@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "FormFlow AI",
+    "slug": "formflow-ai",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "formflow",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "android": {
+      "package": "com.formflow.ai",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B0F17"
+      },
+      "intentFilters": [
+        {
+          "action": "SEND",
+          "data": [
+            {
+              "mimeType": "text/plain"
+            },
+            {
+              "mimeType": "video/*"
+            }
+          ],
+          "category": [
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow FormFlow AI to access your workout videos to analyze joint angles, handle grip, and generate step-by-step exercise flow videos."
+        }
+      ]
+    ]
+  }
+}

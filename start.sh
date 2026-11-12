@@ -60,9 +60,10 @@ echo ""
 echo "[2/2] Starting React Native (Expo SDK 58) App in $MOBILE_DIR ..."
 cd "$MOBILE_DIR"
 
-# Ensure Expo SDK 58, expo-video, expo-speech, and async-storage are installed
+# Ensure Expo SDK 58, expo-video, expo-speech, and async-storage 2.2.0 are installed
 INSTALLED_EXPO_VER="$(node -p "try { require('./node_modules/expo/package.json').version } catch(e) { '' }")"
-if [[ ! "$INSTALLED_EXPO_VER" =~ ^58\. ]] || [[ ! -d "node_modules/expo-video" ]] || [[ ! -d "node_modules/expo-speech" ]] || [[ ! -d "node_modules/@react-native-async-storage/async-storage" ]]; then
+INSTALLED_AS_VER="$(node -p "try { require('./node_modules/@react-native-async-storage/async-storage/package.json').version } catch(e) { '' }")"
+if [[ ! "$INSTALLED_EXPO_VER" =~ ^58\. ]] || [[ "$INSTALLED_AS_VER" != "2.2.0" ]] || [[ ! -d "node_modules/expo-video" ]] || [[ ! -d "node_modules/expo-speech" ]]; then
   echo "Upgrading / syncing mobile npm packages to Expo SDK 58..."
   npm install --legacy-peer-deps
 fi

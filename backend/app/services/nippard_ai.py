@@ -12,7 +12,29 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+
+def _load_dotenv_if_present() -> None:
+    env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+    if not env_path.exists():
+        return
+    try:
+        for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            k = k.strip()
+            v = v.strip().strip("'").strip('"')
+            if k and k not in os.environ:
+                os.environ[k] = v
+    except Exception:
+        pass
+
+
+_load_dotenv_if_present()
 
 from app.schemas import (
     FlowPhaseStep,
@@ -259,30 +281,52 @@ def build_exercise_analysis(
             )
         )
 
-    # Optionally enrich with Gemini API if user provided GEMINI_API_KEY
+    # Optionally enrich with Gemini API (REST or SDK) if user provided GEMINI_API_KEY
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if api_key and api_key != "your_gemini_api_key_here":
+        model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
+        prompt = (
+            f"You are strength & hypertrophy coach Jeff Nippard. Provide 4 concise, science-based "
+            f"biomechanical coaching cues for '{exercise_name}' focusing specifically on: "
+            f"(1) Handle grip & wrist stack angle (~172°), (2) Elbow & scapular plane angle, "
+            f"(3) Peak lengthened stretch pause, and (4) Foot/ankle base stability (~82° dorsiflexion). "
+            f"Return ONLY a valid JSON array of 4 strings."
+        )
         try:
-            from google import genai  # type: ignore
+            import urllib.request
 
-            client = genai.Client(api_key=api_key)
-            prompt = (
-                f"You are strength & hypertrophy coach Jeff Nippard. Provide 3 concise, science-based "
-                f"biomechanical coaching cues for '{exercise_name}' focusing specifically on: "
-                f"(1) Handle grip & wrist angle, (2) Peak lengthened stretch angle, and (3) Foot/ankle base stability. "
-                f"Return plain JSON array of 3 strings."
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+            body = json.dumps(
+                {
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {"temperature": 0.3},
+                }
+            ).encode("utf-8")
+            req = urllib.request.Request(
+                url,
+                data=body,
+                headers={"Content-Type": "application/json"},
+                method="POST",
             )
-            resp = client.models.generate_content(
-                model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
-                contents=prompt,
-            )
-            if resp and resp.text:
-                text_clean = resp.text.strip().removeprefix("```json").removesuffix("```").strip()
-                parsed = json.loads(text_clean)
-                if isinstance(parsed, list) and len(parsed) >= 3:
-                    takeaways = [str(x) for x in parsed[:4]]
+            with urllib.request.urlopen(req, timeout=12) as resp:
+                payload = json.loads(resp.read().decode("utf-8"))
+                candidates = payload.get("candidates") or []
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts") or []
+                    if parts and "text" in parts[0]:
+                        text_clean = (
+                            parts[0]["text"]
+                            .strip()
+                            .removeprefix("```json")
+                            .removeprefix("```")
+                            .removesuffix("```")
+                            .strip()
+                        )
+                        parsed = json.loads(text_clean)
+                        if isinstance(parsed, list) and len(parsed) >= 3:
+                            takeaways = [str(x) for x in parsed[:4]]
         except Exception:
-            # Keep deterministic high-precision biomechanics analysis on any API error
+            # Keep deterministic high-precision biomechanics analysis on any network/API error
             pass
 
     return exercise_name, preset.target_muscles, handle_info, takeaways, steps

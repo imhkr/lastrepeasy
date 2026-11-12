@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,19 +8,53 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { Video, ResizeMode } from "expo-av";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { fetchJobResult } from "../../src/api/client";
 import { WorkoutAnalysisResult } from "../../src/types/workout";
 import { HandleAndAnklePanel } from "../../src/components/HandleAndAnklePanel";
 import { StepFlowTimeline } from "../../src/components/StepFlowTimeline";
 
+function WorkoutVideoPlayer({
+  videoUrl,
+  seekToSec,
+}: {
+  videoUrl: string;
+  seekToSec: number | null;
+}) {
+  const player = useVideoPlayer(videoUrl, (p) => {
+    p.loop = true;
+    p.play();
+  });
+
+  useEffect(() => {
+    if (seekToSec !== null && player) {
+      try {
+        player.currentTime = seekToSec;
+      } catch {
+        // Ignore seek errors while loading
+      }
+    }
+  }, [seekToSec, player]);
+
+  return (
+    <VideoView
+      style={styles.videoPlayer}
+      player={player}
+      allowsFullscreen
+      allowsPictureInPicture
+      contentFit="contain"
+      nativeControls
+    />
+  );
+}
+
 export default function AnalysisResultScreen() {
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
-  const videoRef = useRef<Video>(null);
 
   const [result, setResult] = useState<WorkoutAnalysisResult | null>(null);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [videoMode, setVideoMode] = useState<"flow" | "full">("flow");
+  const [seekToSec, setSeekToSec] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,14 +81,10 @@ export default function AnalysisResultScreen() {
     };
   }, [jobId]);
 
-  const handleSelectStep = async (index: number, timestampSec: number) => {
+  const handleSelectStep = (index: number, timestampSec: number) => {
     setActiveStepIndex(index);
-    if (videoRef.current && videoMode === "full") {
-      try {
-        await videoRef.current.setPositionAsync(Math.round(timestampSec * 1000));
-      } catch {
-        // Ignore seek errors if video is still buffering
-      }
+    if (videoMode === "full") {
+      setSeekToSec(timestampSec);
     }
   };
 
@@ -138,15 +168,7 @@ export default function AnalysisResultScreen() {
         </View>
 
         {activeVideoUrl ? (
-          <Video
-            ref={videoRef}
-            source={{ uri: activeVideoUrl }}
-            style={styles.videoPlayer}
-            useNativeControls
-            resizeMode={ResizeMode.CONTAIN}
-            shouldPlay
-            isLooping
-          />
+          <WorkoutVideoPlayer key={activeVideoUrl} videoUrl={activeVideoUrl} seekToSec={seekToSec} />
         ) : null}
 
         <Text style={styles.videoCaption}>

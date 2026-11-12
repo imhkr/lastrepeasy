@@ -55,20 +55,22 @@ BACKEND_PID=$!
 sleep 2
 echo "Backend running (PID: $BACKEND_PID)"
 
-# 2. Setup & Start React Native (Expo) Mobile App
+# 2. Setup & Start React Native (Expo SDK 58) Mobile App
 echo ""
-echo "[2/2] Starting React Native (Expo) App in $MOBILE_DIR ..."
+echo "[2/2] Starting React Native (Expo SDK 58) App in $MOBILE_DIR ..."
 cd "$MOBILE_DIR"
 
-# Ensure node_modules and required Expo peer packages (like expo-asset) are installed
-if [[ ! -d "node_modules" ]] || [[ ! -d "node_modules/expo-asset" ]] || [[ ! -d "node_modules/expo-constants" ]]; then
-  echo "Installing / syncing mobile npm packages..."
-  npm install
+# Ensure Expo SDK 58 and expo-video are installed
+INSTALLED_EXPO_VER="$(node -p "try { require('./node_modules/expo/package.json').version } catch(e) { '' }")"
+if [[ ! "$INSTALLED_EXPO_VER" =~ ^58\. ]] || [[ ! -d "node_modules/expo-video" ]]; then
+  echo "Upgrading / syncing mobile npm packages to Expo SDK 58..."
+  rm -rf node_modules package-lock.json
+  npm install --legacy-peer-deps
 fi
 
 export EXPO_PUBLIC_API_URL="${EXPO_PUBLIC_API_URL:-http://$LAN_IP:8000}"
 echo "Using EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL"
-echo "Tip: Press 'a' in Expo to launch on Android, or 'w' for Web preview."
+echo "Tip: Scan the QR code with Expo Go (SDK 58) or press 'a' for Android / 'w' for Web."
 echo ""
 
 npx expo start -c

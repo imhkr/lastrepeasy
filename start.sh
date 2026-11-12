@@ -60,8 +60,9 @@ echo ""
 echo "[2/2] Starting React Native (Expo) App in $MOBILE_DIR ..."
 cd "$MOBILE_DIR"
 
-if [[ ! -d "node_modules" ]]; then
-  echo "Installing mobile npm packages..."
+# Ensure node_modules and required Expo peer packages (like expo-asset) are installed
+if [[ ! -d "node_modules" ]] || [[ ! -d "node_modules/expo-asset" ]] || [[ ! -d "node_modules/expo-constants" ]]; then
+  echo "Installing / syncing mobile npm packages..."
   npm install
 fi
 
@@ -70,4 +71,4 @@ echo "Using EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL"
 echo "Tip: Press 'a' in Expo to launch on Android, or 'w' for Web preview."
 echo ""
 
-npx expo start
+npx expo start -c

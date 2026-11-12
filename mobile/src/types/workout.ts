@@ -66,6 +66,8 @@ export interface WorkoutAnalysisResult {
   overall_form_score: number;
   handle_and_stance?: HandleAndStanceInfo | null;
   key_takeaways: string[];
+  voice_script_english?: string;
+  voice_script_hinglish?: string;
 
   steps: FlowPhaseStep[];
   angle_timeline: AngleSeriesPoint[];
@@ -73,6 +75,11 @@ export interface WorkoutAnalysisResult {
   source_video_url?: string | null;
   step_by_step_flow_video_url?: string | null;
   annotated_full_video_url?: string | null;
+
+  // Offline phone storage metadata
+  saved_at?: string;
+  local_flow_video_uri?: string | null;
+  local_full_video_uri?: string | null;
 }
 
 export interface PresetCatalogItem {

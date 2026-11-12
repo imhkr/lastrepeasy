@@ -10,9 +10,15 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { fetchJobResult } from "../../src/api/client";
+import {
+  getSavedWorkoutById,
+  saveWorkoutToPhoneStorage,
+} from "../../src/services/localWorkoutStorage";
 import { WorkoutAnalysisResult } from "../../src/types/workout";
 import { HandleAndAnklePanel } from "../../src/components/HandleAndAnklePanel";
 import { StepFlowTimeline } from "../../src/components/StepFlowTimeline";
+import { VoiceCoachPanel } from "../../src/components/VoiceCoachPanel";
+import { MuscleHitMapAnimation } from "../../src/components/MuscleHitMapAnimation";
 
 function WorkoutVideoPlayer({
   videoUrl,
@@ -55,28 +61,59 @@ export default function AnalysisResultScreen() {
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [videoMode, setVideoMode] = useState<"flow" | "full">("flow");
   const [seekToSec, setSeekToSec] = useState<number | null>(null);
+  const [isSavedLocally, setIsSavedLocally] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!jobId) return;
     let timer: ReturnType<typeof setInterval> | null = null;
+    let isMounted = true;
 
-    const poll = async () => {
-      try {
-        const data = await fetchJobResult(jobId);
-        setResult(data);
-        if (data.status === "completed" || data.status === "failed") {
+    const loadOrPoll = async () => {
+      // 1. Check if this workout is already saved on phone storage (instant revisit without backend)
+      const cached = await getSavedWorkoutById(jobId);
+      if (cached && cached.status === "completed") {
+        if (isMounted) {
+          setResult(cached);
+          setIsSavedLocally(true);
+        }
+        return;
+      }
+
+      // 2. Otherwise poll the backend until analysis finishes, then auto-save to phone storage
+      const poll = async () => {
+        try {
+          const data = await fetchJobResult(jobId);
+          if (!isMounted) return;
+          setResult(data);
+
+          if (data.status === "completed") {
+            if (timer) clearInterval(timer);
+            setIsSaving(true);
+            const savedCopy = await saveWorkoutToPhoneStorage(data);
+            if (isMounted) {
+              setResult(savedCopy);
+              setIsSavedLocally(true);
+              setIsSaving(false);
+            }
+          } else if (data.status === "failed") {
+            if (timer) clearInterval(timer);
+          }
+        } catch (err: any) {
+          if (!isMounted) return;
+          setError(err.message || "Failed to load job status.");
           if (timer) clearInterval(timer);
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to load job status.");
-        if (timer) clearInterval(timer);
-      }
+      };
+
+      await poll();
+      timer = setInterval(poll, 1200);
     };
 
-    poll();
-    timer = setInterval(poll, 1200);
+    loadOrPoll();
     return () => {
+      isMounted = false;
       if (timer) clearInterval(timer);
     };
   }, [jobId]);
@@ -86,6 +123,15 @@ export default function AnalysisResultScreen() {
     if (videoMode === "full") {
       setSeekToSec(timestampSec);
     }
+  };
+
+  const handleManualSave = async () => {
+    if (!result) return;
+    setIsSaving(true);
+    const savedCopy = await saveWorkoutToPhoneStorage(result);
+    setResult(savedCopy);
+    setIsSavedLocally(true);
+    setIsSaving(false);
   };
 
   if (error) {
@@ -119,11 +165,13 @@ export default function AnalysisResultScreen() {
   }
 
   const activeVideoUrl =
-    videoMode === "flow" ? result.step_by_step_flow_video_url : result.annotated_full_video_url;
+    videoMode === "flow"
+      ? result.local_flow_video_uri || result.step_by_step_flow_video_url
+      : result.local_full_video_uri || result.annotated_full_video_url;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Exercise Title & Form Score Header */}
+      {/* Exercise Title, Offline Storage Status & Form Score Header */}
       <View style={styles.headerCard}>
         <View style={styles.headerTopRow}>
           <View style={{ flex: 1 }}>
@@ -136,12 +184,25 @@ export default function AnalysisResultScreen() {
           </View>
         </View>
 
-        <View style={styles.muscleRow}>
-          {result.target_muscles.map((m) => (
-            <View key={m} style={styles.muscleChip}>
-              <Text style={styles.muscleChipText}>{m}</Text>
+        {/* Local Phone Storage Status Bar */}
+        <View style={styles.storageRow}>
+          {isSavedLocally ? (
+            <View style={styles.savedBadge}>
+              <Text style={styles.savedBadgeText}>
+                📱 Saved on Phone Storage (Instant Offline Revisit Ready)
+              </Text>
             </View>
-          ))}
+          ) : (
+            <TouchableOpacity
+              style={styles.saveNowBtn}
+              onPress={handleManualSave}
+              disabled={isSaving}
+            >
+              <Text style={styles.saveNowBtnText}>
+                {isSaving ? "Saving Video to Phone..." : "💾 Save Video to Phone Storage"}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -177,6 +238,15 @@ export default function AnalysisResultScreen() {
             : "Continuous real-time skeletal tracking with live joint angle telemetry"}
         </Text>
       </View>
+
+      {/* Feature 2: Hinglish & English Voice Coaching Panel */}
+      <VoiceCoachPanel workout={result} />
+
+      {/* Feature 3: Animated Human Body Muscle Hit Map */}
+      <MuscleHitMapAnimation
+        exerciseName={result.exercise_name}
+        targetMuscles={result.target_muscles}
+      />
 
       {/* Handle Position, Wrist Stack & Foot/Ankle Stance Breakdown */}
       {result.handle_and_stance && <HandleAndAnklePanel info={result.handle_and_stance} />}
@@ -289,21 +359,34 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontWeight: "800",
   },
-  muscleRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
+  storageRow: {
+    marginTop: 4,
   },
-  muscleChip: {
-    backgroundColor: "#0B0F17",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+  savedBadge: {
+    backgroundColor: "#10B98122",
+    borderColor: "#10B981",
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: "flex-start",
   },
-  muscleChipText: {
-    color: "#CBD5E1",
+  savedBadgeText: {
+    color: "#10B981",
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: "800",
+  },
+  saveNowBtn: {
+    backgroundColor: "#0284C7",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignSelf: "flex-start",
+  },
+  saveNowBtnText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "800",
   },
   videoCard: {
     backgroundColor: "#111827",

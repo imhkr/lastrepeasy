@@ -31,12 +31,14 @@ class TestFormFlowPipeline(unittest.TestCase):
         phases = detect_five_workout_phases(timeline, dur)
         self.assertEqual(len(phases), 5)
 
-        ex_name, muscles, handle_info, takeaways, steps = build_exercise_analysis(
+        ex_name, muscles, handle_info, takeaways, steps, voice_en, voice_hi = build_exercise_analysis(
             "lat_pullover_nippard", phases, {}
         )
         self.assertIn("wrist", handle_info.wrist_alignment.lower())
         self.assertIn("ankle", handle_info.foot_and_ankle_position.lower())
         self.assertEqual(len(steps), 5)
+        self.assertTrue(len(voice_en) > 40)
+        self.assertTrue(len(voice_hi) > 40)
 
         # 4. Render 5 HUD Keyframes + Step-by-Step Start-to-End Flow Video
         kf_urls, flow_url, full_url = render_keyframes_and_flow_videos(

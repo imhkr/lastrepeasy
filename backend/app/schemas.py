@@ -110,6 +110,14 @@ class WorkoutAnalysisResult(BaseModel):
     overall_form_score: int = 92
     handle_and_stance: Optional[HandleAndStanceInfo] = None
     key_takeaways: List[str] = Field(default_factory=list)
+    voice_script_english: str = Field(
+        default="",
+        description="Spoken coaching script in clear English covering setup, handle/wrist placement, ankle base, and target muscle focus.",
+    )
+    voice_script_hinglish: str = Field(
+        default="",
+        description="Spoken coaching script in natural gym Hinglish covering setup, handle/wrist placement, ankle base, and target muscle focus.",
+    )
 
     # Step-by-Step Start-to-End Flow
     steps: List[FlowPhaseStep] = Field(default_factory=list)

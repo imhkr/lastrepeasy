@@ -60,11 +60,10 @@ echo ""
 echo "[2/2] Starting React Native (Expo SDK 58) App in $MOBILE_DIR ..."
 cd "$MOBILE_DIR"
 
-# Ensure Expo SDK 58 and expo-video are installed
+# Ensure Expo SDK 58, expo-video, expo-speech, and async-storage are installed
 INSTALLED_EXPO_VER="$(node -p "try { require('./node_modules/expo/package.json').version } catch(e) { '' }")"
-if [[ ! "$INSTALLED_EXPO_VER" =~ ^58\. ]] || [[ ! -d "node_modules/expo-video" ]]; then
+if [[ ! "$INSTALLED_EXPO_VER" =~ ^58\. ]] || [[ ! -d "node_modules/expo-video" ]] || [[ ! -d "node_modules/expo-speech" ]] || [[ ! -d "node_modules/@react-native-async-storage/async-storage" ]]; then
   echo "Upgrading / syncing mobile npm packages to Expo SDK 58..."
-  rm -rf node_modules package-lock.json
   npm install --legacy-peer-deps
 fi
 

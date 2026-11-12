@@ -130,7 +130,15 @@ def _run_analysis_pipeline(
         job.progress_message = "Evaluating handle position, wrist stack, ankle dorsiflexion & Jeff Nippard cues..."
 
         profile_id = detect_exercise_profile(profile_hint)
-        exercise_name, target_muscles, handle_info, takeaways, steps = build_exercise_analysis(
+        (
+            exercise_name,
+            target_muscles,
+            handle_info,
+            takeaways,
+            steps,
+            voice_en,
+            voice_hi,
+        ) = build_exercise_analysis(
             profile_id=profile_id,
             phase_tuples=phase_tuples,
             keyframe_urls={},
@@ -159,6 +167,8 @@ def _run_analysis_pipeline(
         job.target_muscles = target_muscles
         job.handle_and_stance = handle_info
         job.key_takeaways = takeaways
+        job.voice_script_english = voice_en
+        job.voice_script_hinglish = voice_hi
         job.steps = steps
         job.step_by_step_flow_video_url = flow_video_url
         job.annotated_full_video_url = full_video_url

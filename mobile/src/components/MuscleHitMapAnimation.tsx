@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
-import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SvgText } from "react-native-svg";
+import React, { useEffect, useRef } from "react";
+import { View, Text, StyleSheet, Animated, Easing } from "react-native";
+import Body, { ExtendedBodyPart, Slug } from "react-native-body-highlighter";
 
 interface Props {
   exerciseName: string;
@@ -75,400 +75,88 @@ function classifyMuscleActivation(
   return { primary, secondary };
 }
 
-export const MuscleHitMapAnimation: React.FC<Props> = ({
-  exerciseName,
-  targetMuscles,
-}) => {
-  const [pulsePhase, setPulsePhase] = useState(0);
+const SLUGS: Record<MuscleGroupKey, Slug[]> = {
+  chest: ["chest"],
+  shoulders: ["deltoids"],
+  biceps: ["biceps"],
+  forearms: ["forearm"],
+  abs: ["abs", "obliques"],
+  quads: ["quadriceps"],
+  lats: ["upper-back"],
+  traps: ["trapezius"],
+  triceps: ["triceps"],
+  glutes: ["gluteal"],
+  hamstrings: ["hamstring"],
+  erectors: ["lower-back"],
+};
+
+// intensity 1 = helper (amber), 2 = main (red)
+const COLORS = ["#D97706", "#DC2626"];
+
+export const MuscleHitMapAnimation: React.FC<Props> = ({ exerciseName, targetMuscles }) => {
+  const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPulsePhase((prev) => (prev + 1) % 20);
-    }, 90);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Smooth sine wave between 0.45 and 1.0 for glowing muscle animation
-  const wave = 0.5 * (1 + Math.sin((pulsePhase / 20) * Math.PI * 2));
-  const primaryOpacity = 0.55 + 0.45 * wave;
-  const secondaryOpacity = 0.35 + 0.3 * wave;
-  const glowRadiusBoost = 2.5 * wave;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulse]);
 
   const { primary, secondary } = classifyMuscleActivation(exerciseName, targetMuscles);
+  const data: ExtendedBodyPart[] = [];
+  secondary.forEach((k) => !primary.has(k) && SLUGS[k].forEach((slug) => data.push({ slug, intensity: 1 })));
+  primary.forEach((k) => SLUGS[k].forEach((slug) => data.push({ slug, intensity: 2 })));
 
-  const colorFor = (key: MuscleGroupKey) => {
-    if (primary.has(key)) return "#EF4444"; // Intense Red-Orange Primary Hit
-    if (secondary.has(key)) return "#F59E0B"; // Amber Stabilizer / Secondary Hit
-    return "#1E293B"; // Inactive base muscle color
-  };
-
-  const opacityFor = (key: MuscleGroupKey) => {
-    if (primary.has(key)) return primaryOpacity;
-    if (secondary.has(key)) return secondaryOpacity;
-    return 0.75;
-  };
-
-  const strokeFor = (key: MuscleGroupKey) => {
-    if (primary.has(key)) return "#FCA5A5";
-    if (secondary.has(key)) return "#FDE68A";
-    return "#334155";
+  const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] });
+  const bodyProps = {
+    data,
+    colors: COLORS,
+    gender: "male" as const,
+    scale: 0.85,
+    border: "#0B1220",
+    defaultFill: "#2A3445",
   };
 
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.badge}>LIVE MUSCLE ACTIVATION ANATOMY</Text>
-          <Text style={styles.title}>Where This Exercise Hits Your Body</Text>
+        <Text style={styles.badge}>MUSCLES WORKED</Text>
+        <Text style={styles.title}>Where you'll feel it</Text>
+      </View>
+
+      <View style={styles.legendRow}>
+        <View style={styles.legendItem}>
+          <View style={[styles.dot, { backgroundColor: COLORS[1] }]} />
+          <Text style={styles.legendText}>Main</Text>
         </View>
-        <View style={styles.legendCol}>
-          <View style={styles.legendItem}>
-            <View style={[styles.dot, { backgroundColor: "#EF4444" }]} />
-            <Text style={styles.legendText}>Primary Target</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.dot, { backgroundColor: "#F59E0B" }]} />
-            <Text style={styles.legendText}>Secondary / Stabilizer</Text>
-          </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.dot, { backgroundColor: COLORS[0] }]} />
+          <Text style={styles.legendText}>Helper</Text>
         </View>
       </View>
 
       <View style={styles.svgContainer}>
-        <Svg width="100%" height={270} viewBox="0 0 320 260">
-          {/* ================= ANTERIOR (FRONT VIEW) — Left X=85 ================= */}
-          <SvgText
-            x="85"
-            y="18"
-            fill="#94A3B8"
-            fontSize="10"
-            fontWeight="bold"
-            textAnchor="middle"
-          >
-            FRONT (ANTERIOR)
-          </SvgText>
-
-          <G transform="translate(85, 25)">
-            {/* Head & Neck */}
-            <Circle cx="0" cy="18" r="13" fill="#1E293B" stroke="#475569" strokeWidth="1.5" />
-            <Rect x="-5" y="31" width="10" height="8" rx="3" fill="#1E293B" />
-
-            {/* Anterior Deltoids (Shoulders) */}
-            <Ellipse
-              cx="-26"
-              cy="48"
-              rx={9 + (primary.has("shoulders") ? glowRadiusBoost * 0.5 : 0)}
-              ry="11"
-              fill={colorFor("shoulders")}
-              fillOpacity={opacityFor("shoulders")}
-              stroke={strokeFor("shoulders")}
-              strokeWidth="1.2"
-            />
-            <Ellipse
-              cx="26"
-              cy="48"
-              rx={9 + (primary.has("shoulders") ? glowRadiusBoost * 0.5 : 0)}
-              ry="11"
-              fill={colorFor("shoulders")}
-              fillOpacity={opacityFor("shoulders")}
-              stroke={strokeFor("shoulders")}
-              strokeWidth="1.2"
-            />
-
-            {/* Pectoralis Major (Upper & Mid Chest) */}
-            <Path
-              d="M -20 40 Q 0 42 0 58 Q -12 62 -21 54 Z"
-              fill={colorFor("chest")}
-              fillOpacity={opacityFor("chest")}
-              stroke={strokeFor("chest")}
-              strokeWidth="1.5"
-            />
-            <Path
-              d="M 20 40 Q 0 42 0 58 Q 12 62 21 54 Z"
-              fill={colorFor("chest")}
-              fillOpacity={opacityFor("chest")}
-              stroke={strokeFor("chest")}
-              strokeWidth="1.5"
-            />
-
-            {/* Core / Rectus Abdominis */}
-            <Rect
-              x="-14"
-              y="60"
-              width="28"
-              height="42"
-              rx="6"
-              fill={colorFor("abs")}
-              fillOpacity={opacityFor("abs")}
-              stroke={strokeFor("abs")}
-              strokeWidth="1.2"
-            />
-            <Line x1="0" y1="62" x2="0" y2="100" stroke="#0F172A" strokeWidth="1.2" />
-
-            {/* Biceps Brachii */}
-            <Ellipse
-              cx="-31"
-              cy="70"
-              rx={7 + (primary.has("biceps") ? glowRadiusBoost * 0.6 : 0)}
-              ry="14"
-              fill={colorFor("biceps")}
-              fillOpacity={opacityFor("biceps")}
-              stroke={strokeFor("biceps")}
-              strokeWidth="1.4"
-            />
-            <Ellipse
-              cx="31"
-              cy="70"
-              rx={7 + (primary.has("biceps") ? glowRadiusBoost * 0.6 : 0)}
-              ry="14"
-              fill={colorFor("biceps")}
-              fillOpacity={opacityFor("biceps")}
-              stroke={strokeFor("biceps")}
-              strokeWidth="1.4"
-            />
-
-            {/* Forearms / Wrist Stabilizers */}
-            <Ellipse
-              cx="-35"
-              cy="97"
-              rx="5.5"
-              ry="13"
-              fill={colorFor("forearms")}
-              fillOpacity={opacityFor("forearms")}
-              stroke={strokeFor("forearms")}
-              strokeWidth="1.2"
-            />
-            <Ellipse
-              cx="35"
-              cy="97"
-              rx="5.5"
-              ry="13"
-              fill={colorFor("forearms")}
-              fillOpacity={opacityFor("forearms")}
-              stroke={strokeFor("forearms")}
-              strokeWidth="1.2"
-            />
-
-            {/* Quadriceps */}
-            <Ellipse
-              cx="-11"
-              cy="132"
-              rx={9 + (primary.has("quads") ? glowRadiusBoost * 0.5 : 0)}
-              ry="26"
-              fill={colorFor("quads")}
-              fillOpacity={opacityFor("quads")}
-              stroke={strokeFor("quads")}
-              strokeWidth="1.3"
-            />
-            <Ellipse
-              cx="11"
-              cy="132"
-              rx={9 + (primary.has("quads") ? glowRadiusBoost * 0.5 : 0)}
-              ry="26"
-              fill={colorFor("quads")}
-              fillOpacity={opacityFor("quads")}
-              stroke={strokeFor("quads")}
-              strokeWidth="1.3"
-            />
-
-            {/* Lower Shins / Calves & Ankle Base */}
-            <Rect x="-16" y="162" width="10" height="36" rx="5" fill="#1E293B" stroke="#334155" strokeWidth="1" />
-            <Rect x="6" y="162" width="10" height="36" rx="5" fill="#1E293B" stroke="#334155" strokeWidth="1" />
-            {/* Ankle Base Stability Pulse Ring */}
-            <Circle cx="-11" cy="200" r={4 + wave * 2} fill="none" stroke="#10B981" strokeWidth="1.5" />
-            <Circle cx="11" cy="200" r={4 + wave * 2} fill="none" stroke="#10B981" strokeWidth="1.5" />
-          </G>
-
-          {/* ================= POSTERIOR (BACK VIEW) — Right X=235 ================= */}
-          <SvgText
-            x="235"
-            y="18"
-            fill="#94A3B8"
-            fontSize="10"
-            fontWeight="bold"
-            textAnchor="middle"
-          >
-            BACK (POSTERIOR)
-          </SvgText>
-
-          <G transform="translate(235, 25)">
-            {/* Head & Neck */}
-            <Circle cx="0" cy="18" r="13" fill="#1E293B" stroke="#475569" strokeWidth="1.5" />
-            <Rect x="-5" y="31" width="10" height="8" rx="3" fill="#1E293B" />
-
-            {/* Traps & Upper Back */}
-            <Path
-              d="M -18 38 L 0 34 L 18 38 L 0 58 Z"
-              fill={colorFor("traps")}
-              fillOpacity={opacityFor("traps")}
-              stroke={strokeFor("traps")}
-              strokeWidth="1.2"
-            />
-
-            {/* Posterior Deltoids */}
-            <Ellipse
-              cx="-26"
-              cy="48"
-              rx="8.5"
-              ry="10"
-              fill={colorFor("shoulders")}
-              fillOpacity={opacityFor("shoulders")}
-              stroke={strokeFor("shoulders")}
-              strokeWidth="1.2"
-            />
-            <Ellipse
-              cx="26"
-              cy="48"
-              rx="8.5"
-              ry="10"
-              fill={colorFor("shoulders")}
-              fillOpacity={opacityFor("shoulders")}
-              stroke={strokeFor("shoulders")}
-              strokeWidth="1.2"
-            />
-
-            {/* Latissimus Dorsi (Lats & Teres Major V-Taper) */}
-            <Path
-              d="M -22 48 L -3 55 L -5 92 Q -19 78 -22 48 Z"
-              fill={colorFor("lats")}
-              fillOpacity={opacityFor("lats")}
-              stroke={strokeFor("lats")}
-              strokeWidth={primary.has("lats") ? "2" : "1.2"}
-            />
-            <Path
-              d="M 22 48 L 3 55 L 5 92 Q 19 78 22 48 Z"
-              fill={colorFor("lats")}
-              fillOpacity={opacityFor("lats")}
-              stroke={strokeFor("lats")}
-              strokeWidth={primary.has("lats") ? "2" : "1.2"}
-            />
-
-            {/* Erector Spinae (Lower Back) */}
-            <Rect
-              x="-7"
-              y="72"
-              width="14"
-              height="26"
-              rx="4"
-              fill={colorFor("erectors")}
-              fillOpacity={opacityFor("erectors")}
-              stroke={strokeFor("erectors")}
-              strokeWidth="1.2"
-            />
-
-            {/* Triceps Brachii */}
-            <Ellipse
-              cx="-31"
-              cy="70"
-              rx={7 + (primary.has("triceps") ? glowRadiusBoost * 0.5 : 0)}
-              ry="14"
-              fill={colorFor("triceps")}
-              fillOpacity={opacityFor("triceps")}
-              stroke={strokeFor("triceps")}
-              strokeWidth="1.3"
-            />
-            <Ellipse
-              cx="31"
-              cy="70"
-              rx={7 + (primary.has("triceps") ? glowRadiusBoost * 0.5 : 0)}
-              ry="14"
-              fill={colorFor("triceps")}
-              fillOpacity={opacityFor("triceps")}
-              stroke={strokeFor("triceps")}
-              strokeWidth="1.3"
-            />
-
-            {/* Forearms */}
-            <Ellipse
-              cx="-35"
-              cy="97"
-              rx="5.5"
-              ry="13"
-              fill={colorFor("forearms")}
-              fillOpacity={opacityFor("forearms")}
-              stroke={strokeFor("forearms")}
-              strokeWidth="1.2"
-            />
-            <Ellipse
-              cx="35"
-              cy="97"
-              rx="5.5"
-              ry="13"
-              fill={colorFor("forearms")}
-              fillOpacity={opacityFor("forearms")}
-              stroke={strokeFor("forearms")}
-              strokeWidth="1.2"
-            />
-
-            {/* Gluteus Maximus */}
-            <Ellipse
-              cx="-9"
-              cy="106"
-              rx="9"
-              ry="10"
-              fill={colorFor("glutes")}
-              fillOpacity={opacityFor("glutes")}
-              stroke={strokeFor("glutes")}
-              strokeWidth="1.3"
-            />
-            <Ellipse
-              cx="9"
-              cy="106"
-              rx="9"
-              ry="10"
-              fill={colorFor("glutes")}
-              fillOpacity={opacityFor("glutes")}
-              stroke={strokeFor("glutes")}
-              strokeWidth="1.3"
-            />
-
-            {/* Hamstrings (Biceps Femoris & Semitendinosus) */}
-            <Ellipse
-              cx="-11"
-              cy="136"
-              rx={8.5 + (primary.has("hamstrings") ? glowRadiusBoost * 0.6 : 0)}
-              ry="24"
-              fill={colorFor("hamstrings")}
-              fillOpacity={opacityFor("hamstrings")}
-              stroke={strokeFor("hamstrings")}
-              strokeWidth="1.4"
-            />
-            <Ellipse
-              cx="11"
-              cy="136"
-              rx={8.5 + (primary.has("hamstrings") ? glowRadiusBoost * 0.6 : 0)}
-              ry="24"
-              fill={colorFor("hamstrings")}
-              fillOpacity={opacityFor("hamstrings")}
-              stroke={strokeFor("hamstrings")}
-              strokeWidth="1.4"
-            />
-
-            {/* Calves & Heel Anchor */}
-            <Rect x="-16" y="162" width="10" height="36" rx="5" fill="#1E293B" stroke="#334155" strokeWidth="1" />
-            <Rect x="6" y="162" width="10" height="36" rx="5" fill="#1E293B" stroke="#334155" strokeWidth="1" />
-            <Circle cx="-11" cy="200" r={4 + wave * 2} fill="none" stroke="#10B981" strokeWidth="1.5" />
-            <Circle cx="11" cy="200" r={4 + wave * 2} fill="none" stroke="#10B981" strokeWidth="1.5" />
-          </G>
-        </Svg>
+        <Animated.View style={[styles.bodies, { opacity }]}>
+          <View style={styles.bodyCol}>
+            <Text style={styles.sideLabel}>FRONT</Text>
+            <Body {...bodyProps} side="front" />
+          </View>
+          <View style={styles.bodyCol}>
+            <Text style={styles.sideLabel}>BACK</Text>
+            <Body {...bodyProps} side="back" />
+          </View>
+        </Animated.View>
       </View>
 
       <View style={styles.muscleTagsWrap}>
         {targetMuscles.map((m, idx) => (
-          <View
-            key={m}
-            style={[
-              styles.targetBadge,
-              idx === 0 ? styles.targetBadgePrimary : styles.targetBadgeSecondary,
-            ]}
-          >
-            <Text
-              style={[
-                styles.targetBadgeText,
-                idx === 0 ? { color: "#FCA5A5" } : { color: "#FDE68A" },
-              ]}
-            >
-              {idx === 0 ? `🔥 Primary Hit: ${m}` : `⚡ Synergist: ${m}`}
-            </Text>
+          <View key={m} style={[styles.targetBadge, idx === 0 ? styles.targetBadgePrimary : styles.targetBadgeSecondary]}>
+            <Text style={[styles.targetBadgeText, { color: idx === 0 ? "#FCA5A5" : "#FDE68A" }]}>{m.replace(/\s*\([^)]*\)/g, "")}</Text>
           </View>
         ))}
       </View>
@@ -486,9 +174,11 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   headerRow: {
+    marginBottom: 8,
+  },
+  legendRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+    gap: 16,
     marginBottom: 8,
   },
   badge: {
@@ -502,9 +192,6 @@ const styles = StyleSheet.create({
     color: "#F8FAFC",
     fontSize: 16,
     fontWeight: "800",
-  },
-  legendCol: {
-    gap: 4,
   },
   legendItem: {
     flexDirection: "row",
@@ -521,6 +208,9 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "600",
   },
+  bodies: { flexDirection: "row", justifyContent: "space-around", width: "100%" },
+  bodyCol: { alignItems: "center" },
+  sideLabel: { color: "#94A3B8", fontSize: 10, fontWeight: "700", marginBottom: 4 },
   svgContainer: {
     backgroundColor: "#090D16",
     borderRadius: 14,

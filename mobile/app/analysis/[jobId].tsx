@@ -4,10 +4,11 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
+  Alert,
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { fetchJobResult } from "../../src/api/client";
 import {
@@ -17,6 +18,8 @@ import {
 import { WorkoutAnalysisResult } from "../../src/types/workout";
 import { HandleAndAnklePanel } from "../../src/components/HandleAndAnklePanel";
 import { StepFlowTimeline } from "../../src/components/StepFlowTimeline";
+import { pickAndUploadClip } from "../../src/services/pickAndUploadClip";
+import { ExercisePickerModal } from "../../src/components/ExercisePickerModal";
 import { VoiceCoachPanel } from "../../src/components/VoiceCoachPanel";
 import { MuscleHitMapAnimation } from "../../src/components/MuscleHitMapAnimation";
 
@@ -46,7 +49,7 @@ function WorkoutVideoPlayer({
     <VideoView
       style={styles.videoPlayer}
       player={player}
-      allowsFullscreen
+      fullscreenOptions={{ enable: true }}
       allowsPictureInPicture
       contentFit="contain"
       nativeControls
@@ -54,16 +57,33 @@ function WorkoutVideoPlayer({
   );
 }
 
+const shortName = (n: string) => n.replace(/\s*\([^)]*\)/g, "").split("—")[0].trim();
+
 export default function AnalysisResultScreen() {
   const { jobId } = useLocalSearchParams<{ jobId: string }>();
+  const router = useRouter();
 
   const [result, setResult] = useState<WorkoutAnalysisResult | null>(null);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [videoMode, setVideoMode] = useState<"flow" | "full">("flow");
   const [seekToSec, setSeekToSec] = useState<number | null>(null);
-  const [isSavedLocally, setIsSavedLocally] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleUpload = async (exerciseHint: string) => {
+    setPickerOpen(false);
+    try {
+      setUploading(true);
+      const job = await pickAndUploadClip(exerciseHint);
+      if (job) router.push(`/analysis/${job.job_id}`);
+    } catch (err: any) {
+      Alert.alert("Upload Failed", err.message || "Could not upload video.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     if (!jobId) return;
@@ -71,32 +91,22 @@ export default function AnalysisResultScreen() {
     let isMounted = true;
 
     const loadOrPoll = async () => {
-      // 1. Check if this workout is already saved on phone storage (instant revisit without backend)
+      // Saved on the phone? Open instantly without the backend.
       const cached = await getSavedWorkoutById(jobId);
       if (cached && cached.status === "completed") {
-        if (isMounted) {
-          setResult(cached);
-          setIsSavedLocally(true);
-        }
+        if (isMounted) setResult(cached);
         return;
       }
 
-      // 2. Otherwise poll the backend until analysis finishes, then auto-save to phone storage
       const poll = async () => {
         try {
           const data = await fetchJobResult(jobId);
           if (!isMounted) return;
           setResult(data);
-
           if (data.status === "completed") {
             if (timer) clearInterval(timer);
-            setIsSaving(true);
-            const savedCopy = await saveWorkoutToPhoneStorage(data);
-            if (isMounted) {
-              setResult(savedCopy);
-              setIsSavedLocally(true);
-              setIsSaving(false);
-            }
+            const savedCopy = await saveWorkoutToPhoneStorage(data); // auto-save for offline revisit
+            if (isMounted) setResult(savedCopy);
           } else if (data.status === "failed") {
             if (timer) clearInterval(timer);
           }
@@ -120,18 +130,7 @@ export default function AnalysisResultScreen() {
 
   const handleSelectStep = (index: number, timestampSec: number) => {
     setActiveStepIndex(index);
-    if (videoMode === "full") {
-      setSeekToSec(timestampSec);
-    }
-  };
-
-  const handleManualSave = async () => {
-    if (!result) return;
-    setIsSaving(true);
-    const savedCopy = await saveWorkoutToPhoneStorage(result);
-    setResult(savedCopy);
-    setIsSavedLocally(true);
-    setIsSaving(false);
+    if (videoMode === "full") setSeekToSec(timestampSec);
   };
 
   if (error) {
@@ -148,9 +147,7 @@ export default function AnalysisResultScreen() {
       <View style={styles.centerBox}>
         <ActivityIndicator size="large" color="#38BDF8" />
         <Text style={styles.progressPct}>{result?.progress_pct ?? 10}%</Text>
-        <Text style={styles.progressMsg}>
-          {result?.progress_message || "Analyzing joint angles & rendering step-by-step flow video..."}
-        </Text>
+        <Text style={styles.progressMsg}>{result?.progress_message || "Analyzing your form..."}</Text>
       </View>
     );
   }
@@ -158,7 +155,7 @@ export default function AnalysisResultScreen() {
   if (result.status === "failed") {
     return (
       <View style={styles.centerBox}>
-        <Text style={styles.errorTitle}>Pipeline Failed</Text>
+        <Text style={styles.errorTitle}>Analysis failed</Text>
         <Text style={styles.errorSub}>{result.error || "Unknown error"}</Text>
       </View>
     );
@@ -169,298 +166,107 @@ export default function AnalysisResultScreen() {
       ? result.local_flow_video_uri || result.step_by_step_flow_video_url
       : result.local_full_video_uri || result.annotated_full_video_url;
 
+  const fixes = result.my_form_fixes ?? [];
+  const isUpload = fixes.length > 0;
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Exercise Title, Offline Storage Status & Form Score Header */}
-      <View style={styles.headerCard}>
-        <View style={styles.headerTopRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.coachTag}>{result.coach_style.toUpperCase()}</Text>
-            <Text style={styles.exerciseTitle}>{result.exercise_name}</Text>
-          </View>
-          <View style={styles.scoreCircle}>
-            <Text style={styles.scoreNumber}>{result.overall_form_score}</Text>
-            <Text style={styles.scoreLabel}>FORM SCORE</Text>
-          </View>
-        </View>
-
-        {/* Local Phone Storage Status Bar */}
-        <View style={styles.storageRow}>
-          {isSavedLocally ? (
-            <View style={styles.savedBadge}>
-              <Text style={styles.savedBadgeText}>
-                📱 Saved on Phone Storage (Instant Offline Revisit Ready)
-              </Text>
-            </View>
-          ) : (
-            <TouchableOpacity
-              style={styles.saveNowBtn}
-              onPress={handleManualSave}
-              disabled={isSaving}
-            >
-              <Text style={styles.saveNowBtnText}>
-                {isSaving ? "Saving Video to Phone..." : "💾 Save Video to Phone Storage"}
-              </Text>
-            </TouchableOpacity>
-          )}
+      <View style={styles.headerRow}>
+        <Text style={styles.exerciseTitle}>{shortName(result.exercise_name)}</Text>
+        <View style={styles.scorePill}>
+          <Text style={styles.scoreNumber}>{result.overall_form_score}</Text>
+          <Text style={styles.scoreLabel}>SCORE</Text>
         </View>
       </View>
 
-      {/* Step-by-Step Start-to-End Flow Video Player */}
       <View style={styles.videoCard}>
         <View style={styles.videoToggleRow}>
-          <TouchableOpacity
-            style={[styles.modeTab, videoMode === "flow" && styles.modeTabActive]}
-            onPress={() => setVideoMode("flow")}
-          >
-            <Text style={[styles.modeTabText, videoMode === "flow" && styles.modeTabTextActive]}>
-              Step-by-Step Flow Video (Start → End)
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.modeTab, videoMode === "full" && styles.modeTabActive]}
-            onPress={() => setVideoMode("full")}
-          >
-            <Text style={[styles.modeTabText, videoMode === "full" && styles.modeTabTextActive]}>
-              Continuous Angle HUD
-            </Text>
-          </TouchableOpacity>
+          {(["flow", "full"] as const).map((m) => (
+            <TouchableOpacity
+              key={m}
+              style={[styles.modeTab, videoMode === m && styles.modeTabActive]}
+              onPress={() => setVideoMode(m)}
+            >
+              <Text style={[styles.modeTabText, videoMode === m && styles.modeTabTextActive]}>
+                {m === "flow" ? "Steps" : "Live angles"}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
-
         {activeVideoUrl ? (
           <WorkoutVideoPlayer key={activeVideoUrl} videoUrl={activeVideoUrl} seekToSec={seekToSec} />
         ) : null}
-
-        <Text style={styles.videoCaption}>
-          {videoMode === "flow"
-            ? "Includes 5 Phase Checkpoint Hold Cards + Live Joint Angle HUD (Elbow, Handle/Wrist, Torso Lean, Knee & Ankle Base)"
-            : "Continuous real-time skeletal tracking with live joint angle telemetry"}
-        </Text>
       </View>
 
-      {/* Feature 2: Hinglish & English Voice Coaching Panel */}
-      <VoiceCoachPanel workout={result} />
+      <TouchableOpacity style={styles.uploadBtn} disabled={uploading} onPress={() => setPickerOpen(true)}>
+        <Text style={styles.uploadBtnText}>{uploading ? "Uploading..." : "Check my form (upload up to 20 sec)"}</Text>
+      </TouchableOpacity>
 
-      {/* Feature 3: Animated Human Body Muscle Hit Map */}
-      <MuscleHitMapAnimation
-        exerciseName={result.exercise_name}
-        targetMuscles={result.target_muscles}
-      />
-
-      {/* Handle Position, Wrist Stack & Foot/Ankle Stance Breakdown */}
-      {result.handle_and_stance && <HandleAndAnklePanel info={result.handle_and_stance} />}
-
-      {/* Interactive 5-Phase Start-to-End Step Timeline */}
-      {result.steps.length > 0 && (
-        <StepFlowTimeline
-          steps={result.steps}
-          activeStepIndex={activeStepIndex}
-          onSelectStep={handleSelectStep}
-        />
-      )}
-
-      {/* Key Jeff Nippard Biomechanical Takeaways */}
-      <View style={styles.takeawaysCard}>
-        <Text style={styles.takeawaysHeader}>KEY BIOMECHANICAL TAKEAWAYS</Text>
-        {result.key_takeaways.map((item, idx) => (
-          <View key={idx} style={styles.takeawayRow}>
-            <Text style={styles.takeawayBullet}>•</Text>
-            <Text style={styles.takeawayText}>{item}</Text>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>{isUpload ? "Fix this" : "Key points"}</Text>
+        {(isUpload ? fixes : result.key_takeaways.slice(0, 3)).map((item, idx) => (
+          <View key={idx} style={styles.bulletRow}>
+            <Text style={styles.bullet}>•</Text>
+            <Text style={styles.bulletText}>{item}</Text>
           </View>
         ))}
       </View>
+
+      <MuscleHitMapAnimation exerciseName={result.exercise_name} targetMuscles={result.target_muscles} />
+
+      <VoiceCoachPanel workout={result} />
+
+      <TouchableOpacity style={styles.detailsBtn} onPress={() => setShowDetails((v) => !v)}>
+        <Text style={styles.detailsBtnText}>{showDetails ? "Hide full breakdown" : "Full angle breakdown"}</Text>
+      </TouchableOpacity>
+      {showDetails && (
+        <>
+          {result.handle_and_stance && <HandleAndAnklePanel info={result.handle_and_stance} />}
+          {result.steps.length > 0 && (
+            <StepFlowTimeline steps={result.steps} activeStepIndex={activeStepIndex} onSelectStep={handleSelectStep} />
+          )}
+        </>
+      )}
+
+      <ExercisePickerModal
+        visible={pickerOpen}
+        initial={result.exercise_name}
+        onClose={() => setPickerOpen(false)}
+        onConfirm={handleUpload}
+      />
     </ScrollView>
   );
 }
 
+const CARD = { backgroundColor: "#111827", borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "#1E293B", marginVertical: 8 } as const;
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0B0F17",
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 48,
-  },
-  centerBox: {
-    flex: 1,
-    backgroundColor: "#0B0F17",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  progressPct: {
-    color: "#F8FAFC",
-    fontSize: 28,
-    fontWeight: "800",
-    marginTop: 16,
-  },
-  progressMsg: {
-    color: "#94A3B8",
-    fontSize: 14,
-    textAlign: "center",
-    marginTop: 8,
-  },
-  errorTitle: {
-    color: "#EF4444",
-    fontSize: 20,
-    fontWeight: "800",
-    marginBottom: 8,
-  },
-  errorSub: {
-    color: "#CBD5E1",
-    fontSize: 14,
-    textAlign: "center",
-  },
-  headerCard: {
-    backgroundColor: "#131C2E",
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#1E293B",
-    marginBottom: 14,
-  },
-  headerTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 10,
-  },
-  coachTag: {
-    color: "#38BDF8",
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    marginBottom: 4,
-  },
-  exerciseTitle: {
-    color: "#F8FAFC",
-    fontSize: 19,
-    fontWeight: "800",
-  },
-  scoreCircle: {
-    backgroundColor: "#10B98122",
-    borderColor: "#10B981",
-    borderWidth: 2,
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    alignItems: "center",
-  },
-  scoreNumber: {
-    color: "#10B981",
-    fontSize: 22,
-    fontWeight: "900",
-  },
-  scoreLabel: {
-    color: "#10B981",
-    fontSize: 8,
-    fontWeight: "800",
-  },
-  storageRow: {
-    marginTop: 4,
-  },
-  savedBadge: {
-    backgroundColor: "#10B98122",
-    borderColor: "#10B981",
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    alignSelf: "flex-start",
-  },
-  savedBadgeText: {
-    color: "#10B981",
-    fontSize: 11,
-    fontWeight: "800",
-  },
-  saveNowBtn: {
-    backgroundColor: "#0284C7",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignSelf: "flex-start",
-  },
-  saveNowBtnText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  videoCard: {
-    backgroundColor: "#111827",
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#1E293B",
-    marginBottom: 6,
-  },
-  videoToggleRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 10,
-  },
-  modeTab: {
-    flex: 1,
-    backgroundColor: "#182235",
-    paddingVertical: 9,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  modeTabActive: {
-    backgroundColor: "#0284C7",
-  },
-  modeTabText: {
-    color: "#94A3B8",
-    fontSize: 11,
-    fontWeight: "800",
-  },
-  modeTabTextActive: {
-    color: "#FFFFFF",
-  },
-  videoPlayer: {
-    width: "100%",
-    height: 230,
-    borderRadius: 12,
-    backgroundColor: "#000000",
-  },
-  videoCaption: {
-    color: "#94A3B8",
-    fontSize: 11,
-    marginTop: 8,
-    textAlign: "center",
-  },
-  takeawaysCard: {
-    backgroundColor: "#111827",
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#1E293B",
-    marginTop: 8,
-  },
-  takeawaysHeader: {
-    color: "#38BDF8",
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    marginBottom: 10,
-  },
-  takeawayRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 8,
-  },
-  takeawayBullet: {
-    color: "#F59E0B",
-    fontSize: 16,
-    fontWeight: "900",
-  },
-  takeawayText: {
-    color: "#E2E8F0",
-    fontSize: 13,
-    lineHeight: 19,
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: "#0B0F17" },
+  content: { padding: 16, paddingBottom: 48 },
+  centerBox: { flex: 1, backgroundColor: "#0B0F17", justifyContent: "center", alignItems: "center", padding: 24 },
+  progressPct: { color: "#F8FAFC", fontSize: 28, fontWeight: "800", marginTop: 16 },
+  progressMsg: { color: "#94A3B8", fontSize: 14, textAlign: "center", marginTop: 8 },
+  errorTitle: { color: "#F87171", fontSize: 20, fontWeight: "800", marginBottom: 6 },
+  errorSub: { color: "#CBD5E1", fontSize: 14, textAlign: "center" },
+  headerRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 8 },
+  exerciseTitle: { flex: 1, color: "#F8FAFC", fontSize: 22, fontWeight: "800" },
+  scorePill: { alignItems: "center", backgroundColor: "#10B98122", borderColor: "#10B981", borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 6 },
+  scoreNumber: { color: "#10B981", fontSize: 22, fontWeight: "800" },
+  scoreLabel: { color: "#10B981", fontSize: 9, fontWeight: "800", letterSpacing: 0.8 },
+  videoCard: { ...CARD, padding: 10 },
+  videoToggleRow: { flexDirection: "row", gap: 8, marginBottom: 10 },
+  modeTab: { flex: 1, paddingVertical: 9, borderRadius: 10, backgroundColor: "#182235", alignItems: "center" },
+  modeTabActive: { backgroundColor: "#0284C7" },
+  modeTabText: { color: "#94A3B8", fontSize: 13, fontWeight: "700" },
+  modeTabTextActive: { color: "#FFFFFF" },
+  videoPlayer: { width: "100%", height: 220, borderRadius: 10, backgroundColor: "#000" },
+  uploadBtn: { backgroundColor: "#0284C7", borderRadius: 14, paddingVertical: 15, alignItems: "center", marginVertical: 8 },
+  uploadBtnText: { color: "#FFFFFF", fontSize: 15, fontWeight: "800" },
+  card: CARD,
+  cardTitle: { color: "#F8FAFC", fontSize: 16, fontWeight: "800", marginBottom: 8 },
+  bulletRow: { flexDirection: "row", gap: 8, marginBottom: 8 },
+  bullet: { color: "#F59E0B", fontSize: 16, lineHeight: 21 },
+  bulletText: { flex: 1, color: "#E2E8F0", fontSize: 14, lineHeight: 21 },
+  detailsBtn: { paddingVertical: 14, alignItems: "center", borderRadius: 12, borderWidth: 1, borderColor: "#26334D", marginVertical: 8 },
+  detailsBtnText: { color: "#38BDF8", fontSize: 14, fontWeight: "700" },
 });

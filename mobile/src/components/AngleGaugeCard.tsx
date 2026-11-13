@@ -56,9 +56,8 @@ const styles = StyleSheet.create({
     borderColor: "#22304A",
   },
   headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
+    gap: 4,
     marginBottom: 6,
   },
   jointTitle: {

@@ -1,15 +1,16 @@
 {
   "expo": {
-    "name": "FormFlow AI",
-    "slug": "formflow-ai",
+    "name": "LastRepEasy",
+    "slug": "lastrepeasy",
     "version": "0.1.0",
     "orientation": "portrait",
-    "scheme": "formflow",
+    "scheme": "lastrepeasy",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "android": {
-      "package": "com.formflow.ai",
+      "package": "com.lastrepeasy.app",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0B0F17"
       },
       "intentFilters": [
@@ -35,9 +36,18 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow FormFlow AI to access your workout videos to analyze joint angles, handle grip, and generate step-by-step exercise flow videos."
+          "photosPermission": "Allow LastRepEasy to access your photos and videos for progress pictures and form checks."
         }
       ]
-    ]
+    ],
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0F17"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
   }
 }

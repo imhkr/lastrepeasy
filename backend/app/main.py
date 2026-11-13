@@ -13,6 +13,8 @@ from __future__ import annotations
 import os
 import shutil
 import uuid
+
+import cv2
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -71,6 +73,18 @@ app.mount("/media/frames", StaticFiles(directory=str(FRAMES_DIR)), name="frames"
 
 # In-memory job store
 JOBS: Dict[str, WorkoutAnalysisResult] = {}
+
+
+MAX_UPLOAD_SEC = 20
+MAX_UPLOAD_MB = 80
+
+
+def _clip_seconds(path: str) -> float:
+    cap = cv2.VideoCapture(path)
+    fps = cap.get(cv2.CAP_PROP_FPS) or 0
+    frames = cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0
+    cap.release()
+    return frames / fps if fps else 0.0
 
 
 def _resolve_base_url(request: Request) -> str:
@@ -191,7 +205,23 @@ def _run_analysis_pipeline(
         optimal_metrics = sum(
             1 for s in steps for jm in s.joint_metrics if jm.status == "optimal"
         )
-        job.overall_form_score = max(84, min(99, int(round(82 + 17 * (optimal_metrics / max(1, total_metrics))))))
+        ratio = optimal_metrics / max(1, total_metrics)
+        if source_type == "upload":
+            # Honest score for the user's own clip: no floor.
+            job.overall_form_score = int(round(100 * ratio))
+            seen = set()
+            for s in steps:
+                for jm in s.joint_metrics:
+                    if jm.status != "optimal" and jm.joint_name not in seen and len(seen) < 6:
+                        seen.add(jm.joint_name)
+                        lo, hi = jm.ideal_range_deg
+                        job.my_form_fixes.append(
+                            f"{s.title.split('. ', 1)[-1]}: {jm.joint_name} was {jm.measured_deg:.0f}°, aim for {lo:.0f}–{hi:.0f}°. {jm.cue}"
+                        )
+            if not job.my_form_fixes:
+                job.my_form_fixes.append("Clean set. Every angle we tracked was in range.")
+        else:
+            job.overall_form_score = max(84, min(99, int(round(82 + 17 * ratio))))
 
         job.status = JobStatus.COMPLETED
         job.progress_pct = 100
@@ -305,6 +335,10 @@ async def analyze_uploaded_video(
 
     with open(video_path, "wb") as out_f:
         shutil.copyfileobj(file.file, out_f)
+
+    if os.path.getsize(video_path) > MAX_UPLOAD_MB * 1024 * 1024 or _clip_seconds(video_path) > MAX_UPLOAD_SEC + 0.5:
+        os.remove(video_path)
+        raise HTTPException(status_code=400, detail=f"Clip must be {MAX_UPLOAD_SEC} seconds or shorter.")
 
     job = WorkoutAnalysisResult(
         job_id=job_id,

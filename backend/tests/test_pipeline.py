@@ -65,3 +65,41 @@ class TestFormFlowPipeline(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_upload_rejects_clip_over_20_seconds(tmp_path):
+    import cv2
+    import numpy as np
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    path = tmp_path / "long.mp4"
+    w = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), 5, (64, 64))
+    for _ in range(5 * 25):  # 25 s
+        w.write(np.zeros((64, 64, 3), np.uint8))
+    w.release()
+    with open(path, "rb") as f:
+        r = TestClient(app).post("/api/analyze/upload", files={"file": ("long.mp4", f, "video/mp4")})
+    assert r.status_code == 400
+
+
+def test_upload_returns_personal_fixes_and_honest_score(tmp_path):
+    import time
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.services.video_ingestor import generate_synthetic_workout_video
+
+    clip = str(tmp_path / "ok.mp4")
+    generate_synthetic_workout_video(output_path=clip, exercise_title="Cable Lat Pullover")
+    cl = TestClient(app)
+    with open(clip, "rb") as f:
+        jid = cl.post("/api/analyze/upload", files={"file": ("ok.mp4", f, "video/mp4")}, data={"exercise_hint": "lat pulldown"}).json()["job_id"]
+    for _ in range(120):
+        j = cl.get(f"/api/jobs/{jid}").json()
+        if j["status"] in ("completed", "failed"):
+            break
+        time.sleep(1)
+    assert j["status"] == "completed", j.get("error")
+    assert j["my_form_fixes"], "uploads must carry personal corrections"
+    assert not j["my_form_fixes"][0][0].isdigit(), "no step-number prefix"
+    assert 0 <= j["overall_form_score"] <= 100

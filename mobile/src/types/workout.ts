@@ -66,6 +66,7 @@ export interface WorkoutAnalysisResult {
   overall_form_score: number;
   handle_and_stance?: HandleAndStanceInfo | null;
   key_takeaways: string[];
+  my_form_fixes?: string[];
   voice_script_english?: string;
   voice_script_hinglish?: string;
 

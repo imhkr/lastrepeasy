@@ -10,6 +10,8 @@ Combines:
 """
 from __future__ import annotations
 
+import re
+
 import json
 import os
 from pathlib import Path
@@ -136,18 +138,10 @@ def build_exercise_analysis(
             "Ankle & Base Stability: Drive heels toward the floor (~82° ankle angle) to lock scapular retraction on the pad.",
         ]
         voice_en = (
-            f"Welcome to the Jeff Nippard biomechanics guide for {exercise_name}. "
-            "First, setup and placement: set the bench to a 30 degree incline to bias the upper clavicular pec fibers without front delt takeover. "
-            "Plant your feet flat on the floor with an 82 degree ankle angle and retract your shoulder blades hard into the pad. "
-            "Second, handle and wrist alignment: rotate your grip 15 degrees inward in the scapular plane and keep a stacked 174 degree wrist directly over your elbows. "
-            "Third, execution focus: lower the weight under a 3 second eccentric to a deep stretch with elbows tucked at a 45 to 55 degree arrow angle, pause for half a second at the bottom, and drive up and slightly inward."
+            "Set the bench to 30 degrees. Feet flat, about shoulder width apart, shoulder blades pinned into the pad. Turn your grip 15 degrees inward, wrists straight over elbows. Keep elbows 45 to 55 degrees from your torso, do not flare to 90. Lower for 3 seconds to a deep chest stretch, pause half a second. Press up and slightly inward, squeeze the upper chest."
         )
         voice_hi = (
-            f"Chaliye dekhte hain {exercise_name} ka proper Jeff Nippard setup aur form. "
-            "Sabse pehle bench ko 30 degree incline par set karo taaki aapke upper chest fibers maximum target hon aur front shoulder overload na ho. "
-            "Apne pair zameen par flat jamaye rakho, ankle angle lagbhag 82 degree hona chahiye jisse solid leg drive mile. "
-            "Grip aur wrist placement par dhyan do: dumbbells ya handles ko halka sa 15 degree andar ki taraf rakho aur wrist ko 174 degree par bilkul seedha elbow ke upar stack rakho, kalai piche mat modna. "
-            "Ab movement focus: elbows ko 90 degree bahar flare karne ke bajaye 45 se 55 degree arrow shape mein tuck karo, niche deep stretch mein aadha second hold karo, aur phir upper chest squeeze karte hue press karo."
+            "Bench ko 30 degree par set karo. Pair flat, lagbhag shoulder width door, shoulder blades pad mein piche. Grip ko 15 degree andar ghumao, wrist seedhi elbow ke upar. Elbows torso se 45 se 55 degree par rakho, 90 par flare mat karo. 3 second mein niche lao, deep stretch par aadha second ruko. Upar aur thoda andar press karo, upper chest squeeze karo."
         )
     elif profile_id == "bayesian_curl_nippard":
         handle_info = HandleAndStanceInfo(
@@ -164,17 +158,10 @@ def build_exercise_analysis(
             "Split Stance Ankle Lock: Front ankle at ~80° prevents torso swaying during the heavy stretch-mediated turnaround.",
         ]
         voice_en = (
-            f"Welcome to the Jeff Nippard biomechanics guide for {exercise_name}. "
-            "First, setup and foot placement: set the cable pulley at ankle or knee height, grab a single rotating D-handle, and step forward into a staggered split stance with your front ankle locked at 80 degrees and a 15 degree forward torso lean. "
-            "Second, shoulder and wrist position: let the cable pull your working arm 30 degrees behind your torso to maximize long-head biceps stretch, while keeping a neutral 172 degree wrist stack. "
-            "Third, execution focus: pause in that deep behind-the-body stretch, then curl forward and up while keeping your elbow pinned at your side and supinating your pinky toward the ceiling."
+            "Set the pulley low, about 30 to 40 cm off the floor, ankle to knee height. Face away from the stack and step forward about 60 cm into a split stance. Lean your torso 15 degrees forward, front ankle at about 80 degrees. Let the cable pull your arm 30 degrees behind your body. Keep the elbow pinned and the wrist straight at about 172 degrees. Hold the stretch, then curl up turning your pinky to the ceiling."
         )
         voice_hi = (
-            f"Chaliye samajhte hain {exercise_name} ka exact setup aur muscle focus. "
-            "Sabse pehle cable pulley ko ankle ya knee height par set karo aur D-handle pakad kar aage ek split stance le lo. Aage wale pair ka ankle 80 degree par lock rakho taaki body swing na kare. "
-            "Placement ka main secret: apne haath ko body se 30 degree piche jaane do jisse biceps ke long head par sabse तगड़ा deep stretch aaye. "
-            "Wrist ko 172 degree par bilkul straight rakho, curl karte waqt kalai ko andar mat modna warna forearm tension chura lega. "
-            "Niche deep stretch mein pause karo aur elbow ko apni jagah lock rakhkar pura squeeze karte hue curl karo."
+            "Pulley ko neeche set karo, zameen se lagbhag 30 se 40 cm, ankle se knee height. Stack ki taraf peeth karke lagbhag 60 cm aage ek kadam lo, split stance. Torso ko 15 degree aage jhukao, aage wala ankle lagbhag 80 degree. Cable ko haath apni body se 30 degree piche khichne do. Elbow side se chipka rakho, wrist 172 degree par seedhi. Stretch mein ruko, phir curl karo aur pinky ko upar ghumao."
         )
     elif profile_id == "rdl_hinge_nippard":
         handle_info = HandleAndStanceInfo(
@@ -191,16 +178,10 @@ def build_exercise_analysis(
             "Stop Before Lumbar Flexion: End the eccentric the instant your hips stop moving backward.",
         ]
         voice_en = (
-            f"Welcome to the Jeff Nippard biomechanics guide for {exercise_name}. "
-            "First, stance and ankle placement: stand with feet hip-width apart, keep your shins strictly vertical at an 88 degree ankle angle, and maintain a soft 158 degree knee bend throughout the entire set. "
-            "Second, handle grip and lat engagement: take a shoulder-width pronated grip with straps, keep wrists locked at 176 degrees, and depress your lats to keep the bar grazing your thighs. "
-            "Third, execution focus: drive your hips straight backward like closing a car door until your torso reaches about a 72 degree angle and your hamstrings hit maximum stretch—stop immediately before your lower back rounds, then drive your hips forward."
+            "Feet hip width, about 30 cm apart, shins vertical. Keep a small knee bend of about 20 degrees and hold it. Shoulder width grip, wrists straight, lats tight. Push your hips straight back until your torso is near 70 degrees forward. Keep the bar within 2 to 3 cm of your legs. Stop around mid shin when the hamstrings are fully stretched, back flat. Drive your hips forward and squeeze the glutes."
         )
         voice_hi = (
-            f"Chaliye dekhte hain {exercise_name} ka proper hip hinge setup aur form. "
-            "Sabse pehle feet ko hip-width par rakho, shins ko bilkul vertical yaani 88 degree ankle angle par rakho, aur ghutno mein halka sa 158 degree ka soft bend lock kar lo—isse squat nahi banana hai. "
-            "Grip aur bar placement: shoulder-width grip lo, wrist ko 176 degree par straight lock rakho, aur apne lats ko tight karke bar ko thighs aur shins se चिपका kar niche le jao. "
-            "Focus point: apne hips ko seedha piche push karo jaise car ka darwaza band kar rahe ho. Jaise hi mid-shin par hamstrings mein full stretch aaye aur hips piche jaana ruk jayein, wahi ruk kar glutes aur hamstrings se wapas upar drive karo."
+            "Pair hip width, lagbhag 30 cm door, shins seedhi vertical. Ghutne mein lagbhag 20 degree ka halka bend rakho aur fix rakho. Shoulder width grip, wrist seedhi, lats tight. Hips ko seedha piche bhejo jab tak torso lagbhag 70 degree aage na ho. Bar ko legs se 2 se 3 cm ke andar rakho. Mid shin par jab hamstrings poore stretch hon tab ruko, back flat. Hips aage drive karo aur glutes squeeze karo."
         )
     else:
         # Default: Jeff Nippard Cable Lat Pullover / Pulldown
@@ -218,16 +199,10 @@ def build_exercise_analysis(
             "Ankle & Hip Anchor: Plant feet with an ~83° ankle angle and ~31° torso lean so the cable stack doesn't pull you forward.",
         ]
         voice_en = (
-            f"Welcome to the Jeff Nippard biomechanics guide for {exercise_name}. "
-            "First, stance and torso placement: step back from the high pulley into a stable athletic stance with an 83 degree ankle angle, soft 146 degree knees, and set a fixed 31 degree forward torso lean. "
-            "Second, handle and wrist grip: use a shoulder-width rope or neutral MAG handle with a hook grip, keeping your wrist stacked at 172 degrees and elbows slightly bent around 140 degrees. "
-            "Third, execution and muscle focus: start with a full overhead lat stretch and pause for half a second, then drive your elbows down and back in a wide sweeping arc toward your hips along a 45 degree scapular plane, stopping right as your upper arm aligns with your torso."
+            "Stand about 70 cm back from the high pulley, feet staggered, ankle at about 83 degrees. Soft knees at about 146 degrees, torso leaning 31 degrees forward. Rope or neutral handle, wrists straight at about 172 degrees. Start with arms overhead, elbows bent about 140 degrees, hold the stretch half a second. Sweep your elbows down toward your hips along a 45 degree line. Stop when your upper arm lines up with your torso."
         )
         voice_hi = (
-            f"Chaliye samajhte hain {exercise_name} ka Jeff Nippard setup, placement aur muscle focus. "
-            "Sabse pehle high pulley se do kadam piche hokar ek solid athletic stance lo—ankle angle lagbhag 83 degree, knees halke bend 146 degree par, aur apni upper body ko 31 degree aage lean karke core tight kar lo. "
-            "Handle aur wrist placement: rope ya neutral handle ko thumbless hook grip se pakdo, wrist ko 172 degree par straight rakho aur elbow mein 140 degree ka halka bend lock rakho. "
-            "Execution focus: upar top position mein lats ko pura stretch hone do aur aadha second pause karo. Phir haath se nahi balki apni elbows ko 45 degree scapular plane mein hips ki taraf sweep karte hue niche lao, aur torso line tak aate hi lats ko hard squeeze karo."
+            "High pulley se lagbhag 70 cm piche khade ho, pair staggered, ankle lagbhag 83 degree. Ghutne halke bend lagbhag 146 degree, torso 31 degree aage. Rope ya neutral handle, wrist 172 degree par seedhi. Haath sir ke upar se shuru karo, elbow lagbhag 140 degree bend, aadha second stretch mein ruko. Elbows ko 45 degree line par hips ki taraf sweep karo. Jab upper arm torso ke saath align ho tab ruko."
         )
 
     phase_cues = {

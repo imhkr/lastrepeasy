@@ -110,6 +110,10 @@ class WorkoutAnalysisResult(BaseModel):
     overall_form_score: int = 92
     handle_and_stance: Optional[HandleAndStanceInfo] = None
     key_takeaways: List[str] = Field(default_factory=list)
+    my_form_fixes: List[str] = Field(
+        default_factory=list,
+        description="Personal corrections for an uploaded clip: measured angle vs ideal range per phase.",
+    )
     voice_script_english: str = Field(
         default="",
         description="Spoken coaching script in clear English covering setup, handle/wrist placement, ankle base, and target muscle focus.",

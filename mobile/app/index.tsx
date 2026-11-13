@@ -1,623 +1,113 @@
-import React, { useCallback, useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
+import React, { useCallback, useState } from "react";
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
-import * as Linking from "expo-linking";
-import {
-  fetchPresets,
-  startPresetDemoAnalysis,
-  startYoutubeAnalysis,
-  uploadWorkoutVideo,
-} from "../src/api/client";
-import {
-  getSavedWorkouts,
-  removeSavedWorkout,
-} from "../src/services/localWorkoutStorage";
-import { PresetCatalogItem, WorkoutAnalysisResult } from "../src/types/workout";
+import { getAllLifts } from "../src/services/weightLog";
+import { loadJson } from "../src/services/kv";
+import { LiftEntry, topSet } from "../src/services/weightMath";
+import { getPlan } from "../src/data";
+import { loadCustom } from "../src/services/customPlan";
+import { mergeCustom } from "../src/services/customMerge";
+import type { Plan } from "../src/types/plans";
 
-export default function HomeScreen() {
+interface LastOpened {
+  planId: string;
+  week: number;
+  day: number;
+}
+
+const TILES = [
+  { title: "Training plans", sub: "Min-Max and PPL, week by week", path: "/plans", color: "#0EA5E9" },
+  { title: "Form check", sub: "Upload a set, see what to fix", path: "/form", color: "#10B981" },
+  { title: "My lifts", sub: "Beat your last numbers", path: "/lifts", color: "#F59E0B" },
+  { title: "Progress photos", sub: "Compare before and after", path: "/photos", color: "#A78BFA" },
+] as const;
+
+export default function HomeHub() {
   const router = useRouter();
-  const [youtubeUrl, setYoutubeUrl] = useState("https://www.youtube.com/watch?v=JEb-dwU3VF4");
-  const [exerciseHint, setExerciseHint] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [presets, setPresets] = useState<PresetCatalogItem[]>([]);
-  const [savedWorkouts, setSavedWorkouts] = useState<WorkoutAnalysisResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingLabel, setLoadingLabel] = useState("");
+  const [last, setLast] = useState<LastOpened | null>(null);
+  const [plan, setPlan] = useState<Plan | undefined>();
+  const [recent, setRecent] = useState<LiftEntry[]>([]);
 
-  useEffect(() => {
-    fetchPresets()
-      .then(setPresets)
-      .catch(() => {
-        // Fallback preset list if server is starting up
-      });
-  }, []);
-
-  // Reload saved offline workouts every time the user returns to the Home screen
   useFocusEffect(
     useCallback(() => {
-      getSavedWorkouts().then(setSavedWorkouts);
+      loadJson<LastOpened | null>("last_workout", null).then(async (l) => {
+        setLast(l);
+        const b = l ? getPlan(l.planId) : undefined;
+        setPlan(b ? mergeCustom(b, await loadCustom()) : undefined);
+      });
+      getAllLifts().then((l) => {
+        const seen = new Set<string>();
+        const latest = [...l].sort((a, b) => b.date.localeCompare(a.date)).filter((e) => !seen.has(e.exerciseId) && !!seen.add(e.exerciseId));
+        setRecent(latest.slice(0, 3));
+      });
     }, [])
   );
 
-  // Listen for shared YouTube URLs via Android Share Intent / Deep Link
-  useEffect(() => {
-    const sub = Linking.addEventListener("url", (event) => {
-      if (event.url && (event.url.includes("youtube.com") || event.url.includes("youtu.be"))) {
-        setYoutubeUrl(event.url);
-      }
-    });
-    return () => sub.remove();
-  }, []);
-
-  const handleAnalyzeYoutube = async () => {
-    if (!youtubeUrl.trim()) {
-      Alert.alert("Missing URL", "Please paste a YouTube or YouTube Shorts workout URL.");
-      return;
-    }
-    try {
-      setLoading(true);
-      setLoadingLabel("Submitting YouTube URL for Biomechanics & Flow Video Analysis...");
-      const job = await startYoutubeAnalysis(youtubeUrl.trim(), exerciseHint.trim() || undefined);
-      router.push(`/analysis/${job.job_id}`);
-    } catch (err: any) {
-      Alert.alert("Analysis Error", err.message || "Could not connect to FormFlow backend.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePickAndUploadVideo = async () => {
-    try {
-      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!perm.granted) {
-        Alert.alert("Permission Required", "Please allow video library access to upload workout clips.");
-        return;
-      }
-
-      const picked = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["videos"],
-        allowsEditing: true,
-        quality: 1,
-      });
-
-      if (picked.canceled || !picked.assets || picked.assets.length === 0) {
-        return;
-      }
-
-      const asset = picked.assets[0];
-      setLoading(true);
-      setLoadingLabel("Uploading workout video & extracting 33 body landmarks...");
-      const job = await uploadWorkoutVideo(
-        asset.uri,
-        asset.fileName || "workout_clip.mp4",
-        asset.mimeType || "video/mp4",
-        exerciseHint.trim() || undefined
-      );
-      router.push(`/analysis/${job.job_id}`);
-    } catch (err: any) {
-      Alert.alert("Upload Failed", err.message || "Could not upload video.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRunPreset = async (preset: PresetCatalogItem) => {
-    try {
-      setLoading(true);
-      setLoadingLabel(`Generating ${preset.title} Step-by-Step Flow Video...`);
-      const job = await startPresetDemoAnalysis(preset.preset_id);
-      router.push(`/analysis/${job.job_id}`);
-    } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to run preset.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteSaved = async (jobId: string) => {
-    const updated = await removeSavedWorkout(jobId);
-    setSavedWorkouts(updated);
-  };
-
-  const q = searchQuery.trim().toLowerCase();
-  const filteredSaved = savedWorkouts.filter((w) => {
-    if (!q) return true;
-    const hay = `${w.exercise_name} ${(w.target_muscles || []).join(" ")} ${w.handle_and_stance?.grip_type || ""}`.toLowerCase();
-    return hay.includes(q);
-  });
-
-  const filteredPresets = presets.filter((p) => {
-    if (!q) return true;
-    const hay = `${p.title} ${p.target_muscles.join(" ")} ${p.default_grip} ${p.highlight_cue}`.toLowerCase();
-    return hay.includes(q);
-  });
+  const day = plan?.weeks.find((w) => w.week === last!.week)?.days[last!.day];
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Hero Banner */}
-      <View style={styles.heroCard}>
-        <View style={styles.badgeRow}>
-          <Text style={styles.heroBadge}>JEFF NIPPARD BIOMECHANICS ENGINE</Text>
-        </View>
-        <Text style={styles.heroTitle}>
-          Point Out Every Joint Angle, Handle Grip & Start-to-End Flow
-        </Text>
-        <Text style={styles.heroSub}>
-          Share any Jeff Nippard YouTube workout URL or upload your own gym video. Includes
-          Offline Phone Storage, Hinglish & English Voice Coaching, and Live Muscle Hit Anatomy.
-        </Text>
-      </View>
+      <Text style={styles.hello}>Let's train</Text>
+      <Text style={styles.sub}>Pick up where you left off, or start something new.</Text>
 
-      {/* Global Search Bar for Saved Offline Videos & Presets */}
-      <View style={styles.searchCard}>
-        <Text style={styles.searchLabel}>SEARCH SAVED WORKOUTS & EXERCISES BY NAME</Text>
-        <View style={styles.searchRow}>
-          <TextInput
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="🔍 Search by exercise name or muscle (e.g. Lat, Incline, Curl, RDL)..."
-            placeholderTextColor="#64748B"
-            autoCapitalize="none"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity style={styles.clearBtn} onPress={() => setSearchQuery("")}>
-              <Text style={styles.clearBtnText}>Clear</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Saved on Phone Section (Instant Offline Revisit without Regenerating) */}
-      {filteredSaved.length > 0 && (
-        <View style={styles.sectionCard}>
-          <View style={styles.savedHeaderRow}>
-            <Text style={styles.sectionTitleGreen}>
-              📱 SAVED ON PHONE ({filteredSaved.length}) — INSTANT REVISIT
-            </Text>
-          </View>
-          <Text style={styles.sectionSub}>
-            Stored locally on your phone. Tap any saved workout to open its Step-by-Step Flow
-            Video, Voice Coach & Muscle Map immediately without regenerating:
+      {plan && day && (
+        <TouchableOpacity
+          style={styles.continueCard}
+          onPress={() => router.push(`/workout/${plan.id}/${last!.week}/${last!.day}` as any)}
+        >
+          <Text style={styles.continueLabel}>CONTINUE</Text>
+          <Text style={styles.continueTitle}>{day.day}</Text>
+          <Text style={styles.continueSub}>
+            {plan.name.split(":")[0].replace(/\s*\(.*\)/, "")} · {plan.unit ?? "Week"} {last!.week}
           </Text>
-
-          {filteredSaved.map((item) => (
-            <View key={item.job_id} style={styles.savedCard}>
-              <TouchableOpacity
-                style={{ flex: 1 }}
-                onPress={() => router.push(`/analysis/${item.job_id}`)}
-              >
-                <View style={styles.presetHeader}>
-                  <Text style={styles.presetTitle}>{item.exercise_name}</Text>
-                  <View style={styles.offlineBadge}>
-                    <Text style={styles.offlineBadgeText}>OFFLINE READY ✓</Text>
-                  </View>
-                </View>
-                {item.handle_and_stance?.grip_type ? (
-                  <Text style={styles.presetGrip}>
-                    Handle: {item.handle_and_stance.grip_type}
-                  </Text>
-                ) : null}
-                <View style={styles.muscleRow}>
-                  {(item.target_muscles || []).map((m) => (
-                    <View key={m} style={styles.muscleTag}>
-                      <Text style={styles.muscleTagText}>{m}</Text>
-                    </View>
-                  ))}
-                </View>
-              </TouchableOpacity>
-
-              <View style={styles.savedActionRow}>
-                <TouchableOpacity
-                  style={styles.openSavedBtn}
-                  onPress={() => router.push(`/analysis/${item.job_id}`)}
-                >
-                  <Text style={styles.openSavedBtnText}>▶ Open Saved Flow Video</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.deleteSavedBtn}
-                  onPress={() => handleDeleteSaved(item.job_id)}
-                >
-                  <Text style={styles.deleteSavedBtnText}>Remove</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-        </View>
+        </TouchableOpacity>
       )}
 
-      {/* Option 1: Share / Paste YouTube Workout URL */}
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>1. SHARE YOUTUBE WORKOUT URL OR UPLOAD VIDEO</Text>
-        <Text style={styles.inputLabel}>YouTube Video or Shorts URL</Text>
-        <TextInput
-          style={styles.textInput}
-          value={youtubeUrl}
-          onChangeText={setYoutubeUrl}
-          placeholder="https://www.youtube.com/watch?v=..."
-          placeholderTextColor="#64748B"
-          autoCapitalize="none"
-        />
-
-        <Text style={styles.inputLabel}>Exercise Name / Focus Hint (Optional)</Text>
-        <TextInput
-          style={styles.textInput}
-          value={exerciseHint}
-          onChangeText={setExerciseHint}
-          placeholder="e.g., Jeff Nippard Cable Lat Pullover or 30° Incline Press"
-          placeholderTextColor="#64748B"
-        />
-
-        <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={handleAnalyzeYoutube}
-            disabled={loading}
-          >
-            <Text style={styles.primaryButtonText}>Analyze YouTube URL</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={handlePickAndUploadVideo}
-            disabled={loading}
-          >
-            <Text style={styles.secondaryButtonText}>Upload Video File</Text>
-          </TouchableOpacity>
-        </View>
-
-        {loading && (
-          <View style={styles.loadingBanner}>
-            <ActivityIndicator color="#38BDF8" size="small" />
-            <Text style={styles.loadingText}>{loadingLabel}</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Option 2: Instant Jeff Nippard Science-Applied Presets */}
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>
-          2. JEFF NIPPARD WORKOUT LIBRARY ({filteredPresets.length})
-        </Text>
-        <Text style={styles.sectionSub}>
-          Tap any movement below to run pose angle tracking, generate its Step-by-Step Flow
-          Video, and automatically save it to your phone:
-        </Text>
-
-        {filteredPresets.map((p) => (
-          <TouchableOpacity
-            key={p.preset_id}
-            style={styles.presetCard}
-            onPress={() => handleRunPreset(p)}
-            disabled={loading}
-          >
-            <View style={styles.presetHeader}>
-              <Text style={styles.presetTitle}>{p.title}</Text>
-              <View style={styles.goChip}>
-                <Text style={styles.goChipText}>GENERATE FLOW →</Text>
-              </View>
-            </View>
-            <Text style={styles.presetGrip}>Handle / Grip: {p.default_grip}</Text>
-            <Text style={styles.presetCue}>{p.highlight_cue}</Text>
-            <View style={styles.muscleRow}>
-              {p.target_muscles.map((m) => (
-                <View key={m} style={styles.muscleTag}>
-                  <Text style={styles.muscleTagText}>{m}</Text>
-                </View>
-              ))}
-            </View>
+      <View style={styles.grid}>
+        {TILES.map((t) => (
+          <TouchableOpacity key={t.path} style={[styles.tile, { borderColor: t.color }]} onPress={() => router.push(t.path as any)}>
+            <View style={[styles.dot, { backgroundColor: t.color }]} />
+            <Text style={styles.tileTitle}>{t.title}</Text>
+            <Text style={styles.tileSub}>{t.sub}</Text>
           </TouchableOpacity>
         ))}
       </View>
+
+      {recent.length > 0 && (
+        <View style={styles.recent}>
+          <Text style={styles.recentTitle}>Latest lifts</Text>
+          {recent.map((e) => {
+            const t = topSet(e.sets);
+            return (
+              <View key={e.id} style={styles.recentRow}>
+                <Text style={styles.recentName}>{e.exerciseName}</Text>
+                <Text style={styles.recentVal}>{t ? `${t.kg} kg × ${t.reps}` : ""}</Text>
+              </View>
+            );
+          })}
+        </View>
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0B0F17",
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 48,
-  },
-  heroCard: {
-    backgroundColor: "#131C2E",
-    borderRadius: 18,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "#1E293B",
-    marginBottom: 14,
-  },
-  badgeRow: {
-    flexDirection: "row",
-    marginBottom: 8,
-  },
-  heroBadge: {
-    backgroundColor: "#0284C733",
-    color: "#38BDF8",
-    borderColor: "#38BDF8",
-    borderWidth: 1,
-    fontSize: 10,
-    fontWeight: "800",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    letterSpacing: 0.7,
-  },
-  heroTitle: {
-    color: "#F8FAFC",
-    fontSize: 21,
-    fontWeight: "800",
-    lineHeight: 27,
-    marginBottom: 8,
-  },
-  heroSub: {
-    color: "#94A3B8",
-    fontSize: 13,
-    lineHeight: 19,
-  },
-  searchCard: {
-    backgroundColor: "#111827",
-    borderRadius: 16,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#26334D",
-    marginBottom: 14,
-  },
-  searchLabel: {
-    color: "#38BDF8",
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.7,
-    marginBottom: 8,
-  },
-  searchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    backgroundColor: "#090D16",
-    color: "#F8FAFC",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#334155",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 13,
-  },
-  clearBtn: {
-    backgroundColor: "#1E293B",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  clearBtnText: {
-    color: "#CBD5E1",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  sectionCard: {
-    backgroundColor: "#111827",
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#1E293B",
-    marginBottom: 16,
-  },
-  savedHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  sectionTitleGreen: {
-    color: "#10B981",
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-  },
-  sectionTitle: {
-    color: "#38BDF8",
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    marginBottom: 10,
-  },
-  sectionSub: {
-    color: "#94A3B8",
-    fontSize: 12,
-    lineHeight: 17,
-    marginBottom: 12,
-  },
-  savedCard: {
-    backgroundColor: "#142230",
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#10B98155",
-    marginBottom: 10,
-  },
-  offlineBadge: {
-    backgroundColor: "#10B98122",
-    borderColor: "#10B981",
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  offlineBadgeText: {
-    color: "#10B981",
-    fontSize: 10,
-    fontWeight: "800",
-  },
-  savedActionRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 10,
-  },
-  openSavedBtn: {
-    flex: 1,
-    backgroundColor: "#0284C7",
-    paddingVertical: 9,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  openSavedBtnText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  deleteSavedBtn: {
-    backgroundColor: "#EF444422",
-    borderColor: "#EF4444",
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  deleteSavedBtnText: {
-    color: "#EF4444",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  inputLabel: {
-    color: "#CBD5E1",
-    fontSize: 12,
-    fontWeight: "600",
-    marginBottom: 6,
-  },
-  textInput: {
-    backgroundColor: "#090D16",
-    color: "#F8FAFC",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#26334D",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 13,
-    marginBottom: 12,
-  },
-  buttonRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 4,
-  },
-  primaryButton: {
-    flex: 1,
-    backgroundColor: "#0284C7",
-    paddingVertical: 13,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  primaryButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  secondaryButton: {
-    flex: 1,
-    backgroundColor: "#1E293B",
-    paddingVertical: 13,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#38BDF8",
-    alignItems: "center",
-  },
-  secondaryButtonText: {
-    color: "#38BDF8",
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  loadingBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginTop: 14,
-    backgroundColor: "#0F172A",
-    padding: 12,
-    borderRadius: 10,
-  },
-  loadingText: {
-    color: "#38BDF8",
-    fontSize: 12,
-    fontWeight: "600",
-    flex: 1,
-  },
-  presetCard: {
-    backgroundColor: "#162033",
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#253552",
-    marginBottom: 12,
-  },
-  presetHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 6,
-    gap: 8,
-  },
-  presetTitle: {
-    color: "#F8FAFC",
-    fontSize: 15,
-    fontWeight: "800",
-    flex: 1,
-  },
-  goChip: {
-    backgroundColor: "#10B98122",
-    borderColor: "#10B981",
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  goChipText: {
-    color: "#10B981",
-    fontSize: 10,
-    fontWeight: "800",
-  },
-  presetGrip: {
-    color: "#F59E0B",
-    fontSize: 12,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  presetCue: {
-    color: "#CBD5E1",
-    fontSize: 12,
-    lineHeight: 17,
-    marginBottom: 8,
-  },
-  muscleRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-  },
-  muscleTag: {
-    backgroundColor: "#0B0F17",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  muscleTagText: {
-    color: "#94A3B8",
-    fontSize: 10,
-    fontWeight: "600",
-  },
+  container: { flex: 1, backgroundColor: "#0B0F17" },
+  content: { padding: 16, paddingBottom: 48 },
+  hello: { color: "#F8FAFC", fontSize: 30, fontWeight: "800", marginTop: 8 },
+  sub: { color: "#94A3B8", fontSize: 15, marginTop: 4, marginBottom: 18 },
+  continueCard: { backgroundColor: "#12304A", borderRadius: 18, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: "#1D4E75" },
+  continueLabel: { color: "#7DD3FC", fontSize: 11, fontWeight: "800", letterSpacing: 1 },
+  continueTitle: { color: "#F8FAFC", fontSize: 22, fontWeight: "800", marginTop: 4 },
+  continueSub: { color: "#BAE6FD", fontSize: 14, marginTop: 2 },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  tile: { width: "48%", flexGrow: 1, height: 150, backgroundColor: "#111827", borderRadius: 18, padding: 16, borderWidth: 1, justifyContent: "flex-end" },
+  dot: { width: 14, height: 14, borderRadius: 7, marginBottom: 14 },
+  tileTitle: { color: "#F8FAFC", fontSize: 17, fontWeight: "800" },
+  tileSub: { color: "#94A3B8", fontSize: 12, marginTop: 4, lineHeight: 17 },
+  recent: { marginTop: 24, gap: 8 },
+  recentTitle: { color: "#94A3B8", fontSize: 13, fontWeight: "700", letterSpacing: 0.4 },
+  recentRow: { flexDirection: "row", justifyContent: "space-between", backgroundColor: "#111827", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "#1E293B" },
+  recentName: { color: "#F8FAFC", fontSize: 14, fontWeight: "600", flex: 1 },
+  recentVal: { color: "#F59E0B", fontSize: 14, fontWeight: "700" },
 });

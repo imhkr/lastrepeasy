@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import { File } from "expo-file-system";
 import { PresetCatalogItem, WorkoutAnalysisResult } from "../types/workout";
 
 // Default local backend URL: Android Emulator uses 10.0.2.2, iOS/Web uses localhost
@@ -55,11 +56,12 @@ export async function uploadWorkoutVideo(
   exerciseHint?: string
 ): Promise<WorkoutAnalysisResult> {
   const formData = new FormData();
-  formData.append("file", {
-    uri: fileUri,
-    name: fileName || "workout.mp4",
-    type: mimeType,
-  } as any);
+  if (Platform.OS === "web") {
+    formData.append("file", await (await fetch(fileUri)).blob(), fileName || "workout.mp4");
+  } else {
+    // Expo's fetch rejects the old {uri,name,type} object; it needs a real File/Blob.
+    formData.append("file", new File(fileUri) as any);
+  }
 
   if (exerciseHint) {
     formData.append("exercise_hint", exerciseHint);

@@ -5,7 +5,9 @@ import { PresetCatalogItem, WorkoutAnalysisResult } from "../types/workout";
 // Default local backend URL: Android Emulator uses 10.0.2.2, iOS/Web uses localhost
 const DEFAULT_HOST = Platform.OS === "android" ? "http://10.0.2.2:8000" : "http://localhost:8000";
 
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_HOST;
+// Installed (release) builds always talk to the deployed server; dev runs use EXPO_PUBLIC_API_URL or the local backend.
+const PROD_URL = "https://formflow-backend-r8dh.onrender.com";
+export const API_BASE_URL = __DEV__ ? process.env.EXPO_PUBLIC_API_URL || DEFAULT_HOST : PROD_URL;
 
 export async function fetchPresets(): Promise<PresetCatalogItem[]> {
   const res = await fetch(`${API_BASE_URL}/api/presets`);

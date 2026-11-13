@@ -1,14 +1,12 @@
 #!/bin/bash
 # Builds a release-signed LastRepEasy.apk on this Mac (no Expo account needed).
-# Usage: scripts/build-apk.sh https://your-backend-url
+# Usage: scripts/build-apk.sh   (release builds use PROD_URL from src/api/client.ts)
 set -euo pipefail
-API_URL="${1:?pass the backend URL, e.g. https://user-lastrepeasy-api.hf.space}"
 cd "$(dirname "$0")/.."
 
 export JAVA_HOME="${JAVA_HOME:-/opt/homebrew/opt/openjdk@17}"
 export ANDROID_HOME="${ANDROID_HOME:-/opt/homebrew/share/android-commandlinetools}"
 export PATH="$JAVA_HOME/bin:$PATH"
-export EXPO_PUBLIC_API_URL="$API_URL"
 
 # One signing key for every build, kept outside the repo. Lose it and phones can't update the app in place.
 KDIR="$HOME/.lastrepeasy"; KS="$KDIR/lastrepeasy-release.jks"; KP="$KDIR/keystore.properties"

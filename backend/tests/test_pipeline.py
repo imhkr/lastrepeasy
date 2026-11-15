@@ -113,14 +113,14 @@ def test_ghost_arm_stacks_forearm_and_follows_elbow_target():
     from app.services.pose_analyzer import FramePoseMetrics, Keypoint2D
     from app.services.ghost import build_ghost_track
 
-    # Fake a clean press: right arm in the image plane, wrist travelling straight up and down 40 cm.
+    # Fake a clean press: forearm always vertical, elbow angle swinging 90 (bottom) to 170 (top).
     tl = []
     for i in range(30):
         ph = 0.5 - 0.5 * np.cos(2 * np.pi * i / 29)  # 0 bottom .. 1 top
-        wy = -0.10 - 0.40 * ph  # wrist height above shoulder (y down), metres
-        kp = {}
-        for part, (wx, wy_) in {"shoulder": (0.0, 0.0), "elbow": (0.0, -0.10 + 0.0), "wrist": (0.0, wy), "hip": (0.0, 0.5)}.items():
-            kp[f"right_{part}"] = Keypoint2D(0.5 + wx * 0.5, 0.5 + wy_ * 0.5, 1.0, wx, wy_, 0.0)
+        th = np.radians(90 + 80 * ph)
+        el = (-0.30 * np.sin(th), 0.30 * np.cos(th))  # shoulder at the origin, y down
+        parts = {"shoulder": (0.0, 0.0), "elbow": el, "wrist": (el[0], el[1] - 0.28), "hip": (0.0, 0.5)}
+        kp = {f"right_{k}": Keypoint2D(0.5 + x * 0.5, 0.5 + y * 0.5, 1.0, x, y, 0.0) for k, (x, y) in parts.items()}
         tl.append(FramePoseMetrics(frame_idx=i, time_sec=i / 10, keypoints=kp, dominant_side="right"))
     tr = build_ghost_track("incline_press_nippard", tl, 1000, 1000)
     assert tr is not None and len(tr.arms) == 1

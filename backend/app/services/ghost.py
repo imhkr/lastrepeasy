@@ -27,7 +27,8 @@ GHOST_PROFILES: Dict[str, Tuple[float, float]] = {
 
 STACK_TOLERANCE_DEG = 12.0  # forearm vs the pressing line
 DEPTH_TOLERANCE_DEG = 20.0  # elbow angle above the ghost at the bottom
-MIN_VIS = 0.5
+MIN_VIS = 0.6  # median landmark visibility an arm needs before we trust it
+MIN_PRESS_CORR = 0.5  # elbow extension must line up with the wrist moving up the press line
 
 GREEN = (110, 235, 60)
 WHITE = (250, 250, 250)
@@ -103,18 +104,32 @@ def build_ghost_track(profile_id: str, timeline: List[FramePoseMetrics], width: 
         if np.median(vis) < MIN_VIS:
             continue
         parts = ("shoulder", "elbow", "wrist", "hip")
-        raw[side] = {"i": {p: img(side, p) for p in parts}, "w": {p: wld(side, p) for p in parts}}
+        cand = {"i": {p: img(side, p) for p in parts}, "w": {p: wld(side, p) for p in parts}}
+        fore = np.linalg.norm(cand["w"]["wrist"] - cand["w"]["elbow"], axis=1)
+        if np.std(fore) / (np.mean(fore) + 1e-9) > 0.4:  # forearm length jumping around = hand lost behind a dumbbell
+            continue
+        raw[side] = cand
     if not raw or not any(np.abs(d["w"]["wrist"]).sum() > 0 for d in raw.values()):
         return None
 
-    # Pressing line (3D): main direction the wrists travel relative to the shoulders; up = toward lockout.
-    rel = np.mean([d["w"]["wrist"] - d["w"]["shoulder"] for d in raw.values()], axis=0)
-    centred = rel - rel.mean(0)
-    axis = np.linalg.svd(centred, full_matrices=False)[2][0]
-    reach = np.linalg.norm(rel, axis=1)
-    up = axis if axis @ (rel[int(reach.argmax())] - rel[int(reach.argmin())]) >= 0 else -axis
-    if np.ptp(centred @ up) < 0.15:  # under 15 cm of wrist travel: not a pressing rep we can coach
+    # Per arm: "up" = the way the forearm points at lockout (top 20% of elbow extension), where a lifter holds the
+    # weight stacked over the elbow. It also absorbs any camera tilt. The arm must then behave like a press: the
+    # wrist rises along "up" as the elbow extends. An arm that does not is dropped, never guessed.
+    ups: Dict[str, np.ndarray] = {}
+    for side in list(raw):
+        d = raw[side]
+        ext = _angle3(d["w"]["shoulder"], d["w"]["elbow"], d["w"]["wrist"])
+        top = ext >= np.percentile(ext, 80)
+        fdir = _unit(_unit(d["w"]["wrist"] - d["w"]["elbow"])[top].mean(0))
+        rise = (d["w"]["wrist"] - d["w"]["shoulder"]) @ fdir  # wrist height along "up"
+        corr = float(np.corrcoef(ext, rise)[0, 1]) if np.std(ext) > 1e-6 and np.std(rise) > 1e-6 else 0.0
+        if np.ptp(rise) < 0.15 or not np.isfinite(corr) or corr < MIN_PRESS_CORR:
+            del raw[side]  # under 15 cm of travel, or elbow and wrist do not move together like a press
+            continue
+        ups[side] = fdir
+    if not raw:
         return None
+    up = _unit(np.mean(list(ups.values()), axis=0))
 
     # Pixels per metre per frame, least squares over the visible bones (image xy vs world xy).
     num = np.zeros(len(t)); den = np.zeros(len(t))
@@ -133,22 +148,23 @@ def build_ghost_track(profile_id: str, timeline: List[FramePoseMetrics], width: 
         Ew, Ww = d["w"]["elbow"], d["w"]["wrist"]
         l1 = float(np.percentile(np.linalg.norm(Ew - Sw, axis=1), 70))
         l2 = float(np.percentile(np.linalg.norm(Ww - Ew, axis=1), 70))
-        s_along = (Ww - Sw) @ up
+        arm_up = ups[side]
+        s_along = (Ww - Sw) @ arm_up
         lo, hi = np.percentile(s_along, 5), np.percentile(s_along, 95)
         prog = np.clip((s_along - lo) / max(hi - lo, 1e-6), 0, 1)
         target = bottom_deg + (top_deg - bottom_deg) * prog
 
         upper = Sw - Ew  # elbow -> shoulder, as the user actually holds it
-        perp = upper - (upper @ up)[:, None] * up
+        perp = upper - (upper @ arm_up)[:, None] * arm_up
         perp_u = _unit(perp)  # keeps the user's own elbow direction (flare) untouched
         th = np.radians(target)[:, None]
-        gdir = np.cos(th) * up + np.sin(th) * perp_u  # ghost elbow -> shoulder
+        gdir = np.cos(th) * arm_up + np.sin(th) * perp_u  # ghost elbow -> shoulder
         gel_w = Sw - gdir * l1
-        gwr_w = gel_w + up * l2
+        gwr_w = gel_w + arm_up * l2
         gel = Si + scale[:, None] * (gel_w - Sw)[:, :2]
         gwr = Si + scale[:, None] * (gwr_w - Sw)[:, :2]
 
-        off = np.degrees(np.arccos(np.clip((_unit(Ww - Ew) @ up), -1, 1)))
+        off = np.degrees(np.arccos(np.clip((_unit(Ww - Ew) @ arm_up), -1, 1)))
         track.arms.append(ArmTrack(side, t, Si, d["i"]["elbow"], d["i"]["wrist"], gel, gwr, _angle3(Sw, Ew, Ww), target, off, prog))
 
     arms = track.arms

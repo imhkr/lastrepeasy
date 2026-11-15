@@ -148,6 +148,9 @@ POSE_MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarke
 POSE_MODEL_PATH = Path(os.getenv("POSE_MODEL_PATH", Path(__file__).resolve().parents[2] / "storage" / "models" / "pose_landmarker_heavy.task"))
 
 
+POSE_LOAD_ERROR = ""
+
+
 def _try_load_mediapipe_pose():
     """
     Loads the MediaPipe PoseLandmarker (Tasks API; the old mp.solutions API no longer ships).
@@ -169,7 +172,9 @@ def _try_load_mediapipe_pose():
             min_tracking_confidence=0.5,
         )
         return vision.PoseLandmarker.create_from_options(opts)
-    except Exception:
+    except Exception as exc:
+        global POSE_LOAD_ERROR
+        POSE_LOAD_ERROR = f"{type(exc).__name__}: {exc}"[:300]
         return None
 
 
@@ -315,7 +320,7 @@ def analyze_video_pose_timeline(
     step = max(1, int(round(fps / sample_fps)))
     mp_pose = _try_load_mediapipe_pose()
     if mp_pose is None and not allow_synthetic:
-        raise ValueError("Pose model could not be loaded on the server, so the clip cannot be analysed.")
+        raise ValueError(f"Pose model could not be loaded on the server ({POSE_LOAD_ERROR}), so the clip cannot be analysed.")
     frame_wh = (float(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1), float(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1))
     last_kp: Optional[Dict[str, Keypoint2D]] = None
     detected = 0

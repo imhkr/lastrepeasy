@@ -46,6 +46,8 @@ export function liveHtml(): string {
   var cfg = window.__CONFIG || {};
   var src = q.get("src") || cfg.src || null;
   var facing = q.get("facing") || cfg.facing || "user";
+  var lang = q.get("lang") || cfg.lang || "hi";  // "hi" = Hinglish, "en" = English
+  function T(en, hi) { return lang === "hi" ? hi : en; }
   var v = document.getElementById("v"), c = document.getElementById("c"), ctx = c.getContext("2d");
   var msg = document.getElementById("msg"), banner = document.getElementById("banner");
   function post(o) { try { window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify(o)); } catch (e) {} }
@@ -92,7 +94,7 @@ export function liveHtml(): string {
     });
     ["depth", "hands", "lockout", "speed"].forEach(function (key) { icon(key, view.checks[key] || null); });
     document.getElementById("rep").textContent = view.repIndex ? "REP " + view.repIndex : "GET READY";
-    banner.textContent = view.message;
+    banner.textContent = lang === "hi" ? view.messageHi : view.message;
     banner.className = view.tone === "good" || view.tone === "almost" || view.tone === "fix" ? view.tone : "";
   }
 
@@ -125,30 +127,32 @@ export function liveHtml(): string {
           render(out.view);
           window.__live.view = out.view; window.__live.reps = coach.reps(); window.__live.fps = window.__live.frames / Math.max(1, (performance.now() - (window.__live.t0 || (window.__live.t0 = performance.now()))) / 1000);
           out.events.forEach(function (e) {
-            if (e.type === "rep_done") { post({ type: "speak", text: e.speak }); post({ type: "rep", index: e.index, checks: e.checks }); }
+            if (e.type === "rep_done") { post({ type: "speak", en: e.speak.en, hi: e.speak.hi }); post({ type: "rep", index: e.index, checks: e.checks }); }
           });
-        } else { ctx.clearRect(0, 0, c.width, c.height); banner.textContent = "I cannot see you. Step back so your arms are in view."; banner.className = ""; }
+        } else { ctx.clearRect(0, 0, c.width, c.height); banner.textContent = T("I cannot see you. Step back so your arms are in view.", "Main aapko dekh nahi pa raha. Peeche hato, haath dikhne chahiye."); banner.className = ""; }
       }
     }
   }
 
   async function boot() {
     try {
-      status("Loading the coach… (first time takes a moment)");
+      status(T("Loading the coach… (first time takes a moment)", "Coach load ho raha hai… (pehli baar time lagta hai)"));
       var files = await FilesetResolver.forVisionTasks("${VISION}/wasm");
       var make = function (delegate) { return PoseLandmarker.createFromOptions(files, { baseOptions: { modelAssetPath: "${MODEL}", delegate: delegate }, runningMode: "VIDEO", numPoses: 1 }); };
       try { landmarker = await make("GPU"); } catch (e) { landmarker = await make("CPU"); }
-      status("Starting the camera…");
+      status(T("Starting the camera…", "Camera shuru ho raha hai…"));
       await startSource();
       status("");
       loop();
     } catch (e) {
       window.__live.error = String(e && e.message || e);
-      status("Could not start: " + window.__live.error);
+      status(T("Could not start: ", "Shuru nahi hua: ") + window.__live.error);
     }
   }
+  banner.textContent = T("Place your phone about 2 m away, beside you, so your arms are in view. Hold the weights up for a second to start.", "Phone ko 2 meter door, apni side mein rakho, haath dikhne chahiye. Shuru karne ke liye weight ek second upar pakdo.");
+  document.getElementById("flip").textContent = T("Flip camera", "Camera badlo"); document.getElementById("reset").textContent = T("New set", "Naya set");
   document.getElementById("flip").onclick = function () { facing = facing === "user" ? "environment" : "user"; startSource(); };
-  document.getElementById("reset").onclick = function () { coach = CORE.createCoach(); window.__live.reps = []; ["depth", "hands", "lockout", "speed"].forEach(function (k) { icon(k, null); }); banner.textContent = "New set. Hold the weights up for a second."; banner.className = ""; };
+  document.getElementById("reset").onclick = function () { coach = CORE.createCoach(); window.__live.reps = []; ["depth", "hands", "lockout", "speed"].forEach(function (k) { icon(k, null); }); banner.textContent = T("New set. Hold the weights up for a second.", "Naya set. Weight ek second upar pakdo."); banner.className = ""; };
   if (src) document.getElementById("btns").style.display = "none";
   boot();
 </script>

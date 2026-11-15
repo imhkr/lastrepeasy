@@ -24,44 +24,82 @@ HANDS_GOOD, HANDS_ALMOST = 30.0, 50.0  # forearm lean from straight up
 DOWN_GOOD, DOWN_FAST = 0.9, 0.45  # seconds from 80% to 20% of the wrist's height (about 0.48 x the full lowering time: 0.9 = 2 s down)
 TOP_P, BOTTOM_P = 0.8, 0.35  # wrist height fractions that count as "top" and "went down"
 ARMS_EVEN_DEG = 25.0
+ARMS_SEEN = 0.7  # both arms must be this well seen before we compare them
 MIN_SEEN = {"depth": 0.25, "lockout": 0.5, "hands": 0.6}  # landmark confidence needed before we judge; below it we say so. Depth is lenient: the dumbbell hides the wrist at the bottom
 
 LABELS = {"depth": "Depth", "lockout": "Lockout", "hands": "Hands", "speed": "Speed", "arms": "Arms"}
 PRIORITY = ["depth", "hands", "lockout", "speed", "arms"]  # which fix to say first
 
+# The simplest words we can: a one-week beginner must get it on first read. English and Hinglish say the same thing.
 MESSAGES: Dict[str, Dict[str, str]] = {
     "depth": {
-        "good": "Great depth. Elbows went low.",
+        "good": "Good. You went down low enough.",
         "almost": "Go a little lower.",
-        "fix": "Go lower. Bring the weights near your chest.",
+        "fix": "Go lower. The dumbbells should come near your chest.",
     },
     "lockout": {
-        "good": "Full lockout at the top.",
-        "almost": "Press a bit higher at the top.",
-        "fix": "Press all the way up until your arms are straight.",
+        "good": "Good. Your arms went fully straight.",
+        "almost": "Push a little higher. Make your arms straight.",
+        "fix": "Push all the way up. Make your arms fully straight.",
     },
     "hands": {
-        "good": "Hands stayed over your elbows.",
-        "almost_head": "Hands drift toward your head. Keep them over your elbows.",
-        "almost_feet": "Hands drift toward your feet. Keep them over your elbows.",
-        "fix_head": "Hands are far toward your head. Stack them straight over your elbows.",
-        "fix_feet": "Hands are far toward your feet. Stack them straight over your elbows.",
+        "good": "Good. Your hands are right above your elbows.",
+        "almost_head": "Your hands lean toward your head. Keep them straight above your elbows.",
+        "almost_feet": "Your hands lean toward your feet. Keep them straight above your elbows.",
+        "fix_head": "Your hands are far toward your head. Put them straight above your elbows.",
+        "fix_feet": "Your hands are far toward your feet. Put them straight above your elbows.",
     },
     "speed": {
-        "good": "Good, slow and controlled.",
-        "almost": "A bit fast. Take 2 seconds going down.",
-        "fix": "Too fast. Lower in 2 seconds, do not drop it.",
+        "good": "Good. You came down slowly.",
+        "almost": "A bit fast. Count 2 seconds going down.",
+        "fix": "Too fast. Do not drop the weights. Count 2 seconds.",
     },
     "unsure": {
-        "depth": "I could not see your elbows clearly. Film from the side.",
-        "lockout": "I could not see your arms clearly at the top. Film from the side.",
-        "hands": "I could not see your hands clearly. Film from the side.",
+        "depth": "I could not see your elbows. Put the phone at your side.",
+        "lockout": "I could not see your arms up top. Put the phone at your side.",
+        "hands": "I could not see your hands. Put the phone at your side.",
     },
     "arms": {
-        "good": "Both arms moved together.",
-        "fix": "One arm is lower. Keep both arms even.",
+        "good": "Good. Both arms moved together.",
+        "fix": "One arm is lower. Move both arms together.",
     },
 }
+
+MESSAGES_HI: Dict[str, Dict[str, str]] = {
+    "depth": {
+        "good": "Badhiya. Aap kaafi neeche gaye.",
+        "almost": "Thoda aur neeche jao.",
+        "fix": "Aur neeche jao. Dumbbell chest ke paas aane chahiye.",
+    },
+    "lockout": {
+        "good": "Badhiya. Aapke haath poore seedhe hue.",
+        "almost": "Thoda aur upar dhakelo. Haath seedhe karo.",
+        "fix": "Poora upar dhakelo. Haath poore seedhe karo.",
+    },
+    "hands": {
+        "good": "Badhiya. Haath kohni ke seedha upar hain.",
+        "almost_head": "Aapke haath sir ki taraf jhuk rahe hain. Kohni ke seedha upar rakho.",
+        "almost_feet": "Aapke haath pair ki taraf jhuk rahe hain. Kohni ke seedha upar rakho.",
+        "fix_head": "Aapke haath sir ki taraf bahut jhuke hain. Kohni ke seedha upar rakho.",
+        "fix_feet": "Aapke haath pair ki taraf bahut jhuke hain. Kohni ke seedha upar rakho.",
+    },
+    "speed": {
+        "good": "Badhiya. Aap dheere neeche aaye.",
+        "almost": "Thoda tez hai. Neeche aate time 2 tak gino.",
+        "fix": "Bahut tez hai. Weight girao mat. 2 tak gino.",
+    },
+    "unsure": {
+        "depth": "Mujhe aapki kohni nahi dikhi. Phone side mein rakho.",
+        "lockout": "Mujhe upar aapke haath nahi dikhe. Phone side mein rakho.",
+        "hands": "Mujhe aapke haath nahi dikhe. Phone side mein rakho.",
+    },
+    "arms": {
+        "good": "Badhiya. Dono haath saath chale.",
+        "fix": "Ek haath neeche hai. Dono haath saath chalao.",
+    },
+}
+
+LABELS_HI = {"depth": "Depth (kitna neeche)", "lockout": "Lockout (upar seedha)", "hands": "Hands (haath)", "speed": "Speed (kitna tez)", "arms": "Arms (dono haath)"}
 
 
 @dataclass
@@ -70,7 +108,9 @@ class Check:
     label: str
     status: str  # good | almost | fix | unsure (could not see well enough to judge)
     message: str
+    message_hi: str = ""
     resolved_t: float = 0.0  # when in the clip the lifter could first see this verdict
+    value: float = float("nan")  # the measured number behind the verdict (degrees, seconds)
 
 
 @dataclass
@@ -143,39 +183,43 @@ def analyze_reps(track: GhostTrack) -> List[RepReport]:
     return reps
 
 
+def _check(key: str, st: str, variant: str, t: float, value: float = float("nan")) -> Check:
+    """variant picks the sentence: 'unsure' reads the could-not-see line, otherwise the status (hands adds head/feet)."""
+    if st == "unsure":
+        en, hi = MESSAGES["unsure"][key], MESSAGES_HI["unsure"][key]
+    else:
+        k = "good" if st == "good" else (f"{st}_{variant}" if key == "hands" else st)
+        en, hi = MESSAGES[key][k], MESSAGES_HI[key][k]
+    return Check(key, LABELS[key], st, en, hi, t, value)
+
+
 def _report(idx: int, t, p, elbow, lean, vis, arms, j: int, k: int) -> RepReport:
     gap = np.arange(j + 1, k)
     bi = int(gap[np.argmin(p[gap])])
     rep = RepReport(idx, float(t[j]), float(t[bi]), float(t[k]))
 
-    deepest = np.sort(elbow[gap])[:3]
-    depth_deg = float(np.median(deepest))
+    depth_deg = float(np.median(np.sort(elbow[gap])[:3]))
     st = _judge("depth", float(np.median(vis[gap])), _status(depth_deg, DEPTH_GOOD, DEPTH_ALMOST, True))
-    rep.checks.append(Check("depth", LABELS["depth"], st, MESSAGES["unsure"]["depth"] if st == "unsure" else MESSAGES["depth"][st], rep.bottom_t))
+    rep.checks.append(_check("depth", st, "", rep.bottom_t, depth_deg))
 
     lower = gap[p[gap] < 0.6]
     lean_med = float(np.median(lean[lower])) if len(lower) else 0.0
-    mag = abs(lean_med)
-    st = _judge("hands", float(np.median(vis[lower])) if len(lower) else 0.0, _status(mag, HANDS_GOOD, HANDS_ALMOST, True))
-    side = "head" if lean_med >= 0 else "feet"
-    msg = MESSAGES["unsure"]["hands"] if st == "unsure" else MESSAGES["hands"]["good"] if st == "good" else MESSAGES["hands"][f"{st}_{side}"]
-    rep.checks.append(Check("hands", LABELS["hands"], st, msg, rep.bottom_t))
+    st = _judge("hands", float(np.median(vis[lower])) if len(lower) else 0.0, _status(abs(lean_med), HANDS_GOOD, HANDS_ALMOST, True))
+    rep.checks.append(_check("hands", st, "head" if lean_med >= 0 else "feet", rep.bottom_t, lean_med))
 
     top_deg = float(np.max(elbow[max(k - 2, 0) : k + 4]))  # straightest the arm got as the rep finished
     st = _judge("lockout", float(np.median(vis[max(k - 2, 0) : k + 4])), _status(top_deg, LOCK_GOOD, LOCK_ALMOST, False))
-    rep.checks.append(Check("lockout", LABELS["lockout"], st, MESSAGES["unsure"]["lockout"] if st == "unsure" else MESSAGES["lockout"][st], rep.end_t))
+    rep.checks.append(_check("lockout", st, "", rep.end_t, top_deg))
 
     t_hi = _cross_down(t, p, j, TOP_P)
     t_lo = _cross_down(t, p, j, 0.2)
     if t_hi is not None and t_lo is not None:
         secs = t_lo - t_hi
-        st = _status(secs, DOWN_GOOD, DOWN_FAST, False)
-        rep.checks.append(Check("speed", LABELS["speed"], st, MESSAGES["speed"][st], rep.bottom_t))
+        rep.checks.append(_check("speed", _status(secs, DOWN_GOOD, DOWN_FAST, False), "", rep.bottom_t, secs))
 
-    if len(arms) == 2:
-        d = np.abs(arms[0].elbow_deg - arms[1].elbow_deg)[bi]
-        st = "good" if d <= ARMS_EVEN_DEG else "fix"
-        rep.checks.append(Check("arms", LABELS["arms"], st, MESSAGES["arms"][st], rep.bottom_t))
+    if len(arms) == 2 and min(float(np.median(a.vis[gap])) for a in arms) >= ARMS_SEEN:  # never compare an arm we cannot see
+        d = float(np.abs(arms[0].elbow_deg - arms[1].elbow_deg)[bi])
+        rep.checks.append(_check("arms", "good" if d <= ARMS_EVEN_DEG else "fix", "", rep.bottom_t, d))
     return rep
 
 
@@ -185,17 +229,18 @@ def set_score(reps: List[RepReport]) -> int:
     return int(round(sum(vals) / len(vals))) if vals else 0
 
 
-def set_lines(reps: List[RepReport]) -> List[str]:
+def set_lines(reps: List[RepReport], hindi: bool = False) -> List[str]:
     """Short plain-language list for the results screen: what to fix next set, most important first."""
+    pick = (lambda c: c.message_hi) if hindi else (lambda c: c.message)
     if not reps:
-        return ["No full rep found. Start with arms straight up, lower, and press back up."]
+        return ["Koi poora rep nahi mila. Haath seedhe upar rakho, neeche lao, phir upar dhakelo." if hindi else "I found no full rep. Start with arms straight up, lower, then push up."]
     worst: Dict[str, Check] = {}
     unsure = any(c.status == "unsure" for r in reps for c in r.checks)
     for r in reps:
         for c in r.checks:
             if c.status in ("almost", "fix") and (c.key not in worst or c.status == "fix"):
                 worst[c.key] = c
-    lines = [c.message for c in sorted(worst.values(), key=lambda c: (c.status != "fix", PRIORITY.index(c.key)))]
+    lines = [pick(c) for c in sorted(worst.values(), key=lambda c: (c.status != "fix", PRIORITY.index(c.key)))]
     if unsure:
-        lines.append("Some checks were hidden. Film from the side so I can see your arms.")
-    return lines or ["Clean set. Every check was good."]
+        lines.append("Kuch hissa nahi dikha. Phone side mein rakho." if hindi else "Some parts were hidden. Put the phone at your side.")
+    return lines or (["Badhiya set. Sab checks theek the."] if hindi else ["Clean set. Every check was good."])

@@ -17,23 +17,52 @@ var CORE = (function () {
   };
   var LABELS = { depth: 'Depth', hands: 'Hands', lockout: 'Lockout', speed: 'Speed', arms: 'Arms' };
   var PRIORITY = ['depth', 'hands', 'lockout', 'speed', 'arms'];
+  // The simplest words we can: a one-week beginner must get it on first read. Same sentences as backend/app/services/press_coach.py.
   var MSG = {
-    depth: { good: 'Great depth. Elbows went low.', almost: 'Go a little lower.', fix: 'Go lower. Bring the weights near your chest.' },
-    lockout: { good: 'Full lockout at the top.', almost: 'Press a bit higher at the top.', fix: 'Press all the way up until your arms are straight.' },
+    depth: { good: 'Good. You went down low enough.', almost: 'Go a little lower.', fix: 'Go lower. The dumbbells should come near your chest.' },
+    lockout: { good: 'Good. Your arms went fully straight.', almost: 'Push a little higher. Make your arms straight.', fix: 'Push all the way up. Make your arms fully straight.' },
     hands: {
-      good: 'Hands stayed over your elbows.',
-      almost_head: 'Hands drift toward your head. Keep them over your elbows.',
-      almost_feet: 'Hands drift toward your feet. Keep them over your elbows.',
-      fix_head: 'Hands are far toward your head. Stack them straight over your elbows.',
-      fix_feet: 'Hands are far toward your feet. Stack them straight over your elbows.'
+      good: 'Good. Your hands are right above your elbows.',
+      almost_head: 'Your hands lean toward your head. Keep them straight above your elbows.',
+      almost_feet: 'Your hands lean toward your feet. Keep them straight above your elbows.',
+      fix_head: 'Your hands are far toward your head. Put them straight above your elbows.',
+      fix_feet: 'Your hands are far toward your feet. Put them straight above your elbows.'
     },
-    speed: { good: 'Good, slow and controlled.', almost: 'A bit fast. Take 2 seconds going down.', fix: 'Too fast. Lower in 2 seconds, do not drop it.' },
-    arms: { good: 'Both arms moved together.', fix: 'One arm is lower. Keep both arms even.' },
+    speed: { good: 'Good. You came down slowly.', almost: 'A bit fast. Count 2 seconds going down.', fix: 'Too fast. Do not drop the weights. Count 2 seconds.' },
     unsure: {
-      depth: 'I could not see your elbows clearly. Film from the side.',
-      lockout: 'I could not see your arms clearly at the top. Film from the side.',
-      hands: 'I could not see your hands clearly. Film from the side.'
-    }
+      depth: 'I could not see your elbows. Put the phone at your side.',
+      lockout: 'I could not see your arms up top. Put the phone at your side.',
+      hands: 'I could not see your hands. Put the phone at your side.'
+    },
+    arms: { good: 'Good. Both arms moved together.', fix: 'One arm is lower. Move both arms together.' }
+  };
+  var MSG_HI = {
+    depth: { good: 'Badhiya. Aap kaafi neeche gaye.', almost: 'Thoda aur neeche jao.', fix: 'Aur neeche jao. Dumbbell chest ke paas aane chahiye.' },
+    lockout: { good: 'Badhiya. Aapke haath poore seedhe hue.', almost: 'Thoda aur upar dhakelo. Haath seedhe karo.', fix: 'Poora upar dhakelo. Haath poore seedhe karo.' },
+    hands: {
+      good: 'Badhiya. Haath kohni ke seedha upar hain.',
+      almost_head: 'Aapke haath sir ki taraf jhuk rahe hain. Kohni ke seedha upar rakho.',
+      almost_feet: 'Aapke haath pair ki taraf jhuk rahe hain. Kohni ke seedha upar rakho.',
+      fix_head: 'Aapke haath sir ki taraf bahut jhuke hain. Kohni ke seedha upar rakho.',
+      fix_feet: 'Aapke haath pair ki taraf bahut jhuke hain. Kohni ke seedha upar rakho.'
+    },
+    speed: { good: 'Badhiya. Aap dheere neeche aaye.', almost: 'Thoda tez hai. Neeche aate time 2 tak gino.', fix: 'Bahut tez hai. Weight girao mat. 2 tak gino.' },
+    unsure: {
+      depth: 'Mujhe aapki kohni nahi dikhi. Phone side mein rakho.',
+      lockout: 'Mujhe upar aapke haath nahi dikhe. Phone side mein rakho.',
+      hands: 'Mujhe aapke haath nahi dikhe. Phone side mein rakho.'
+    },
+    arms: { good: 'Badhiya. Dono haath saath chale.', fix: 'Ek haath neeche hai. Dono haath saath chalao.' }
+  };
+
+  var UI = {
+    stepBack: ['Step back so I can see your arms.', 'Peeche hato taaki main aapke haath dekh sakun.'],
+    holdUp: ['Hold the weights straight up for a second.', 'Weight ek second seedha upar pakdo.'],
+    goodSoFar: ['Good so far. Keep going.', 'Abhi tak badhiya. Chalte raho.'],
+    ready: ['Ready. Start your reps.', 'Taiyaar. Reps shuru karo.'],
+    goodRep: ['Good rep!', 'Badhiya rep!'],
+    goodSoFarSpeak: ['Good so far.', 'Abhi tak badhiya.'],
+    goodRepSpeak: ['Good rep.', 'Badhiya rep.']
   };
 
   // ---- small vector helpers (arrays of any length)
@@ -68,7 +97,8 @@ var CORE = (function () {
     var rs = { state: 'wait', rep: null, pending: null, prev: null };
     var hist = [];
     var done = [];
-    var view = { message: 'Hold the weights up so I can see your arms.', tone: 'info', checks: {}, repIndex: 0 };
+    var view = { message: UI.holdUp[0], messageHi: UI.holdUp[1], tone: 'info', checks: {}, repIndex: 0 };
+    function say(pair, tone) { view.message = pair[0]; view.messageHi = pair[1]; view.tone = tone; }
     var showUntil = -1;
     var targetKeys = null;
 
@@ -165,28 +195,34 @@ var CORE = (function () {
 
     function mean(list) { var s = 0; for (var i = 0; i < list.length; i++) s += list[i]; return list.length ? s / list.length : 0; }
 
-    function makeCheck(key, st, msg, t, value) { return { key: key, label: LABELS[key], status: st, message: msg, t: t, value: value }; }
+    // variant: 'head' or 'feet' for the hands check; ignored otherwise
+    function makeCheck(key, st, variant, t, value) {
+      var k = st === 'good' ? 'good' : (key === 'hands' ? st + '_' + variant : st);
+      var en = st === 'unsure' ? MSG.unsure[key] : MSG[key][k];
+      var hi = st === 'unsure' ? MSG_HI.unsure[key] : MSG_HI[key][k];
+      return { key: key, label: LABELS[key], status: st, message: en, message_hi: hi, t: t, value: value };
+    }
 
     function resolveBottom(rep, tEnd) {
       var s = rep.samples;
       var checks = [];
       var elbows = s.map(function (x) { return x.elbow; }).sort(function (a, b) { return a - b; }).slice(0, 3);
       var depthSt = judge('depth', median(s.map(function (x) { return x.vis; })), status(median(elbows), T.DEPTH_GOOD, T.DEPTH_ALMOST, true));
-      checks.push(makeCheck('depth', depthSt, depthSt === 'unsure' ? MSG.unsure.depth : MSG.depth[depthSt], rep.minT, median(elbows)));
+      checks.push(makeCheck('depth', depthSt, '', rep.minT, median(elbows)));
       var lower = s.filter(function (x) { return x.p < 0.6; });
       var leanMed = lower.length ? median(lower.map(function (x) { return x.lean; })) : 0;
       var hSt = judge('hands', lower.length ? median(lower.map(function (x) { return x.vis; })) : 0, status(Math.abs(leanMed), T.HANDS_GOOD, T.HANDS_ALMOST, true));
       var side = leanMed >= 0 ? 'head' : 'feet';
-      checks.push(makeCheck('hands', hSt, hSt === 'unsure' ? MSG.unsure.hands : hSt === 'good' ? MSG.hands.good : MSG.hands[hSt + '_' + side], rep.minT, leanMed));
+      checks.push(makeCheck('hands', hSt, side, rep.minT, leanMed));
       var secs = ownRangeSeconds(rep, tEnd);
       if (secs !== null) {
         var spSt = status(secs, T.DOWN_GOOD, T.DOWN_FAST, false);
-        checks.push(makeCheck('speed', spSt, MSG.speed[spSt], rep.minT, secs));
+        checks.push(makeCheck('speed', spSt, '', rep.minT, secs));
       }
       var bothSeen = rep.armGap !== null && s.length && median(s.map(function (x) { return x.visMin === null ? 0 : x.visMin; })) >= T.ARMS_VIS;
       if (bothSeen) {  // a hidden arm is guessed by the tracker, so only compare arms we can really see
         var aSt = rep.armGap <= T.ARMS_EVEN ? 'good' : 'fix';
-        checks.push(makeCheck('arms', aSt, MSG.arms[aSt], rep.minT, rep.armGap));
+        checks.push(makeCheck('arms', aSt, '', rep.minT, rep.armGap));
       }
       return checks;
     }
@@ -232,12 +268,12 @@ var CORE = (function () {
       ['left', 'right'].forEach(function (s) { if (cur[s] && arms[s].active) act.push(s); });
 
       if (!act.length) {
-        view.message = 'Step back so I can see your arms.'; view.tone = 'info';
+        say(UI.stepBack, 'info');
         return { events: events, view: snapshot(f, act, null) };
       }
       var ready = act.filter(function (s) { return cur[s].ready; });
       if (ready.length < act.length || !ready.length) {
-        view.message = 'Hold the weights straight up for a second.'; view.tone = 'info';
+        say(UI.holdUp, 'info');
         return { events: events, view: snapshot(f, act, null) };
       }
       var p = mean(ready.map(function (s) { return cur[s].p; }));
@@ -274,8 +310,8 @@ var CORE = (function () {
           var w1 = worst(rep.resolved);
           events.push({ type: 'bottom', index: rep.index, checks: rep.resolved });
           view.checks = {}; rep.resolved.forEach(function (c) { view.checks[c.key] = c.status; });
-          if (w1) { view.message = w1.message; view.tone = w1.status === 'fix' ? 'fix' : 'almost'; }
-          else { view.message = 'Good so far. Keep going.'; view.tone = 'good'; }
+          if (w1) { say([w1.message, w1.message_hi], w1.status === 'fix' ? 'fix' : 'almost'); }
+          else { say(UI.goodSoFar, 'good'); }
           var tk = w1 && (w1.key === 'hands' || w1.key === 'depth');
           showUntil = tk ? Infinity : -1;
         }
@@ -296,7 +332,7 @@ var CORE = (function () {
       rs.prev = { t: t, p: p, elbow: elbow };
 
       var show = rs.rep && showUntil === Infinity && (rs.state === 'down' || rs.state === 'finish');
-      if (rs.state === 'top' || rs.state === 'wait') { if (!(done.length && view.tone !== 'info' && view.message)) { view.message = 'Ready. Start your reps.'; view.tone = 'info'; } showUntil = -1; }
+      if (rs.state === 'top' || rs.state === 'wait') { if (!(done.length && view.tone !== 'info' && view.message)) { say(UI.ready, 'info'); } showUntil = -1; }
       var ghost = {};
       if (show) ready.forEach(function (s) { ghost[s] = ghostFor(arms[s], p); });
       view.repIndex = rs.rep ? rs.rep.index : done.length;
@@ -316,14 +352,16 @@ var CORE = (function () {
       var checks = resolveBottom(rep, rep.endT);  // final verdict from the whole rep, like the recorded-clip coach
       var top = Math.max.apply(null, rep.tail.concat([rep.samples.length ? rep.samples[rep.samples.length - 1].elbow : 0]));
       var lockSt = judge('lockout', median(rep.tailVis), status(top, T.LOCK_GOOD, T.LOCK_ALMOST, false));
-      checks.push(makeCheck('lockout', lockSt, lockSt === 'unsure' ? MSG.unsure.lockout : MSG.lockout[lockSt], rep.endT, top));
+      checks.push(makeCheck('lockout', lockSt, '', rep.endT, top));
       var order = {}; PRIORITY.forEach(function (k, i) { order[k] = i; });
       checks.sort(function (a, b) { return order[a.key] - order[b.key]; });
       var w = worst(checks);
-      var speak = 'Rep ' + rep.index + '. ' + (w ? w.message : checks.some(function (c) { return c.status === 'unsure'; }) ? 'Good so far.' : 'Good rep.');
+      var anyUnsure = checks.some(function (c) { return c.status === 'unsure'; });
+      var speak = { en: 'Rep ' + rep.index + '. ' + (w ? w.message : anyUnsure ? UI.goodSoFarSpeak[0] : UI.goodRepSpeak[0]),
+                    hi: 'Rep ' + rep.index + '. ' + (w ? w.message_hi : anyUnsure ? UI.goodSoFarSpeak[1] : UI.goodRepSpeak[1]) };
       done.push({ index: rep.index, checks: checks, startT: rep.start, bottomT: rep.minT, endT: rep.endT });
       view.checks = {}; checks.forEach(function (c) { view.checks[c.key] = c.status; });
-      view.message = w ? w.message : 'Good rep!'; view.tone = w ? (w.status === 'fix' ? 'fix' : 'almost') : 'good';
+      if (w) say([w.message, w.message_hi], w.status === 'fix' ? 'fix' : 'almost'); else say(UI.goodRep, 'good');
       events.push({ type: 'rep_done', index: rep.index, checks: checks, speak: speak, worst: w });
     }
 
@@ -335,12 +373,12 @@ var CORE = (function () {
         if (ghost && ghost[s]) { item.gel = ghost[s].gel; item.gwr = ghost[s].gwr; }
         out.push(item);
       });
-      return { arms: out, message: view.message, tone: view.tone, checks: view.checks, repIndex: view.repIndex, repsDone: done.length, calibrated: act.length > 0 && act.every(function (s) { return !!arms[s].up; }) };
+      return { arms: out, message: view.message, messageHi: view.messageHi, tone: view.tone, checks: view.checks, repIndex: view.repIndex, repsDone: done.length, calibrated: act.length > 0 && act.every(function (s) { return !!arms[s].up; }) };
     }
 
     return { update: update, reps: function () { return done; } };
   }
 
-  return { createCoach: createCoach, T: T, MSG: MSG, LABELS: LABELS };
+  return { createCoach: createCoach, T: T, MSG: MSG, MSG_HI: MSG_HI, UI: UI, LABELS: LABELS };
 })();
 `;

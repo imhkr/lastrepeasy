@@ -78,6 +78,7 @@ export interface WorkoutAnalysisResult {
   annotated_full_video_url?: string | null;
   ghost_video_url?: string | null;
   rep_reports?: RepReport[];
+  my_form_fixes_hi?: string[];
 
   // Offline phone storage metadata
   saved_at?: string;
@@ -101,6 +102,8 @@ export interface RepCheck {
   label: string;
   status: "good" | "almost" | "fix" | "unsure";
   message: string;
+  message_hi?: string;
+  image_url?: string | null;
 }
 
 export interface RepReport {

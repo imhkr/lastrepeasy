@@ -96,6 +96,8 @@ class RepCheckOut(BaseModel):
     label: str
     status: str  # good | almost | fix | unsure
     message: str
+    message_hi: str = ""  # the same advice in Hinglish
+    image_url: Optional[str] = None  # picture: what you did vs how it should look
 
 
 class RepReportOut(BaseModel):
@@ -145,6 +147,7 @@ class WorkoutAnalysisResult(BaseModel):
     source_video_url: Optional[str] = None
     step_by_step_flow_video_url: Optional[str] = None
     annotated_full_video_url: Optional[str] = None
+    my_form_fixes_hi: List[str] = Field(default_factory=list)  # same list, in Hinglish
     rep_reports: List[RepReportOut] = Field(default_factory=list)  # per-rep checklist in plain words
     ghost_video_url: Optional[str] = None  # user's own clip with the green target arm drawn on it
 

@@ -17,8 +17,9 @@ export async function pickVoice(locale: string): Promise<string | undefined> {
 }
 
 /** Speaks one short coaching line in the deeper coach voice, replacing anything still being said. */
-export async function sayCoach(text: string): Promise<void> {
-  const voice = await pickVoice("en-US");
+export async function sayCoach(text: string, hinglish = false): Promise<void> {
+  const locale = hinglish ? "en-IN" : "en-US";  // Hinglish is Hindi written in English letters; the Indian-English voice reads it best
+  const voice = await pickVoice(locale);
   Speech.stop();
-  Speech.speak(text, { language: "en-US", voice, rate: 0.92, pitch: 0.75 });
+  Speech.speak(text, { language: locale, voice, rate: 0.92, pitch: 0.75 });
 }

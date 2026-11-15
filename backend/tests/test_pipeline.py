@@ -174,3 +174,9 @@ def test_upload_returns_per_rep_checklist_and_ghost_video(tmp_path, monkeypatch)
     keys = {c["key"]: c["status"] for c in j["rep_reports"][0]["checks"]}
     assert keys["depth"] == "good" and "fix" not in keys.values()
     assert j["my_form_fixes"] and 0 <= j["overall_form_score"] <= 100
+    checks = {c["key"]: c for c in j["rep_reports"][0]["checks"]}
+    assert all(c["message_hi"] for c in checks.values()), "every check needs its Hinglish twin"
+    assert checks["speed"]["status"] == "almost" and checks["speed"]["image_url"].endswith(".jpg"), "a picture for every fix"
+    assert checks["hands"]["status"] == "unsure" and checks["hands"]["image_url"].endswith(".jpg"), "unsure hands still get a how-it-should-look picture"
+    assert checks["depth"]["image_url"] is None, "no picture for what was done right"
+    assert j["my_form_fixes_hi"], "Hinglish list too"

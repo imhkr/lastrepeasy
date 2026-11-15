@@ -28,7 +28,7 @@ assert.equal(rc.lockout, "good");
 assert.equal(rc.hands, "unsure");
 assert.notEqual(rc.speed, "fix");
 assert.ok(!Object.values(rc).includes("fix"), "a correct rep must never be marked wrong");
-assert.ok(real.events.some((e: any) => e.type === "rep_done" && /^Rep 1\./.test(e.speak)), "speaks after the rep");
+assert.ok(real.events.some((e: any) => e.type === "rep_done" && /^Rep 1\./.test(e.speak.en) && /^Rep 1\./.test(e.speak.hi)), "speaks after the rep, in both languages");
 console.log("LIVE_CORE_OK");
 
 // ---- G4: deliberate mistakes on synthetic reps (geometry mirrors backend/tests/test_press_coach.py)
@@ -66,7 +66,7 @@ function press(o: { reps?: number; bottom?: number; top?: number; down?: number;
 const good = run(press({ reps: 2 }));
 assert.equal(good.reps.length, 2, "two good reps found, got " + good.reps.length);
 for (const r of good.reps) assert.ok(r.checks.every((c: any) => c.status === "good"), JSON.stringify(r.checks.map((c: any) => [c.key, c.status])));
-assert.ok(good.events.filter((e: any) => e.type === "rep_done").every((e: any) => /Good rep\./.test(e.speak)), "quiet praise only on good reps");
+assert.ok(good.events.filter((e: any) => e.type === "rep_done").every((e: any) => /Good rep\./.test(e.speak.en) && /Badhiya rep\./.test(e.speak.hi)), "quiet praise only on good reps");
 
 assert.equal(st(run(press({ reps: 1, bottom: 130 })).reps[0], "depth"), "fix", "shallow");
 assert.equal(st(run(press({ reps: 1, top: 125 })).reps[0], "lockout"), "fix", "no lockout");

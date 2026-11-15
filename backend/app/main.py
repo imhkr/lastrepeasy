@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import traceback
 import uuid
 
 import cv2
@@ -32,7 +33,7 @@ from app.schemas import (
     WorkoutAnalysisResult,
 )
 from app.services.flow_renderer import render_keyframes_and_flow_videos
-from app.services.coach_overlay import render_ghost_video
+from app.services.coach_overlay import render_compare, render_ghost_video, render_speed
 from app.services.ghost import build_ghost_track
 from app.services.press_coach import analyze_reps, set_lines, set_score
 from app.services.nippard_ai import (
@@ -201,12 +202,31 @@ def _run_analysis_pipeline(
                     job.ghost_video_url = f"{public_base_url}/media/outputs/{ghost_name}"
                     ghost_lines = set_lines(reps)
                     ghost_pts = set_score(reps) if reps else None
-                    job.rep_reports = [
-                        RepReportOut(index=r.index, checks=[RepCheckOut(key=c.key, label=c.label, status=c.status, message=c.message) for c in r.checks])
-                        for r in reps
-                    ]
+                    job.rep_reports = []
+                    for r in reps:
+                        outs = []
+                        for c in r.checks:
+                            img_url = None
+                            try:
+                                fname = f"{job_id}_r{r.index}_{c.key}.jpg"
+                                fpath = os.path.join(str(FRAMES_DIR), fname)
+                                if c.key == "speed" and c.status in ("almost", "fix"):
+                                    render_speed(c, fpath)
+                                elif c.key in ("hands", "depth", "lockout") and c.status in ("almost", "fix"):
+                                    render_compare(video_path, track, r.end_t if c.key == "lockout" else r.bottom_t, c, fpath)
+                                elif c.key == "hands" and c.status == "unsure":
+                                    render_compare(video_path, track, r.bottom_t, c, fpath)  # no verdict, but show the right way
+                                else:
+                                    fpath = None
+                                if fpath and os.path.exists(fpath):
+                                    img_url = f"{public_base_url}/media/frames/{fname}"
+                            except Exception:
+                                img_url = None
+                            outs.append(RepCheckOut(key=c.key, label=c.label, status=c.status, message=c.message, message_hi=c.message_hi, image_url=img_url))
+                        job.rep_reports.append(RepReportOut(index=r.index, checks=outs))
+                    job.my_form_fixes_hi = set_lines(reps, hindi=True)
             except Exception:
-                pass  # the other videos still work without the ghost
+                traceback.print_exc()  # the other videos still work without the coaching video
 
         # Populate final job result
         job.exercise_name = exercise_name

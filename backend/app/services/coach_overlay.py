@@ -109,24 +109,30 @@ def draw_coach(frame: np.ndarray, track: GhostTrack, reports: List[RepReport], t
         _icon(out, (int(28 * k), y), int(11 * k), seen.get(key))
         cv2.putText(out, LABELS[key], (int(48 * k), y + int(6 * k)), cv2.FONT_HERSHEY_SIMPLEX, 0.6 * k, WHITE, 2, cv2.LINE_AA)
 
-    # One sentence at the bottom
+    # Two short lines at the bottom: English, then Hinglish
     if rep is None:
-        msg, col = "Start your set. I am watching.", GRAY
+        en, hi, col = "Start your set. I am watching.", "Set shuru karo. Main dekh raha hoon.", GRAY
     elif fix is not None:
-        msg, col = fix.message, RED if fix.status == "fix" else AMBER_OK
+        en, hi, col = fix.message, fix.message_hi, RED if fix.status == "fix" else AMBER_OK
     elif not any(seen.values()):
-        msg, col = "Rep in progress. Keep going.", GRAY
+        en, hi, col = "Rep in progress. Keep going.", "Rep chal raha hai. Chalte raho.", GRAY
     elif "unsure" in seen.values():
-        msg, col = "Good so far. Film from the side so I can see more.", GREEN
+        en, hi, col = "Good so far. Put the phone at your side.", "Abhi tak badhiya. Phone side mein rakho.", GREEN
     else:
-        msg, col = "Good rep!", GREEN
-    lines = _wrap(msg, int(30 * (w / 540.0) ** 0 * 1.0) if w < 700 else 44)
-    bar = int((18 + 26 * len(lines)) * k)
-    _panel(out, (0, h - bar), (w, h), 0.85)
+        en, hi, col = "Good rep!", "Badhiya rep!", GREEN
+    en_lines, hi_lines = _wrap(en, 30 if w < 700 else 44), _wrap(hi, 34 if w < 700 else 50)
+    bar = int((20 + 25 * len(en_lines) + 22 * len(hi_lines)) * k)
+    _panel(out, (0, h - bar), (w, h), 0.88)
     cv2.rectangle(out, (0, h - bar), (w, h - bar + max(3, int(4 * k))), col, -1)
-    for n, ln in enumerate(lines):
-        (tw, _), _ = cv2.getTextSize(ln, cv2.FONT_HERSHEY_SIMPLEX, 0.72 * k, 2)
-        cv2.putText(out, ln, (max(10, (w - tw) // 2), h - bar + int((34 + 26 * n) * k)), cv2.FONT_HERSHEY_SIMPLEX, 0.72 * k, WHITE, 2, cv2.LINE_AA)
+    y = h - bar + int(30 * k)
+    for ln in en_lines:
+        (tw, _), _ = cv2.getTextSize(ln, cv2.FONT_HERSHEY_SIMPLEX, 0.68 * k, 2)
+        cv2.putText(out, ln, (max(10, (w - tw) // 2), y), cv2.FONT_HERSHEY_SIMPLEX, 0.68 * k, WHITE, 2, cv2.LINE_AA)
+        y += int(25 * k)
+    for ln in hi_lines:
+        (tw, _), _ = cv2.getTextSize(ln, cv2.FONT_HERSHEY_SIMPLEX, 0.55 * k, 1)
+        cv2.putText(out, ln, (max(10, (w - tw) // 2), y), cv2.FONT_HERSHEY_SIMPLEX, 0.55 * k, (130, 220, 255), 1, cv2.LINE_AA)
+        y += int(22 * k)
     return out
 
 
@@ -185,4 +191,137 @@ def render_ghost_video(source_video_path: str, track: GhostTrack, reports: List[
         os.remove(raw)
     if not os.path.exists(out_path):
         raise RuntimeError("ghost video encode failed")
+    return out_path
+
+
+# ---------------------------------------------------------------- "YOU vs SHOULD BE" pictures
+
+PANEL_W, PANEL_H, HEAD_H = 480, 640, 96
+AMBER_BAR = (0, 150, 255)
+
+
+def _read_frame(video_path: str, t: float) -> Optional[np.ndarray]:
+    cap = cv2.VideoCapture(video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    cap.set(cv2.CAP_PROP_POS_FRAMES, max(0, int(round(t * fps))))
+    ok, frame = cap.read()
+    cap.release()
+    return frame if ok else None
+
+
+def _crop_box(points: List[np.ndarray], w: int, h: int) -> Tuple[int, int, int, int]:
+    """A 3:4 window around the arm (and its target), zoomed in so the arm fills the picture."""
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+    size = max(max(xs) - min(xs), (max(ys) - min(ys)) * 0.75, 120) * 1.7
+    bw, bh = size, size * 4 / 3
+    bw, bh = min(bw, w), min(bh, h)
+    if bw / bh > 0.75:
+        bw = bh * 0.75
+    else:
+        bh = bw / 0.75
+    x0 = int(np.clip(cx - bw / 2, 0, w - bw))
+    y0 = int(np.clip(cy - bh / 2, 0, h - bh))
+    return x0, y0, int(bw), int(bh)
+
+
+def _crop_panel(frame: np.ndarray, box: Tuple[int, int, int, int]) -> Tuple[np.ndarray, float, Tuple[int, int]]:
+    x0, y0, bw, bh = box
+    img = cv2.resize(frame[y0 : y0 + bh, x0 : x0 + bw], (PANEL_W, PANEL_H), interpolation=cv2.INTER_AREA)
+    return img, PANEL_W / bw, (x0, y0)
+
+
+def _to(p: np.ndarray, sc: float, off: Tuple[int, int]) -> Tuple[int, int]:
+    return int(round((p[0] - off[0]) * sc)), int(round((p[1] - off[1]) * sc))
+
+
+def _tag(img: np.ndarray, p: Tuple[int, int], text: str, col, dy: int = -22) -> None:
+    """A word next to a joint, with a dark outline so it reads on any background."""
+    x = int(np.clip(p[0] + 18, 6, img.shape[1] - 150))
+    y = int(np.clip(p[1] + dy, 24, img.shape[0] - 8))
+    cv2.putText(img, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (20, 20, 20), 5, cv2.LINE_AA)
+    cv2.putText(img, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, col, 2, cv2.LINE_AA)
+
+
+def _header(panel: np.ndarray, big: str, small: str, color) -> np.ndarray:
+    bar = np.full((HEAD_H, PANEL_W, 3), (22, 18, 16), np.uint8)
+    bar[:8] = color
+    cv2.putText(bar, big, (14, 48), cv2.FONT_HERSHEY_SIMPLEX, 0.95, WHITE, 3, cv2.LINE_AA)
+    cv2.putText(bar, small, (14, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.62, (200, 200, 200), 2, cv2.LINE_AA)
+    return np.vstack([bar, panel])
+
+
+def render_compare(video_path: str, track: GhostTrack, t: float, check: Check, out_path: str) -> Optional[str]:
+    """Left: what you did (the wrong part in amber). Right: how it should look (green arm). Zoomed on your arm."""
+    frame = _read_frame(video_path, t)
+    if frame is None:
+        return None
+    h, w = frame.shape[:2]
+    pos = [_at(track, a, t) for a in track.arms]
+    pts = [q[k] for q in pos for k in ("sh", "el", "wr", "gel", "gwr")]
+    box = _crop_box(pts, w, h)
+    base, sc, off = _crop_panel(frame, box)
+    thick = 14
+    wrong = check.status in ("almost", "fix")
+    # Only draw YOUR arm when the camera really saw it; a guessed arm drawn off your real arm would mislead.
+    trusted = all(float(np.interp(t, a.t, a.vis)) >= 0.6 for a in track.arms) and check.status != "unsure"
+
+    left = base.copy()
+    for q in pos if trusted else []:
+        sh, el, wr = _to(q["sh"], sc, off), _to(q["el"], sc, off), _to(q["wr"], sc, off)
+        cv2.line(left, sh, el, WHITE, thick, cv2.LINE_AA)
+        cv2.line(left, el, wr, AMBER_BAR if wrong else WHITE, thick, cv2.LINE_AA)
+        for p in (sh, el, wr):
+            cv2.circle(left, p, thick // 2 + 3, (20, 20, 20), -1, cv2.LINE_AA)
+            cv2.circle(left, p, thick // 2, WHITE, -1, cv2.LINE_AA)
+        _tag(left, el, "KOHNI", WHITE, 34)
+        _tag(left, wr, "HAATH", AMBER_BAR if wrong else WHITE, -18)
+        if check.key == "hands":  # the straight-up line the hand should sit on
+            d = q["gwr"] - q["gel"]
+            n = d / (np.linalg.norm(d) + 1e-9)
+            for s0 in range(0, int(np.linalg.norm(d) * sc * 1.3), 26):
+                a = el[0] + n[0] * s0, el[1] + n[1] * s0
+                b = el[0] + n[0] * (s0 + 13), el[1] + n[1] * (s0 + 13)
+                cv2.line(left, (int(a[0]), int(a[1])), (int(b[0]), int(b[1])), GREEN, 3, cv2.LINE_AA)
+
+    right = base.copy()
+    shadow = np.zeros_like(right)
+    for q in pos:
+        sh, gel, gwr = _to(q["sh"], sc, off), _to(q["gel"], sc, off), _to(q["gwr"], sc, off)
+        cv2.line(shadow, sh, gel, GREEN, thick + 6, cv2.LINE_AA)
+        cv2.line(shadow, gel, gwr, GREEN, thick + 6, cv2.LINE_AA)
+        for p in (gel, gwr):
+            cv2.circle(shadow, p, thick, GREEN, -1, cv2.LINE_AA)
+    m = shadow.any(axis=2)
+    right[m] = cv2.addWeighted(right, 0.35, shadow, 0.65, 0)[m]
+    for q in pos:
+        _tag(right, _to(q["gel"], sc, off), "KOHNI (elbow)", GREEN, 34)
+        _tag(right, _to(q["gwr"], sc, off), "HAATH (hand)", GREEN, -18)
+    for q in pos if trusted else []:  # your arm stays visible, thin, so you can compare
+        cv2.line(right, _to(q["sh"], sc, off), _to(q["el"], sc, off), WHITE, 3, cv2.LINE_AA)
+        cv2.line(right, _to(q["el"], sc, off), _to(q["wr"], sc, off), WHITE, 3, cv2.LINE_AA)
+
+    left = _header(left, "AAP AISE KAR RAHE HO", "YOU DO THIS", AMBER_BAR)
+    right = _header(right, "AISE HONA CHAHIYE", "IT SHOULD BE LIKE THIS", GREEN)
+    img = np.hstack([left, np.full((left.shape[0], 6, 3), (22, 18, 16), np.uint8), right]) if trusted else right
+    cv2.imwrite(out_path, img, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
+    return out_path
+
+
+def render_speed(check: Check, out_path: str) -> str:
+    """Two bars: how long you took to lower the weight vs the 2 seconds you should take."""
+    you = float(np.clip(check.value / 0.48, 0.3, 4.0)) if check.value == check.value else 1.0
+    img = np.full((420, 960, 3), (22, 18, 16), np.uint8)
+    cv2.putText(img, "NEECHE AATE TIME KITNA TIME?", (24, 54), cv2.FONT_HERSHEY_SIMPLEX, 1.0, WHITE, 3, cv2.LINE_AA)
+    cv2.putText(img, "HOW LONG YOU TAKE TO LOWER THE WEIGHT", (24, 88), cv2.FONT_HERSHEY_SIMPLEX, 0.62, (200, 200, 200), 2, cv2.LINE_AA)
+    scale = 190.0  # pixels per second
+    rows = [("AAP (YOU)", you, AMBER_BAR if check.status != "good" else GREEN), ("SAHI (SHOULD BE)", 2.0, GREEN)]
+    for n, (label, secs, col) in enumerate(rows):
+        y = 150 + n * 120
+        cv2.putText(img, label, (24, y - 12), cv2.FONT_HERSHEY_SIMPLEX, 0.8, WHITE, 2, cv2.LINE_AA)
+        cv2.rectangle(img, (24, y), (24 + int(secs * scale), y + 50), col, -1)
+        cv2.putText(img, f"{secs:.1f} sec", (24 + int(secs * scale) + 14, y + 36), cv2.FONT_HERSHEY_SIMPLEX, 0.95, WHITE, 3, cv2.LINE_AA)
+    cv2.putText(img, "Count: 1 ... 2   (1 ... 2 gino)", (24, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.8, GREEN, 2, cv2.LINE_AA)
+    cv2.imwrite(out_path, img, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
     return out_path

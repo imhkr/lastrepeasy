@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  StyleSheet,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, Image } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { fetchJobResult } from "../../src/api/client";
@@ -22,6 +14,7 @@ import { pickAndUploadClip } from "../../src/services/pickAndUploadClip";
 import { ExercisePickerModal } from "../../src/components/ExercisePickerModal";
 import { VoiceCoachPanel } from "../../src/components/VoiceCoachPanel";
 import { RepReport } from "../../src/types/workout";
+import { Lang, useLang } from "../../src/services/lang";
 import { MuscleHitMapAnimation } from "../../src/components/MuscleHitMapAnimation";
 
 function WorkoutVideoPlayer({
@@ -66,26 +59,47 @@ const STATUS_ICON: Record<string, { sym: string; bg: string; fg: string }> = {
   fix: { sym: "\u2715", bg: "#F87171", fg: "#FFFFFF" },
   unsure: { sym: "?", bg: "#94A3B8", fg: "#0B0F17" },
 };
+const LABEL_HI: Record<string, string> = { depth: "Depth (kitna neeche)", lockout: "Lockout (upar seedha)", hands: "Hands (haath)", speed: "Speed (kitna tez)", arms: "Arms (dono haath)" };
 
-// One card per rep, one line per check, plain words. Tick = good, ! = nearly, x = fix it, ? = could not see.
-function RepChecklist({ reps }: { reps: RepReport[] }) {
+// A picture that keeps its own shape (the pictures are wider or taller depending on the fix).
+function FixPicture({ uri }: { uri: string }) {
+  const [ratio, setRatio] = useState(1.3);
+  useEffect(() => {
+    Image.getSize(uri, (w, h) => h && setRatio(w / h), () => {});
+  }, [uri]);
+  return <Image source={{ uri }} style={{ width: "100%", aspectRatio: ratio, borderRadius: 10, backgroundColor: "#000" }} resizeMode="contain" />;
+}
+
+// One card per rep, one block per check: tick / ! / x / ?, a short sentence, and for every fix a picture of
+// "what you did vs how it should look". English or Hinglish.
+function RepChecklist({ reps, lang, onLang }: { reps: RepReport[]; lang: Lang; onLang: (l: Lang) => void }) {
   if (!reps.length) return null;
   return (
     <View>
+      <View style={rcStyles.langRow}>
+        {(["hi", "en"] as Lang[]).map((l) => (
+          <TouchableOpacity key={l} style={[rcStyles.langChip, lang === l && rcStyles.langOn]} onPress={() => onLang(l)}>
+            <Text style={[rcStyles.langText, lang === l && rcStyles.langTextOn]}>{l === "hi" ? "Hinglish" : "English"}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
       {reps.map((r) => (
         <View key={r.index} style={rcStyles.card}>
           <Text style={rcStyles.title}>Rep {r.index}</Text>
           {r.checks.map((c) => {
             const ic = STATUS_ICON[c.status] ?? STATUS_ICON.unsure;
             return (
-              <View key={c.key} style={rcStyles.row}>
-                <View style={[rcStyles.icon, { backgroundColor: ic.bg }]}>
-                  <Text style={[rcStyles.iconText, { color: ic.fg }]}>{ic.sym}</Text>
+              <View key={c.key} style={rcStyles.block}>
+                <View style={rcStyles.row}>
+                  <View style={[rcStyles.icon, { backgroundColor: ic.bg }]}>
+                    <Text style={[rcStyles.iconText, { color: ic.fg }]}>{ic.sym}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={rcStyles.label}>{lang === "hi" ? LABEL_HI[c.key] ?? c.label : c.label}</Text>
+                    <Text style={rcStyles.msg}>{lang === "hi" && c.message_hi ? c.message_hi : c.message}</Text>
+                  </View>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={rcStyles.label}>{c.label}</Text>
-                  <Text style={rcStyles.msg}>{c.message}</Text>
-                </View>
+                {c.image_url ? <FixPicture uri={c.image_url} /> : null}
               </View>
             );
           })}
@@ -96,13 +110,19 @@ function RepChecklist({ reps }: { reps: RepReport[] }) {
 }
 
 const rcStyles = StyleSheet.create({
-  card: { backgroundColor: "#111827", borderRadius: 16, padding: 14, borderWidth: 1, borderColor: "#1E293B", marginBottom: 12, gap: 12 },
+  langRow: { flexDirection: "row", gap: 8, marginBottom: 10 },
+  langChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: "#182235" },
+  langOn: { backgroundColor: "#0C2A3F", borderWidth: 1, borderColor: "#38BDF8" },
+  langText: { color: "#94A3B8", fontWeight: "700", fontSize: 13 },
+  langTextOn: { color: "#FFFFFF" },
+  card: { backgroundColor: "#111827", borderRadius: 16, padding: 14, borderWidth: 1, borderColor: "#1E293B", marginBottom: 12, gap: 14 },
   title: { color: "#F8FAFC", fontSize: 17, fontWeight: "800" },
+  block: { gap: 10 },
   row: { flexDirection: "row", gap: 12, alignItems: "flex-start" },
   icon: { width: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center", marginTop: 1 },
   iconText: { fontSize: 14, fontWeight: "900" },
   label: { color: "#F8FAFC", fontSize: 15, fontWeight: "700" },
-  msg: { color: "#CBD5E1", fontSize: 14, lineHeight: 19, marginTop: 1 },
+  msg: { color: "#CBD5E1", fontSize: 15, lineHeight: 21, marginTop: 1 },
 });
 
 const shortName = (n: string) => n.replace(/\s*\([^)]*\)/g, "").split("—")[0].trim();
@@ -113,6 +133,7 @@ export default function AnalysisResultScreen() {
 
   const [result, setResult] = useState<WorkoutAnalysisResult | null>(null);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
+  const [lang, setLang] = useLang();
   const [pickedMode, setVideoMode] = useState<"ghost" | "flow" | "full" | null>(null);
   const [seekToSec, setSeekToSec] = useState<number | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -218,7 +239,7 @@ export default function AnalysisResultScreen() {
       ? result.local_flow_video_uri || result.step_by_step_flow_video_url
       : result.local_full_video_uri || result.annotated_full_video_url;
 
-  const fixes = result.my_form_fixes ?? [];
+  const fixes = (lang === "hi" && result.my_form_fixes_hi?.length ? result.my_form_fixes_hi : result.my_form_fixes) ?? [];
   const isUpload = fixes.length > 0;
 
   return (
@@ -254,7 +275,7 @@ export default function AnalysisResultScreen() {
         <Text style={styles.uploadBtnText}>{uploading ? "Uploading..." : "Check my form (upload up to 20 sec)"}</Text>
       </TouchableOpacity>
 
-      <RepChecklist reps={result.rep_reports ?? []} />
+      <RepChecklist reps={result.rep_reports ?? []} lang={lang} onLang={setLang} />
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{isUpload ? "Fix this" : "Key points"}</Text>
         {(isUpload ? fixes : result.key_takeaways.slice(0, 3)).map((item, idx) => (

@@ -4,7 +4,9 @@ import numpy as np
 
 from app.services.ghost import build_ghost_track
 from app.services.pose_analyzer import FramePoseMetrics, Keypoint2D
-from app.services.press_coach import MESSAGES, analyze_reps, set_lines, set_score
+from pathlib import Path
+
+from app.services.press_coach import MESSAGES, MESSAGES_HI, analyze_reps, set_lines, set_score
 from tests.fixture_util import load_fixture
 
 FPS = 15
@@ -61,6 +63,7 @@ def test_good_synthetic_rep_is_all_good():
     for r in reps:
         assert {c.status for c in r.checks} == {"good"}, [(c.key, c.status) for c in r.checks]
     assert set_lines(reps) == ["Clean set. Every check was good."]
+    assert set_lines(reps, hindi=True) == ["Badhiya set. Sab checks theek the."]
 
 
 def test_each_mistake_is_caught_by_its_own_check():
@@ -81,3 +84,23 @@ def test_plain_words_for_beginners():
     for t in texts:
         assert len(t.split()) <= 14, t
         assert not re.search(r"°|degree|angle|extension|flexion|scapul|humer", t, re.I), t
+
+
+def test_every_message_has_a_hinglish_twin_that_is_also_short_and_plain():
+    for key, group in MESSAGES.items():
+        assert set(MESSAGES_HI[key]) == set(group), f"{key}: Hinglish keys differ"
+        for variant, hi in MESSAGES_HI[key].items():
+            assert len(hi.split()) <= 14, hi
+            assert not re.search(r"\u00b0|degree|angle", hi, re.I), hi
+            assert hi != group[variant], "Hinglish must be written, not copied"
+    tl, w, h = load_fixture()
+    reps = analyze_reps(build_ghost_track("incline_press_nippard", tl, w, h))
+    assert all(c.message_hi for r in reps for c in r.checks)
+
+
+def test_live_js_coach_uses_exactly_the_same_sentences_sync():
+    js = (Path(__file__).resolve().parents[2] / "mobile" / "src" / "live" / "liveCore.ts").read_text()
+    for table in (MESSAGES, MESSAGES_HI):
+        for group in table.values():
+            for sentence in group.values():
+                assert sentence in js, f"missing in liveCore.ts: {sentence}"

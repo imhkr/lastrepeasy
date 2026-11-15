@@ -76,11 +76,13 @@ export interface WorkoutAnalysisResult {
   source_video_url?: string | null;
   step_by_step_flow_video_url?: string | null;
   annotated_full_video_url?: string | null;
+  ghost_video_url?: string | null;
 
   // Offline phone storage metadata
   saved_at?: string;
   local_flow_video_uri?: string | null;
   local_full_video_uri?: string | null;
+  local_ghost_video_uri?: string | null;
 }
 
 export interface PresetCatalogItem {

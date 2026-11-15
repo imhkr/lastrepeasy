@@ -30,6 +30,7 @@ from app.schemas import (
     WorkoutAnalysisResult,
 )
 from app.services.flow_renderer import render_keyframes_and_flow_videos
+from app.services.ghost import build_ghost_track, coaching_lines, ghost_score, render_ghost_video
 from app.services.nippard_ai import (
     JEFF_NIPPARD_PRESETS,
     build_exercise_analysis,
@@ -133,7 +134,11 @@ def _run_analysis_pipeline(
         job.progress_pct = 42
         job.progress_message = "Tracking 33 body landmarks (elbow, wrist/handle, torso, knee, ankle angles)..."
 
-        timeline, duration_sec = analyze_video_pose_timeline(video_path, sample_fps=8.0)
+        timeline, duration_sec = analyze_video_pose_timeline(
+            video_path,
+            sample_fps=15.0 if source_type == "upload" else 8.0,
+            allow_synthetic=source_type != "upload",  # never invent joints for a real user clip
+        )
         job.duration_sec = duration_sec
 
         phase_tuples = detect_five_workout_phases(timeline, duration_sec)
@@ -176,6 +181,24 @@ def _run_analysis_pipeline(
             public_base_url=public_base_url,
         )
 
+        # Ghost-arm coaching video (supported exercises only)
+        ghost_lines: List[str] = []
+        ghost_pts: Optional[int] = None
+        if source_type == "upload":
+            try:
+                cap = cv2.VideoCapture(video_path)
+                vw, vh = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                cap.release()
+                track = build_ghost_track(profile_id, timeline, vw, vh)
+                if track is not None:
+                    ghost_name = f"{job_id}_ghost.mp4"
+                    render_ghost_video(video_path, track, os.path.join(str(OUTPUTS_DIR), ghost_name))
+                    job.ghost_video_url = f"{public_base_url}/media/outputs/{ghost_name}"
+                    ghost_lines = coaching_lines(track)
+                    ghost_pts = ghost_score(track)
+            except Exception:
+                pass  # the other videos still work without the ghost
+
         # Populate final job result
         job.exercise_name = exercise_name
         job.target_muscles = target_muscles
@@ -208,16 +231,21 @@ def _run_analysis_pipeline(
         ratio = optimal_metrics / max(1, total_metrics)
         if source_type == "upload":
             # Honest score for the user's own clip: no floor.
-            job.overall_form_score = int(round(100 * ratio))
-            seen = set()
-            for s in steps:
-                for jm in s.joint_metrics:
-                    if jm.status != "optimal" and jm.joint_name not in seen and len(seen) < 6:
-                        seen.add(jm.joint_name)
-                        lo, hi = jm.ideal_range_deg
-                        job.my_form_fixes.append(
-                            f"{s.title.split('. ', 1)[-1]}: {jm.joint_name} was {jm.measured_deg:.0f}°, aim for {lo:.0f}–{hi:.0f}°. {jm.cue}"
-                        )
+            job.my_form_fixes.extend(ghost_lines)
+            if ghost_pts is not None:
+                # The ghost measures what matters for this lift, so skip the generic joint-range list.
+                job.overall_form_score = ghost_pts
+            else:
+                job.overall_form_score = int(round(100 * ratio))
+                seen = set()
+                for s in steps:
+                    for jm in s.joint_metrics:
+                        if jm.status != "optimal" and jm.joint_name not in seen and len(seen) < 6:
+                            seen.add(jm.joint_name)
+                            lo, hi = jm.ideal_range_deg
+                            job.my_form_fixes.append(
+                                f"{s.title.split('. ', 1)[-1]}: {jm.joint_name} was {jm.measured_deg:.0f}°, aim for {lo:.0f}–{hi:.0f}°. {jm.cue}"
+                            )
             if not job.my_form_fixes:
                 job.my_form_fixes.append("Clean set. Every angle we tracked was in range.")
         else:

@@ -26,9 +26,11 @@ import { MuscleHitMapAnimation } from "../../src/components/MuscleHitMapAnimatio
 function WorkoutVideoPlayer({
   videoUrl,
   seekToSec,
+  tall,
 }: {
   videoUrl: string;
   seekToSec: number | null;
+  tall?: boolean;
 }) {
   const player = useVideoPlayer(videoUrl, (p) => {
     p.loop = true;
@@ -47,7 +49,7 @@ function WorkoutVideoPlayer({
 
   return (
     <VideoView
-      style={styles.videoPlayer}
+      style={[styles.videoPlayer, tall && { height: 460 }]}
       player={player}
       fullscreenOptions={{ enable: true }}
       allowsPictureInPicture
@@ -65,7 +67,7 @@ export default function AnalysisResultScreen() {
 
   const [result, setResult] = useState<WorkoutAnalysisResult | null>(null);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
-  const [videoMode, setVideoMode] = useState<"flow" | "full">("flow");
+  const [pickedMode, setVideoMode] = useState<"ghost" | "flow" | "full" | null>(null);
   const [seekToSec, setSeekToSec] = useState<number | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -130,7 +132,7 @@ export default function AnalysisResultScreen() {
 
   const handleSelectStep = (index: number, timestampSec: number) => {
     setActiveStepIndex(index);
-    if (videoMode === "full") setSeekToSec(timestampSec);
+    if ((pickedMode ?? (result?.ghost_video_url ? "ghost" : "flow")) === "full") setSeekToSec(timestampSec);
   };
 
   if (error) {
@@ -161,8 +163,12 @@ export default function AnalysisResultScreen() {
     );
   }
 
+  const modes = (result.ghost_video_url ? ["ghost", "flow", "full"] : ["flow", "full"]) as ("ghost" | "flow" | "full")[];
+  const videoMode = pickedMode && modes.includes(pickedMode) ? pickedMode : modes[0];
   const activeVideoUrl =
-    videoMode === "flow"
+    videoMode === "ghost"
+      ? result.local_ghost_video_uri || result.ghost_video_url
+      : videoMode === "flow"
       ? result.local_flow_video_uri || result.step_by_step_flow_video_url
       : result.local_full_video_uri || result.annotated_full_video_url;
 
@@ -181,20 +187,20 @@ export default function AnalysisResultScreen() {
 
       <View style={styles.videoCard}>
         <View style={styles.videoToggleRow}>
-          {(["flow", "full"] as const).map((m) => (
+          {modes.map((m) => (
             <TouchableOpacity
               key={m}
               style={[styles.modeTab, videoMode === m && styles.modeTabActive]}
               onPress={() => setVideoMode(m)}
             >
               <Text style={[styles.modeTabText, videoMode === m && styles.modeTabTextActive]}>
-                {m === "flow" ? "Steps" : "Live angles"}
+                {m === "ghost" ? "Target arm" : m === "flow" ? "Steps" : "Live angles"}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
         {activeVideoUrl ? (
-          <WorkoutVideoPlayer key={activeVideoUrl} videoUrl={activeVideoUrl} seekToSec={seekToSec} />
+          <WorkoutVideoPlayer key={activeVideoUrl} videoUrl={activeVideoUrl} seekToSec={seekToSec} tall={videoMode === "ghost"} />
         ) : null}
       </View>
 

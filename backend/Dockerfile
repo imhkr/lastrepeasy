@@ -19,7 +19,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r /app/requirements.txt
 
 COPY app /app/app
-RUN mkdir -p /app/storage/uploads /app/storage/outputs /app/storage/frames
+RUN mkdir -p /app/storage/uploads /app/storage/outputs /app/storage/frames /app/storage/models && \
+    curl -fsSL -o /app/storage/models/pose_landmarker_heavy.task \
+    https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/latest/pose_landmarker_heavy.task
 
 EXPOSE 8000
 

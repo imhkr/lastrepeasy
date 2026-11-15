@@ -133,6 +133,7 @@ class WorkoutAnalysisResult(BaseModel):
     source_video_url: Optional[str] = None
     step_by_step_flow_video_url: Optional[str] = None
     annotated_full_video_url: Optional[str] = None
+    ghost_video_url: Optional[str] = None  # user's own clip with the green target arm drawn on it
 
 
 class AnalyzeYoutubeRequest(BaseModel):

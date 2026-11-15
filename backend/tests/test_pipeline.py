@@ -83,10 +83,61 @@ def test_upload_rejects_clip_over_20_seconds(tmp_path):
     assert r.status_code == 400
 
 
-def test_upload_returns_personal_fixes_and_honest_score(tmp_path):
+def _wait(cl, jid):
     import time
+
+    for _ in range(120):
+        j = cl.get(f"/api/jobs/{jid}").json()
+        if j["status"] in ("completed", "failed"):
+            return j
+        time.sleep(1)
+    return j
+
+
+def test_upload_without_a_person_fails_instead_of_inventing_joints(tmp_path):
     from fastapi.testclient import TestClient
     from app.main import app
+    from app.services.video_ingestor import generate_synthetic_workout_video
+
+    clip = str(tmp_path / "empty.mp4")
+    generate_synthetic_workout_video(output_path=clip, exercise_title="Cable Lat Pullover")
+    cl = TestClient(app)
+    with open(clip, "rb") as f:
+        jid = cl.post("/api/analyze/upload", files={"file": ("empty.mp4", f, "video/mp4")}, data={"exercise_hint": "incline press"}).json()["job_id"]
+    j = _wait(cl, jid)
+    assert j["status"] == "failed" and "person" in j["error"].lower()
+
+
+def test_ghost_arm_stacks_forearm_and_follows_elbow_target():
+    import numpy as np
+    from app.services.pose_analyzer import FramePoseMetrics, Keypoint2D
+    from app.services.ghost import build_ghost_track
+
+    # Fake a clean press: right arm in the image plane, wrist travelling straight up and down 40 cm.
+    tl = []
+    for i in range(30):
+        ph = 0.5 - 0.5 * np.cos(2 * np.pi * i / 29)  # 0 bottom .. 1 top
+        wy = -0.10 - 0.40 * ph  # wrist height above shoulder (y down), metres
+        kp = {}
+        for part, (wx, wy_) in {"shoulder": (0.0, 0.0), "elbow": (0.0, -0.10 + 0.0), "wrist": (0.0, wy), "hip": (0.0, 0.5)}.items():
+            kp[f"right_{part}"] = Keypoint2D(0.5 + wx * 0.5, 0.5 + wy_ * 0.5, 1.0, wx, wy_, 0.0)
+        tl.append(FramePoseMetrics(frame_idx=i, time_sec=i / 10, keypoints=kp, dominant_side="right"))
+    tr = build_ghost_track("incline_press_nippard", tl, 1000, 1000)
+    assert tr is not None and len(tr.arms) == 1
+    a = tr.arms[0]
+    assert float(np.mean(a.off_deg)) < 5, "a straight-up forearm is already stacked"
+    assert abs(a.ghost_deg.min() - 90) < 1 and abs(a.ghost_deg.max() - 170) < 1
+    assert build_ghost_track("lat_pullover_nippard", tl, 1000, 1000) is None, "only pressing is supported"
+
+
+def test_upload_returns_personal_fixes_and_honest_score(tmp_path, monkeypatch):
+    import app.main as main
+    from app.services.pose_analyzer import analyze_video_pose_timeline as real
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    # The generated clip has no person; let it use the synthetic skeleton so the rest of the pipeline is exercised.
+    monkeypatch.setattr(main, "analyze_video_pose_timeline", lambda p, sample_fps=8.0, allow_synthetic=True: real(p, sample_fps, True))
     from app.services.video_ingestor import generate_synthetic_workout_video
 
     clip = str(tmp_path / "ok.mp4")
@@ -94,11 +145,7 @@ def test_upload_returns_personal_fixes_and_honest_score(tmp_path):
     cl = TestClient(app)
     with open(clip, "rb") as f:
         jid = cl.post("/api/analyze/upload", files={"file": ("ok.mp4", f, "video/mp4")}, data={"exercise_hint": "lat pulldown"}).json()["job_id"]
-    for _ in range(120):
-        j = cl.get(f"/api/jobs/{jid}").json()
-        if j["status"] in ("completed", "failed"):
-            break
-        time.sleep(1)
+    j = _wait(cl, jid)
     assert j["status"] == "completed", j.get("error")
     assert j["my_form_fixes"], "uploads must carry personal corrections"
     assert not j["my_form_fixes"][0][0].isdigit(), "no step-number prefix"

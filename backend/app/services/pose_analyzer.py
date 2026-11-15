@@ -12,6 +12,9 @@ Computes 2D/3D joint angles for:
 from __future__ import annotations
 
 import math
+import os
+import urllib.request
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 import cv2
@@ -23,6 +26,9 @@ class Keypoint2D:
     x: float  # normalized [0, 1]
     y: float  # normalized [0, 1]
     visibility: float = 1.0
+    wx: float = 0.0  # MediaPipe world landmarks: metres, hip-centred; real bone lengths, camera-angle independent
+    wy: float = 0.0
+    wz: float = 0.0
 
 
 @dataclass
@@ -82,6 +88,7 @@ def compute_metrics_from_keypoints(
     frame_idx: int,
     time_sec: float,
     kp: Dict[str, Keypoint2D],
+    frame_wh: Tuple[float, float] = (1.0, 1.0),
 ) -> FramePoseMetrics:
     """
     Given normalized keypoints for left/right body landmarks, select the more visible side
@@ -97,11 +104,13 @@ def compute_metrics_from_keypoints(
     )
     side = "left" if left_vis > right_vis else "right"
 
+    fw, fh = frame_wh  # angles must be measured in pixels, or portrait/landscape frames skew them
+
     def pt(name: str, default: Tuple[float, float]) -> Tuple[float, float]:
         p = kp.get(f"{side}_{name}")
         if p is None:
-            return default
-        return (p.x, p.y)
+            return (default[0] * fw, default[1] * fh)
+        return (p.x * fw, p.y * fh)
 
     shoulder = pt("shoulder", (0.48, 0.32))
     elbow = pt("elbow", (0.58, 0.42))
@@ -135,31 +144,40 @@ def compute_metrics_from_keypoints(
     )
 
 
+POSE_MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/latest/pose_landmarker_heavy.task"
+POSE_MODEL_PATH = Path(os.getenv("POSE_MODEL_PATH", Path(__file__).resolve().parents[2] / "storage" / "models" / "pose_landmarker_heavy.task"))
+
+
 def _try_load_mediapipe_pose():
     """
-    Attempts to load MediaPipe Pose solution if available in the environment.
-    Falls back cleanly to OpenCV/kinematic motion tracking if not present.
+    Loads the MediaPipe PoseLandmarker (Tasks API; the old mp.solutions API no longer ships).
+    Downloads the ~9 MB model on first use. Returns None if it cannot be loaded.
     """
     try:
         import mediapipe as mp  # type: ignore
+        from mediapipe.tasks import python as mpp  # type: ignore
+        from mediapipe.tasks.python import vision  # type: ignore
 
-        if hasattr(mp, "solutions") and hasattr(mp.solutions, "pose"):
-            return mp.solutions.pose.Pose(
-                static_image_mode=False,
-                model_complexity=1,
-                smooth_landmarks=True,
-                min_detection_confidence=0.5,
-                min_tracking_confidence=0.5,
-            )
+        if not POSE_MODEL_PATH.exists():
+            POSE_MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+            urllib.request.urlretrieve(POSE_MODEL_URL, str(POSE_MODEL_PATH))
+        opts = vision.PoseLandmarkerOptions(
+            base_options=mpp.BaseOptions(model_asset_path=str(POSE_MODEL_PATH)),
+            running_mode=vision.RunningMode.VIDEO,
+            num_poses=1,
+            min_pose_detection_confidence=0.5,
+            min_tracking_confidence=0.5,
+        )
+        return vision.PoseLandmarker.create_from_options(opts)
     except Exception:
-        pass
-    return None
+        return None
 
 
 def _extract_mediapipe_keypoints(results) -> Optional[Dict[str, Keypoint2D]]:
     if not results or not getattr(results, "pose_landmarks", None):
         return None
-    lm = results.pose_landmarks.landmark
+    lm = results.pose_landmarks[0]
+    wlm = results.pose_world_landmarks[0] if getattr(results, "pose_world_landmarks", None) else None
     mapping = {
         "nose": 0,
         "left_shoulder": 11,
@@ -191,6 +209,9 @@ def _extract_mediapipe_keypoints(results) -> Optional[Dict[str, Keypoint2D]]:
                 x=float(np.clip(p.x, 0.02, 0.98)),
                 y=float(np.clip(p.y, 0.02, 0.98)),
                 visibility=float(getattr(p, "visibility", 0.9)),
+                wx=float(wlm[idx].x) if wlm is not None else 0.0,
+                wy=float(wlm[idx].y) if wlm is not None else 0.0,
+                wz=float(wlm[idx].z) if wlm is not None else 0.0,
             )
     return kp
 
@@ -275,10 +296,13 @@ def _build_biomechanical_keypoints_for_phase(progress_0_to_1: float, motion_cent
 def analyze_video_pose_timeline(
     video_path: str,
     sample_fps: float = 6.0,
+    allow_synthetic: bool = True,
 ) -> Tuple[List[FramePoseMetrics], float]:
     """
     Reads a workout video, runs pose detection (MediaPipe Pose with motion-guided fallback),
     and returns a time-series of FramePoseMetrics along with total video duration in seconds.
+    With allow_synthetic=False (real user uploads) a clip where no person is found raises instead of
+    inventing keypoints; the synthetic path exists only for the generated demo clips.
     """
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -290,6 +314,11 @@ def analyze_video_pose_timeline(
 
     step = max(1, int(round(fps / sample_fps)))
     mp_pose = _try_load_mediapipe_pose()
+    if mp_pose is None and not allow_synthetic:
+        raise ValueError("Pose model could not be loaded on the server, so the clip cannot be analysed.")
+    frame_wh = (float(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1), float(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1))
+    last_kp: Optional[Dict[str, Keypoint2D]] = None
+    detected = 0
 
     metrics_list: List[FramePoseMetrics] = []
     prev_gray: Optional[np.ndarray] = None
@@ -306,10 +335,22 @@ def analyze_video_pose_timeline(
 
             kp: Optional[Dict[str, Keypoint2D]] = None
             if mp_pose is not None:
-                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                res = mp_pose.process(rgb)
-                kp = _extract_mediapipe_keypoints(res)
+                import mediapipe as mp  # type: ignore
 
+                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                res = mp_pose.detect_for_video(
+                    mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb), int(time_sec * 1000)
+                )
+                kp = _extract_mediapipe_keypoints(res)
+                if kp is not None:
+                    detected += 1
+                    last_kp = kp
+                elif last_kp is not None and not allow_synthetic:
+                    kp = last_kp  # brief dropout: hold the last real pose
+
+            if kp is None and not allow_synthetic:
+                frame_idx += 1
+                continue
             if kp is None:
                 # Compute motion centroid from frame difference for realistic sync
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -326,7 +367,7 @@ def analyze_video_pose_timeline(
                 prev_gray = gray_small
                 kp = _build_biomechanical_keypoints_for_phase(progress, centroid)
 
-            frame_metrics = compute_metrics_from_keypoints(frame_idx, time_sec, kp)
+            frame_metrics = compute_metrics_from_keypoints(frame_idx, time_sec, kp, frame_wh)
             metrics_list.append(frame_metrics)
 
         frame_idx += 1
@@ -334,6 +375,10 @@ def analyze_video_pose_timeline(
     cap.release()
     if mp_pose is not None:
         mp_pose.close()
+    if not allow_synthetic and detected < max(3, len(metrics_list) // 3):
+        raise ValueError(
+            "Could not see a person clearly in this clip. Film from the side or front at 2-3 m, full body in frame, good light."
+        )
 
     return metrics_list, round(duration_sec, 2)
 

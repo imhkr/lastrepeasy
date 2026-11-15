@@ -125,6 +125,8 @@ export async function saveWorkoutToPhoneStorage(
       `${jobId}_full.mp4`
     );
 
+    const localGhostUri = await downloadFileIfMobile(workout.ghost_video_url, `${jobId}_ghost.mp4`);
+
     const updatedSteps = await Promise.all(
       (workout.steps || []).map(async (step) => {
         const localKf = await downloadFileIfMobile(
@@ -144,6 +146,7 @@ export async function saveWorkoutToPhoneStorage(
       saved_at: new Date().toISOString(),
       local_flow_video_uri: localFlowUri || workout.step_by_step_flow_video_url,
       local_full_video_uri: localFullUri || workout.annotated_full_video_url,
+      local_ghost_video_uri: localGhostUri || workout.ghost_video_url,
       step_by_step_flow_video_url: localFlowUri || workout.step_by_step_flow_video_url,
       annotated_full_video_url: localFullUri || workout.annotated_full_video_url,
     };

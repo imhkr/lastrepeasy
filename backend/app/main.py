@@ -27,10 +27,14 @@ from app.schemas import (
     AngleSeriesPoint,
     JobStatus,
     PresetCatalogItem,
+    RepCheckOut,
+    RepReportOut,
     WorkoutAnalysisResult,
 )
 from app.services.flow_renderer import render_keyframes_and_flow_videos
-from app.services.ghost import build_ghost_track, coaching_lines, ghost_score, render_ghost_video
+from app.services.coach_overlay import render_ghost_video
+from app.services.ghost import build_ghost_track
+from app.services.press_coach import analyze_reps, set_lines, set_score
 from app.services.nippard_ai import (
     JEFF_NIPPARD_PRESETS,
     build_exercise_analysis,
@@ -191,11 +195,16 @@ def _run_analysis_pipeline(
                 cap.release()
                 track = build_ghost_track(profile_id, timeline, vw, vh)
                 if track is not None:
+                    reps = analyze_reps(track)
                     ghost_name = f"{job_id}_ghost.mp4"
-                    render_ghost_video(video_path, track, os.path.join(str(OUTPUTS_DIR), ghost_name))
+                    render_ghost_video(video_path, track, reps, os.path.join(str(OUTPUTS_DIR), ghost_name))
                     job.ghost_video_url = f"{public_base_url}/media/outputs/{ghost_name}"
-                    ghost_lines = coaching_lines(track)
-                    ghost_pts = ghost_score(track)
+                    ghost_lines = set_lines(reps)
+                    ghost_pts = set_score(reps) if reps else None
+                    job.rep_reports = [
+                        RepReportOut(index=r.index, checks=[RepCheckOut(key=c.key, label=c.label, status=c.status, message=c.message) for c in r.checks])
+                        for r in reps
+                    ]
             except Exception:
                 pass  # the other videos still work without the ghost
 

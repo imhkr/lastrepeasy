@@ -17,6 +17,7 @@ interface LastOpened {
 
 const TILES = [
   { title: "Training plans", sub: "Min-Max and PPL, week by week", path: "/plans", color: "#0EA5E9" },
+  { title: "Live coach", sub: "Camera tells you what to fix, rep by rep", path: "/live", color: "#F43F5E" },
   { title: "Form check", sub: "Upload a set, see what to fix", path: "/form", color: "#10B981" },
   { title: "My lifts", sub: "Beat your last numbers", path: "/lifts", color: "#F59E0B" },
   { title: "Progress photos", sub: "Compare before and after", path: "/photos", color: "#A78BFA" },

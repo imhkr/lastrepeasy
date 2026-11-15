@@ -32,6 +32,7 @@ export const MENU_ITEMS = [
   { label: "Training plans", sub: "Min-Max and Pure Bodybuilding PPL", path: "/plans" },
   { label: "My lifts", sub: "Last time vs this time", path: "/lifts" },
   { label: "Progress photos", sub: "Compare before and after", path: "/photos" },
+  { label: "Live coach", sub: "Camera watches your set, tells you what to fix", path: "/live" },
   { label: "Form check", sub: "Upload a set, find what to fix", path: "/form" },
 ] as const;
 

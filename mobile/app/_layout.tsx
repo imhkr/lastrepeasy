@@ -17,6 +17,7 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="index" options={{ title: "LastRepEasy" }} />
+        <Stack.Screen name="live" options={{ title: "Live coach" }} />
         <Stack.Screen name="form" options={{ title: "Form check" }} />
         <Stack.Screen name="analysis/[jobId]" options={{ title: "Results" }} />
         <Stack.Screen name="plans/index" options={{ title: "Training plans" }} />

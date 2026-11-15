@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import * as Speech from "expo-speech";
+import { pickVoice } from "../services/coachVoice";
 import { WorkoutAnalysisResult } from "../types/workout";
 
 interface Props {
@@ -28,22 +29,6 @@ function buildFallbackHinglishScript(w: WorkoutAnalysisResult): string {
 // Split into sentences so the engine pauses naturally instead of reading one flat block.
 function splitSentences(text: string): string[] {
   return text.match(/[^.!?]+[.!?]*/g)?.map((t) => t.trim()).filter(Boolean) ?? [text];
-}
-
-// Prefer the best installed voice (Enhanced/Premium) for the locale; the default one sounds robotic.
-async function pickVoice(locale: string): Promise<string | undefined> {
-  try {
-    const voices = await Speech.getAvailableVoicesAsync();
-    // Known male voices first (iOS names), then quality, then exact locale.
-    const male = /rishi|daniel|aaron|arthur|alex|fred|oliver|gordon|reed|eddy|ene|ive|iod/i;
-    const rank = (v: Speech.Voice) =>
-      (male.test(v.name + v.identifier) ? 4 : 0) + (v.quality === Speech.VoiceQuality.Enhanced ? 2 : 0) + (v.language === locale ? 1 : 0);
-    return voices
-      .filter((v) => v.language.replace("_", "-").startsWith(locale.slice(0, 2)))
-      .sort((x, y) => rank(y) - rank(x))[0]?.identifier;
-  } catch {
-    return undefined;
-  }
 }
 
 // Short lead-ins like "Listen up." join the next sentence so every step has real content.

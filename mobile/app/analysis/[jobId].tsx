@@ -21,6 +21,7 @@ import { StepFlowTimeline } from "../../src/components/StepFlowTimeline";
 import { pickAndUploadClip } from "../../src/services/pickAndUploadClip";
 import { ExercisePickerModal } from "../../src/components/ExercisePickerModal";
 import { VoiceCoachPanel } from "../../src/components/VoiceCoachPanel";
+import { RepReport } from "../../src/types/workout";
 import { MuscleHitMapAnimation } from "../../src/components/MuscleHitMapAnimation";
 
 function WorkoutVideoPlayer({
@@ -58,6 +59,51 @@ function WorkoutVideoPlayer({
     />
   );
 }
+
+const STATUS_ICON: Record<string, { sym: string; bg: string; fg: string }> = {
+  good: { sym: "\u2713", bg: "#34D399", fg: "#0B0F17" },
+  almost: { sym: "!", bg: "#FBBF24", fg: "#0B0F17" },
+  fix: { sym: "\u2715", bg: "#F87171", fg: "#FFFFFF" },
+  unsure: { sym: "?", bg: "#94A3B8", fg: "#0B0F17" },
+};
+
+// One card per rep, one line per check, plain words. Tick = good, ! = nearly, x = fix it, ? = could not see.
+function RepChecklist({ reps }: { reps: RepReport[] }) {
+  if (!reps.length) return null;
+  return (
+    <View>
+      {reps.map((r) => (
+        <View key={r.index} style={rcStyles.card}>
+          <Text style={rcStyles.title}>Rep {r.index}</Text>
+          {r.checks.map((c) => {
+            const ic = STATUS_ICON[c.status] ?? STATUS_ICON.unsure;
+            return (
+              <View key={c.key} style={rcStyles.row}>
+                <View style={[rcStyles.icon, { backgroundColor: ic.bg }]}>
+                  <Text style={[rcStyles.iconText, { color: ic.fg }]}>{ic.sym}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={rcStyles.label}>{c.label}</Text>
+                  <Text style={rcStyles.msg}>{c.message}</Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+const rcStyles = StyleSheet.create({
+  card: { backgroundColor: "#111827", borderRadius: 16, padding: 14, borderWidth: 1, borderColor: "#1E293B", marginBottom: 12, gap: 12 },
+  title: { color: "#F8FAFC", fontSize: 17, fontWeight: "800" },
+  row: { flexDirection: "row", gap: 12, alignItems: "flex-start" },
+  icon: { width: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center", marginTop: 1 },
+  iconText: { fontSize: 14, fontWeight: "900" },
+  label: { color: "#F8FAFC", fontSize: 15, fontWeight: "700" },
+  msg: { color: "#CBD5E1", fontSize: 14, lineHeight: 19, marginTop: 1 },
+});
 
 const shortName = (n: string) => n.replace(/\s*\([^)]*\)/g, "").split("—")[0].trim();
 
@@ -208,6 +254,7 @@ export default function AnalysisResultScreen() {
         <Text style={styles.uploadBtnText}>{uploading ? "Uploading..." : "Check my form (upload up to 20 sec)"}</Text>
       </TouchableOpacity>
 
+      <RepChecklist reps={result.rep_reports ?? []} />
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{isUpload ? "Fix this" : "Key points"}</Text>
         {(isUpload ? fixes : result.key_takeaways.slice(0, 3)).map((item, idx) => (

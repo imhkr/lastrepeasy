@@ -45,7 +45,9 @@ class ArmTrack:
     wr: np.ndarray
     ghost_el: np.ndarray
     ghost_wr: np.ndarray
-    elbow_deg: np.ndarray  # user's elbow angle
+    elbow_deg: np.ndarray  # user's elbow angle in the image (2D, steadier than the depth axis)
+    vis: np.ndarray  # landmark confidence 0-1 (lowest of shoulder, elbow, wrist)
+    lean_deg: np.ndarray  # forearm lean from straight up: + toward the head, - toward the feet
     ghost_deg: np.ndarray
     off_deg: np.ndarray  # forearm vs pressing line
     progress: np.ndarray  # 0 bottom .. 1 top
@@ -99,12 +101,13 @@ def build_ghost_track(profile_id: str, timeline: List[FramePoseMetrics], width: 
     for side in ("left", "right"):
         try:
             vis = np.array([min(m.keypoints[f"{side}_{p}"].visibility for p in ("shoulder", "elbow", "wrist")) for m in timeline])
+            gate = np.array([min(m.keypoints[f"{side}_{p}"].visibility for p in ("shoulder", "elbow")) for m in timeline])  # a dumbbell often hides the wrist
         except KeyError:
             continue
-        if np.median(vis) < MIN_VIS:
+        if np.median(gate) < MIN_VIS:
             continue
         parts = ("shoulder", "elbow", "wrist", "hip")
-        cand = {"i": {p: img(side, p) for p in parts}, "w": {p: wld(side, p) for p in parts}}
+        cand = {"i": {p: img(side, p) for p in parts}, "w": {p: wld(side, p) for p in parts}, "vis": _smooth(vis)}
         fore = np.linalg.norm(cand["w"]["wrist"] - cand["w"]["elbow"], axis=1)
         if np.std(fore) / (np.mean(fore) + 1e-9) > 0.4:  # forearm length jumping around = hand lost behind a dumbbell
             continue
@@ -123,8 +126,8 @@ def build_ghost_track(profile_id: str, timeline: List[FramePoseMetrics], width: 
         fdir = _unit(_unit(d["w"]["wrist"] - d["w"]["elbow"])[top].mean(0))
         rise = (d["w"]["wrist"] - d["w"]["shoulder"]) @ fdir  # wrist height along "up"
         corr = float(np.corrcoef(ext, rise)[0, 1]) if np.std(ext) > 1e-6 and np.std(rise) > 1e-6 else 0.0
-        if np.ptp(rise) < 0.15 or not np.isfinite(corr) or corr < MIN_PRESS_CORR:
-            del raw[side]  # under 15 cm of travel, or elbow and wrist do not move together like a press
+        if np.ptp(rise) < 0.10 or not np.isfinite(corr) or corr < MIN_PRESS_CORR:
+            del raw[side]  # under 10 cm of travel, or elbow and wrist do not move together like a press
             continue
         ups[side] = fdir
     if not raw:
@@ -164,8 +167,15 @@ def build_ghost_track(profile_id: str, timeline: List[FramePoseMetrics], width: 
         gel = Si + scale[:, None] * (gel_w - Sw)[:, :2]
         gwr = Si + scale[:, None] * (gwr_w - Sw)[:, :2]
 
-        off = np.degrees(np.arccos(np.clip((_unit(Ww - Ew) @ arm_up), -1, 1)))
-        track.arms.append(ArmTrack(side, t, Si, d["i"]["elbow"], d["i"]["wrist"], gel, gwr, _angle3(Sw, Ew, Ww), target, off, prog))
+        fdir_t = _unit(Ww - Ew)
+        off = np.degrees(np.arccos(np.clip(fdir_t @ arm_up, -1, 1)))
+        head = _unit(Sw - d["w"]["hip"])  # hip -> shoulder points toward the head
+        head_perp = head - (head @ arm_up)[:, None] * arm_up
+        f_perp = fdir_t - (fdir_t @ arm_up)[:, None] * arm_up
+        lean = off * np.where((f_perp * head_perp).sum(1) >= 0, 1.0, -1.0)
+        ei = d["i"]
+        elbow2d = _angle3(ei["shoulder"], ei["elbow"], ei["wrist"])
+        track.arms.append(ArmTrack(side, t, Si, ei["elbow"], ei["wrist"], gel, gwr, elbow2d, d["vis"], lean, target, off, prog))
 
     arms = track.arms
     off_all = np.mean([a.off_deg for a in arms], axis=0)
@@ -203,103 +213,3 @@ def _arrow(img: np.ndarray, a: np.ndarray, b: np.ndarray, sc: float, col, th: in
     cv2.arrowedLine(img, _pt(a, sc), _pt(b, sc), col, th, cv2.LINE_AA, tipLength=0.25)
 
 
-def _caption(frame: np.ndarray, text: str, col) -> None:
-    h, w = frame.shape[:2]
-    bar = max(60, int(h * 0.075))
-    sub = frame[h - bar : h]
-    frame[h - bar : h] = cv2.addWeighted(np.full_like(sub, (22, 18, 16)), 0.82, sub, 0.18, 0)
-    cv2.rectangle(frame, (0, h - bar), (w, h - bar + 4), col, -1)
-    scale = w / 900.0
-    (tw, th), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, scale, 2)
-    cv2.putText(frame, text, (max(12, (w - tw) // 2), h - bar // 2 + th // 2), cv2.FONT_HERSHEY_SIMPLEX, scale, WHITE, 2, cv2.LINE_AA)
-
-
-def draw_ghost(frame: np.ndarray, track: GhostTrack, time_sec: float, sc: float) -> np.ndarray:
-    """frame is already scaled by sc relative to the tracked pixel space."""
-    out = frame.copy()
-    shadow = np.zeros_like(out)
-    pos = {a.side: _at(track, a, time_sec) for a in track.arms}
-    thick = max(10, int(out.shape[1] * 0.032))
-
-    for q in pos.values():
-        cv2.line(shadow, _pt(q["sh"], sc), _pt(q["gel"], sc), GREEN, thick, cv2.LINE_AA)
-        cv2.line(shadow, _pt(q["gel"], sc), _pt(q["gwr"], sc), GREEN, thick, cv2.LINE_AA)
-        for k in ("gel", "gwr"):
-            cv2.circle(shadow, _pt(q[k], sc), int(thick * 0.85), GREEN, -1, cv2.LINE_AA)
-    mask = shadow.any(axis=2)
-    out[mask] = cv2.addWeighted(out, 0.45, shadow, 0.55, 0)[mask]
-
-    worst_off, worst_gap = 0.0, 0.0
-    for q in pos.values():
-        ok = q["off"] <= STACK_TOLERANCE_DEG
-        col = WHITE if ok else RED
-        for a, b in (("sh", "el"), ("el", "wr")):
-            cv2.line(out, _pt(q[a], sc), _pt(q[b], sc), col, max(3, thick // 4), cv2.LINE_AA)
-        for k in ("sh", "el", "wr"):
-            cv2.circle(out, _pt(q[k], sc), max(5, thick // 3), col, -1, cv2.LINE_AA)
-        if not ok:
-            _arrow(out, q["wr"], q["gwr"], sc, AMBER, max(3, thick // 4))
-        worst_off = max(worst_off, q["off"])
-        if q["p"] < 0.2:
-            worst_gap = max(worst_gap, q["deg"] - q["gdeg"])
-
-    if worst_off > STACK_TOLERANCE_DEG:
-        _caption(out, "Hands drifting - stack wrists over elbows", RED)
-    elif worst_gap > DEPTH_TOLERANCE_DEG:
-        _caption(out, "Lower - bring elbows to the green arm", AMBER)
-    else:
-        _caption(out, "Good - match the green arm", GREEN)
-    cv2.putText(out, "GREEN = where your arms should be", (12, 34), cv2.FONT_HERSHEY_SIMPLEX, out.shape[1] / 1000.0, GREEN, 2, cv2.LINE_AA)
-    return out
-
-
-def render_ghost_video(source_video_path: str, track: GhostTrack, out_path: str, max_side: int = 960) -> str:
-    cap = cv2.VideoCapture(source_video_path)
-    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
-    sc = min(1.0, max_side / max(track.width, track.height))
-    ow, oh = int(track.width * sc) // 2 * 2, int(track.height * sc) // 2 * 2
-    raw = out_path + ".raw.mp4"
-    wr = cv2.VideoWriter(raw, cv2.VideoWriter_fourcc(*"mp4v"), fps, (ow, oh))
-    i = 0
-    while True:
-        ok, frame = cap.read()
-        if not ok:
-            break
-        frame = cv2.resize(frame, (ow, oh))
-        wr.write(draw_ghost(frame, track, i / fps, ow / track.width))
-        i += 1
-    cap.release()
-    wr.release()
-    subprocess.run(
-        ["ffmpeg", "-y", "-i", raw, "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out_path],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False,
-    )
-    if os.path.exists(raw):
-        os.remove(raw)
-    if not os.path.exists(out_path):
-        raise RuntimeError("ghost video encode failed")
-    return out_path
-
-
-def coaching_lines(track: GhostTrack) -> List[str]:
-    """Plain-language fixes from the whole rep, for the results list."""
-    s = track.stats
-    lines: List[str] = []
-    if s["avg_off_deg"] > STACK_TOLERANCE_DEG:
-        lines.append(
-            f"Wrists drift: forearms were about {s['avg_off_deg']:.0f} degrees off straight up. Keep each wrist right over its elbow, like the green arm."
-        )
-    b = s["bottom_elbow_deg"]
-    if b == b and b - s["bottom_target_deg"] > DEPTH_TOLERANCE_DEG:
-        lines.append(f"Go lower: elbows only bent to {b:.0f} degrees at the bottom. Aim for about {s['bottom_target_deg']:.0f}, the green arm.")
-    if not lines:
-        lines.append("Arms matched the green target through the whole rep.")
-    return lines
-
-
-def ghost_score(track: GhostTrack) -> int:
-    """0-100: share of the rep with forearms stacked (85 pts) plus reaching the target bottom depth (15 pts)."""
-    s = track.stats
-    b = s["bottom_elbow_deg"]
-    depth_ok = not (b == b and b - s["bottom_target_deg"] > DEPTH_TOLERANCE_DEG)
-    return int(round(0.85 * s["stack_ok_pct"] + (15 if depth_ok else 0)))

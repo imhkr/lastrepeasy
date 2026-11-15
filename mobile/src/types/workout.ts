@@ -77,6 +77,7 @@ export interface WorkoutAnalysisResult {
   step_by_step_flow_video_url?: string | null;
   annotated_full_video_url?: string | null;
   ghost_video_url?: string | null;
+  rep_reports?: RepReport[];
 
   // Offline phone storage metadata
   saved_at?: string;
@@ -93,4 +94,16 @@ export interface PresetCatalogItem {
   target_muscles: string[];
   highlight_cue: string;
   default_grip: string;
+}
+
+export interface RepCheck {
+  key: string;
+  label: string;
+  status: "good" | "almost" | "fix" | "unsure";
+  message: string;
+}
+
+export interface RepReport {
+  index: number;
+  checks: RepCheck[];
 }

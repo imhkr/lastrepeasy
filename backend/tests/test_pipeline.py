@@ -150,3 +150,27 @@ def test_upload_returns_personal_fixes_and_honest_score(tmp_path, monkeypatch):
     assert j["my_form_fixes"], "uploads must carry personal corrections"
     assert not j["my_form_fixes"][0][0].isdigit(), "no step-number prefix"
     assert 0 <= j["overall_form_score"] <= 100
+
+
+def test_upload_returns_per_rep_checklist_and_ghost_video(tmp_path, monkeypatch):
+    """Whole upload path with the real landmarks of a recorded press standing in for the pose model."""
+    import app.main as main
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.services.video_ingestor import generate_synthetic_workout_video
+    from tests.fixture_util import load_fixture
+
+    timeline, _, _ = load_fixture()
+    monkeypatch.setattr(main, "analyze_video_pose_timeline", lambda p, sample_fps=8.0, allow_synthetic=True: (timeline, 4.27))
+    clip = str(tmp_path / "press.mp4")
+    generate_synthetic_workout_video(output_path=clip, exercise_title="Incline press")
+    cl = TestClient(app)
+    with open(clip, "rb") as f:
+        jid = cl.post("/api/analyze/upload", files={"file": ("press.mp4", f, "video/mp4")}, data={"exercise_hint": "incline dumbbell press"}).json()["job_id"]
+    j = _wait(cl, jid)
+    assert j["status"] == "completed", j.get("error")
+    assert j["ghost_video_url"], "coaching video expected"
+    assert len(j["rep_reports"]) == 1
+    keys = {c["key"]: c["status"] for c in j["rep_reports"][0]["checks"]}
+    assert keys["depth"] == "good" and "fix" not in keys.values()
+    assert j["my_form_fixes"] and 0 <= j["overall_form_score"] <= 100

@@ -91,6 +91,18 @@ class AngleSeriesPoint(BaseModel):
     torso_lean_deg: float = 0.0
 
 
+class RepCheckOut(BaseModel):
+    key: str
+    label: str
+    status: str  # good | almost | fix | unsure
+    message: str
+
+
+class RepReportOut(BaseModel):
+    index: int
+    checks: List[RepCheckOut] = Field(default_factory=list)
+
+
 class WorkoutAnalysisResult(BaseModel):
     job_id: str = ""
     status: JobStatus = JobStatus.QUEUED
@@ -133,6 +145,7 @@ class WorkoutAnalysisResult(BaseModel):
     source_video_url: Optional[str] = None
     step_by_step_flow_video_url: Optional[str] = None
     annotated_full_video_url: Optional[str] = None
+    rep_reports: List[RepReportOut] = Field(default_factory=list)  # per-rep checklist in plain words
     ghost_video_url: Optional[str] = None  # user's own clip with the green target arm drawn on it
 
 

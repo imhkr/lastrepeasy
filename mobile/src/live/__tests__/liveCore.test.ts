@@ -94,3 +94,16 @@ console.log("LIVE_MISTAKES_OK");
   assert.equal(r.events.length, 0, "silent while standing still");
   console.log("LIVE_STILL_OK");
 }
+
+// ---- end-of-set summary: worst fix first, nothing for good reps
+{
+  const two = run(press({ reps: 2, down: 0.4 }));
+  const sm = CORE.summarize(two.reps);
+  assert.equal(sm.count, 2);
+  assert.equal(sm.rows.length, 2);
+  assert.equal(sm.focus[0].key, "speed", "the thing to fix is speed");
+  assert.ok(/Count 2 seconds|2 tak gino/.test(sm.focus[0].en + sm.focus[0].hi));
+  assert.equal(CORE.summarize(good.reps).focus.length, 0, "a clean set has nothing to fix");
+  assert.equal(CORE.summarize([]).count, 0);
+  console.log("LIVE_SUMMARY_OK");
+}

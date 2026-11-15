@@ -326,7 +326,7 @@ var CORE = (function () {
           var pr2 = rs.prev; if (pr2 && pr2.p > p) rs.rep.tHi = pr2.t + (t - pr2.t) * (pr2.p - T.TOP_P) / (pr2.p - p); }
         else {
           r2.tail.push(elbow); r2.tailVis.push(vis);
-          if (r2.tail.length >= 5) { finalize(r2, events); rs.state = 'top'; rs.rep = null; }
+          if (r2.tail.length >= 5) { finalize(r2, events); rs.state = 'top'; rs.rep = null; }  // same window as the recorded-clip coach, so lockout reads the same
         }
       }
       rs.prev = { t: t, p: p, elbow: elbow };
@@ -379,6 +379,22 @@ var CORE = (function () {
     return { update: update, reps: function () { return done; } };
   }
 
-  return { createCoach: createCoach, T: T, MSG: MSG, MSG_HI: MSG_HI, UI: UI, LABELS: LABELS };
+  // What to show when the set ends: a row per rep, and the most important things to fix next set (worst first).
+  function summarize(reps) {
+    var worstByKey = {};
+    var rows = reps.map(function (r) {
+      r.checks.forEach(function (c) {
+        if ((c.status === 'almost' || c.status === 'fix') && (!worstByKey[c.key] || c.status === 'fix')) worstByKey[c.key] = c;
+      });
+      return { index: r.index, checks: r.checks.map(function (c) { return { key: c.key, status: c.status }; }) };
+    });
+    var focus = Object.keys(worstByKey).map(function (k) { return worstByKey[k]; }).sort(function (a, b) {
+      if ((a.status === 'fix') !== (b.status === 'fix')) return a.status === 'fix' ? -1 : 1;
+      return PRIORITY.indexOf(a.key) - PRIORITY.indexOf(b.key);
+    }).map(function (c) { return { key: c.key, status: c.status, en: c.message, hi: c.message_hi }; });
+    return { count: reps.length, rows: rows, focus: focus };
+  }
+
+  return { createCoach: createCoach, summarize: summarize, T: T, MSG: MSG, MSG_HI: MSG_HI, UI: UI, LABELS: LABELS };
 })();
 `;

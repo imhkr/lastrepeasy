@@ -13,3 +13,17 @@ services:
         value: gemini-2.5-flash
       - key: GEMINI_API_KEY
         sync: false
+      - key: COARENA_BASE_URL
+        value: https://coarena.ai/api/v1
+      - key: COARENA_ADJUDICATE_MODEL
+        value: gpt-6-luna
+      - key: COARENA_VISION_MODEL
+        value: gemini-3-8-flash
+      - key: COARENA_API_KEY_1
+        sync: false
+      - key: COARENA_API_KEY_2
+        sync: false
+      - key: COARENA_API_KEY_3
+        sync: false
+      - key: COARENA_API_KEY_4
+        sync: false

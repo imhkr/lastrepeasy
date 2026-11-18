@@ -47,8 +47,15 @@ JOINT_TRIPLES: Dict[str, Tuple[str, str, str]] = {
     "ankle": ("knee", "ankle", "foot_index"),
 }
 
-VIEW_FRONT_RATIO = 0.55  # shoulder width / torso length at or above this reads as a front view
-VIEW_SIDE_RATIO = 0.25  # at or below this the shoulders overlap, so the lifter is side-on
+# Shoulder width over torso length, both corrected into the same physical unit first. Normalized x
+# and y are on different scales on any non-square frame: on a 1080x1920 phone the raw ratio is
+# inflated by 1.78 and a true side view reads as 45.
+#
+# Thresholds come from the geometry, not from taste. Projected width is metric width times cos(yaw),
+# and one real clip measures 0.403 corrected against 0.410 metric -- so face-on is 0.425, the
+# 45-degree point is 0.30, and side-on is 0.
+VIEW_FRONT_RATIO = 0.36
+VIEW_SIDE_RATIO = 0.10
 EPS = 1e-9
 
 
@@ -196,11 +203,12 @@ def detect_view(frames: Sequence, frame_wh: Tuple[float, float]) -> Tuple[str, f
     MediaPipe's depth noise: at a front view the two shoulders are clearly separated, and
     side-on they collapse onto each other.
 
-    Distances are taken in normalized coordinates, not pixels. Comparing a horizontal pixel
-    distance with a vertical one on a 16:9 frame inflates the ratio by the aspect ratio and
-    would read a true side view as '45'.
+    Distances are corrected to a common unit, not taken in raw normalized coordinates. The frame is
+    non-square, so a horizontal normalized distance and a vertical one are on different scales:
+    on a 1080x1920 phone the raw ratio is inflated by 1.78 and a true side view reads as '45'.
     """
     ratios: List[float] = []
+    aspect = frame_wh[0] / frame_wh[1] if frame_wh and frame_wh[1] else 1.0
     for f in frames:
         try:
             ls, rs = _kp(f, "left_shoulder"), _kp(f, "right_shoulder")
@@ -210,10 +218,10 @@ def detect_view(frames: Sequence, frame_wh: Tuple[float, float]) -> Tuple[str, f
         vis = min(_vis(ls), _vis(rs))
         if vis < 0.5:
             continue
-        gap = math.hypot(ls.x - rs.x, ls.y - rs.y)
+        gap = math.hypot((ls.x - rs.x) * aspect, ls.y - rs.y)
         mid_sh = ((ls.x + rs.x) / 2, (ls.y + rs.y) / 2)
         mid_hp = ((lh.x + rh.x) / 2, (lh.y + rh.y) / 2)
-        torso_len = math.hypot(mid_sh[0] - mid_hp[0], mid_sh[1] - mid_hp[1])
+        torso_len = math.hypot((mid_sh[0] - mid_hp[0]) * aspect, mid_sh[1] - mid_hp[1])
         if torso_len < EPS:
             continue
         ratios.append(gap / torso_len)
@@ -221,23 +229,30 @@ def detect_view(frames: Sequence, frame_wh: Tuple[float, float]) -> Tuple[str, f
         return "unknown", 0.0
     r = float(np.median(ratios))
     if r >= VIEW_FRONT_RATIO:
-        view, conf = "front", min(1.0, (r - VIEW_FRONT_RATIO) / 0.35 + 0.5)
+        view, conf = "front", min(1.0, (r - VIEW_FRONT_RATIO) / 0.10 + 0.5)
     elif r <= VIEW_SIDE_RATIO:
-        view, conf = "side", min(1.0, (VIEW_SIDE_RATIO - r) / 0.20 + 0.5)
+        view, conf = "side", min(1.0, (VIEW_SIDE_RATIO - r) / 0.08 + 0.5)
     else:
-        view, conf = "45", 1.0 - abs(r - (VIEW_FRONT_RATIO + VIEW_SIDE_RATIO) / 2) / 0.30
+        view, conf = "45", 1.0 - abs(r - (VIEW_FRONT_RATIO + VIEW_SIDE_RATIO) / 2) / 0.13
     return view, max(0.0, min(1.0, conf))
 
 
-def gate_view(observed: str, required: str) -> Tuple[bool, str]:
-    """Should the rubric judge at all from this camera position?"""
+def gate_view(observed: str, required) -> Tuple[bool, str]:
+    """Should the rubric judge at all from this camera position?
+
+    `required` may be a set of acceptable views. A press is equally readable face-on and at 45
+    degrees, and demanding one exact value refused clips that were perfectly measurable.
+    """
     if required in ("any", "", None):
+        return True, ""
+    wanted = [required] if isinstance(required, str) else list(required)
+    if not wanted or "any" in wanted:
         return True, ""
     if observed == "unknown":
         return False, "view_unknown"
-    if observed == required:
+    if observed in wanted:
         return True, ""
-    return False, f"view_mismatch:{observed}_not_{required}"
+    return False, f"view_mismatch:{observed}_not_{'|'.join(wanted)}"
 
 
 # ---------------------------------------------------------------- aggregation

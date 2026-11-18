@@ -152,6 +152,39 @@ class WorkoutAnalysisResult(BaseModel):
     ghost_video_url: Optional[str] = None  # user's own clip with the green target arm drawn on it
 
 
+class AdjudicateCheckIn(BaseModel):
+    id: str
+    status: str  # good | almost | fix | unsure, as the phone judged it
+
+
+class AdjudicateRequest(BaseModel):
+    """One rep, as the phone saw it. The phone sends what it already decided plus the frames.
+
+    The phone is the authority for the fast in-set cue; this call is the second opinion that
+    catches what a 2D angle cannot, and the disagreement it returns is what the accuracy log
+    measures. Keys never reach the phone: this endpoint is the only thing holding one.
+    """
+
+    exercise_id: str
+    rep_index: int = 1
+    view: Optional[str] = None
+    checks: List[AdjudicateCheckIn] = Field(default_factory=list)
+    # JPEG/PNG frames, base64, no data: prefix required. Two is enough; a third buys latency, not
+    # accuracy. Rejected above MAX_IMAGES so a client cannot inflate the bill or the wait.
+    keyframes: List[str] = Field(default_factory=list)
+    # Per-joint angle summary from the phone's own tracker, so the model reasons about numbers it
+    # can check rather than only pixels.
+    landmarks: List[dict] = Field(default_factory=list)
+
+
+class AdjudicateResponse(BaseModel):
+    checks: List[dict] = Field(default_factory=list)
+    overall: str = ""
+    confidence: float = 0.0
+    agrees_with_local: bool = True
+    disagreements: List[str] = Field(default_factory=list)
+
+
 class AnalyzeYoutubeRequest(BaseModel):
     youtube_url: str = Field(..., description="YouTube video or Shorts URL (e.g. Jeff Nippard workout clip)")
     exercise_hint: Optional[str] = Field(None, description="Optional exercise name or timestamp hint")

@@ -1,0 +1,116 @@
+{
+  "id": "low_incline_db_press",
+  "name": "Low Incline DB Press",
+  "family": "press",
+  "view": ["front", "45"],
+  "start_cue": {
+    "en": "Hold the weights up, then lower them slowly.",
+    "hi": "Weight upar pakdo, phir dheere neeche lao."
+  },
+  "rubric_version": "2026-11-17",
+  "phases": ["setup", "eccentric", "bottom", "concentric", "lockout"],
+  "setup": [
+    {
+      "id": "bench_angle",
+      "label": "Bench angle",
+      "joint": "torso",
+      "measure": "torso_incline",
+      "space": "image2d",
+      "frame": "gravity",
+      "good": [25, 35],
+      "almost": [20, 45],
+      "cue": {
+        "good": { "en": "Good. The bench is at a low incline.", "hi": "Badhiya. Bench thoda sa tilted hai." },
+        "almost": { "en": "Set the bench a little higher.", "hi": "Bench thoda aur upar karo." },
+        "fix": { "en": "Set the bench to one notch up from flat.", "hi": "Bench ko flat se ek notch upar set karo." }
+      }
+    }
+  ],
+  "checks": [
+    {
+      "id": "depth",
+      "label": "Depth",
+      "joint": "elbow",
+      "at": "bottom",
+      "robust": "min_of_3",
+      "capture": "in_plane",
+      "min_visibility": 0.55,
+      "good": [20, 100],
+      "almost": [100, 112],
+      "cue": {
+        "good": { "en": "Good. You went down low enough.", "hi": "Badhiya. Aap kaafi neeche gaye." },
+        "almost": { "en": "Go a little lower.", "hi": "Thoda aur neeche jao." },
+        "above": { "en": "Go lower. Take the dumbbells down to your chest.", "hi": "Neeche jao. Dumbbell chest tak lao." },
+        "below": { "en": "That is very deep. Stop when your upper arm is level.", "hi": "Yeh bahut neeche chala gaya. Upper arm level aate hi ruko." },
+        "fix": { "en": "Lower until your upper arms are level with your torso.", "hi": "Neeche tab tak jao jab tak upper arm shareer ke level na aaye." }
+      }
+    },
+    {
+      "id": "lockout",
+      "label": "Lockout",
+      "joint": "elbow",
+      "at": "lockout",
+      "robust": "max",
+      "capture": "in_plane",
+      "min_visibility": 0.6,
+      "good": [160, 180],
+      "almost": [145, 160],
+      "cue": {
+        "good": { "en": "Good. Your arms went fully straight.", "hi": "Badhiya. Aapke haath poore seedhe hue." },
+        "almost": { "en": "Push a little higher. Make your arms straight.", "hi": "Thoda aur upar dhakelo. Haath seedhe karo." },
+        "fix": { "en": "Push all the way up. Make your arms fully straight.", "hi": "Poora upar dhakelo. Haath poore seedhe karo." }
+      }
+    },
+    {
+      "id": "elbow_path",
+      "label": "Hands",
+      "joint": "wrist",
+      "at": "eccentric",
+      "robust": "median",
+      "capture": "in_plane",
+      "min_visibility": 0.6,
+      "measure": "wrist_vs_elbow_stack",
+      "good": [0, 30],
+      "almost": [30, 50],
+      "cue": {
+        "good": { "en": "Good. Your hands are right above your elbows.", "hi": "Badhiya. Haath kohni ke seedha upar hain." },
+        "almost": { "en": "Keep your wrists over your elbows.", "hi": "Haath kohni ke seedha upar rakho." },
+        "fix": { "en": "Your hands drift. Keep wrists stacked over elbows.", "hi": "Haath hat rahe hain. Kohni ke seedha upar rakho." }
+      }
+    },
+    {
+      "id": "tempo",
+      "label": "Speed",
+      "at": "eccentric",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "eccentric_seconds",
+      "good": [0.9, 3.0],
+      "almost": [0.45, 0.9],
+      "cue": {
+        "good": { "en": "Good. You came down slowly.", "hi": "Badhiya. Aap dheere neeche aaye." },
+        "almost": { "en": "A bit fast. Count 2 seconds going down.", "hi": "Thoda tez hai. Neeche aate time 2 tak gino." },
+        "below": { "en": "Too fast. Do not drop the weights. Count 2 seconds.", "hi": "Bahut tez hai. Weight girao mat. 2 tak gino." },
+        "above": { "en": "Very slow. Keep a steady 2 seconds down.", "hi": "Bahut dheere hai. Neeche aane mein 2 second rakho." },
+        "fix": { "en": "Too fast. Do not drop the weights. Count 2 seconds.", "hi": "Bahut tez hai. Weight girao mat. 2 tak gino." }
+      }
+    },
+    {
+      "id": "symmetry",
+      "label": "Arms",
+      "joint": "elbow",
+      "at": "bottom",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "arm_difference",
+      "min_visibility": 0.7,
+      "good": [0, 12],
+      "almost": [12, 20],
+      "cue": {
+        "good": { "en": "Good. Both arms moved together.", "hi": "Badhiya. Dono haath saath chale." },
+        "almost": { "en": "One arm is a little behind. Move them together.", "hi": "Ek haath thoda peeche hai. Dono saath chalao." },
+        "fix": { "en": "One arm is much lower. Move both arms together.", "hi": "Ek haath bahut neeche hai. Dono haath saath chalao." }
+      }
+    }
+  ]
+}

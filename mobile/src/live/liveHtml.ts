@@ -1,9 +1,21 @@
-import { CORE_JS } from "./liveCore.ts";
+import { RUNTIME_JS } from "./runtime.generated.ts";
 
-// The page that runs inside the app's WebView. MediaPipe pose runs on the phone (WASM/GPU), the camera never leaves
-// the device, and the coach core (liveCore.ts) judges every rep. It talks to the app with postMessage:
-//   {type:"status", text}  loading / errors      {type:"speak", text}  a cue to read aloud      {type:"rep", ...}  rep done
-// For desktop testing it can read a video file instead: page?src=clip.mp4
+// The page that runs inside the app's WebView.
+//
+// MediaPipe pose runs on the phone (WASM/GPU) and the camera never leaves the device. The judging
+// comes from RUNTIME_JS, which is generated from the same TypeScript the node tests run and from
+// the same rubric JSON the backend uses -- so there is no second copy of the thresholds to drift.
+// What lives here is only the DOM: video, canvas, HUD, and the message plumbing to the app.
+//
+// It talks to the app with postMessage:
+//   {type:"status", text}        loading / errors
+//   {type:"ready", view, reason} the camera is positioned correctly (or why not)
+//   {type:"speak", en, hi}       a cue to read aloud
+//   {type:"rep", index, checks}  a rep finished
+//   {type:"done"}                set over
+//
+// For desktop testing it can read a video file instead of the camera:
+//   page?src=clip.mp4&exercise=low_incline_db_press
 const VISION = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.3";
 const MODELS: Record<string, string> = {
   lite: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task",
@@ -11,180 +23,393 @@ const MODELS: Record<string, string> = {
   heavy: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/latest/pose_landmarker_heavy.task",
 };
 
-export function liveHtml(): string {
+export type LiveHtmlOpts = {
+  exerciseId: string; // which rubric to judge with; no default, because guessing was the old bug
+  facing?: "user" | "environment";
+  lang?: "hi" | "en";
+  src?: string | null; // a local clip instead of the camera, for testing
+};
+
+export function liveHtml(opts: LiveHtmlOpts): string {
+  const cfg = {
+    exercise: opts.exerciseId,
+    facing: opts.facing ?? "user",
+    lang: opts.lang ?? "hi",
+    src: opts.src ?? null,
+  };
   return `<!doctype html>
 <html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <style>
-  *{box-sizing:border-box} html,body{margin:0;height:100%;background:#0B0F17;color:#F8FAFC;font-family:-apple-system,Roboto,Helvetica,Arial,sans-serif;overflow:hidden}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#0B0F17;color:#F8FAFC;font-family:-apple-system,Roboto,Helvetica,Arial,sans-serif;overflow:hidden}
   #stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
   #stage.mirror video,#stage.mirror canvas{transform:scaleX(-1)}
   #wrap{position:relative;max-width:100%;max-height:100%}
   video,canvas{display:block;max-width:100vw;max-height:100vh}
   canvas{position:absolute;left:0;top:0;width:100%;height:100%}
-  #hud{position:absolute;left:8px;top:8px;background:rgba(22,18,16,.78);border-radius:12px;padding:8px 12px 6px;min-width:150px}
-  #hud .t{font-weight:800;font-size:14px;margin-bottom:4px}
-  .row{display:flex;align-items:center;gap:8px;margin:5px 0;font-weight:700;font-size:15px}
-  .ic{width:22px;height:22px;border-radius:11px;border:2px solid #969696;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#141414}
-  .good{background:#3CEB6E;border-color:#3CEB6E} .almost{background:#FFAF00;border-color:#FFAF00} .fix{background:#F54646;border-color:#F54646;color:#fff} .unsure{background:#969696;border-color:#969696}
-  #banner{position:absolute;left:0;right:0;bottom:0;padding:14px 16px 18px;text-align:center;font-weight:800;font-size:20px;line-height:1.25;background:rgba(22,18,16,.86);border-top:4px solid #969696}
+  #hud{position:absolute;left:10px;top:10px;background:rgba(12,16,24,.72);border-radius:14px;padding:10px 14px;min-width:176px;
+       backdrop-filter:blur(8px);border:1px solid rgba(148,163,184,.16)}
+  #hud .t{font-weight:800;font-size:12px;letter-spacing:.07em;color:#94A3B8;margin-bottom:8px}
+  .row{display:flex;align-items:center;gap:9px;margin:6px 0;font-weight:700;font-size:14px;color:#E2E8F0}
+  .row .v{margin-left:auto;font-variant-numeric:tabular-nums;color:#94A3B8;font-weight:700;font-size:12px}
+  .ic{width:18px;height:18px;border-radius:9px;border:2px solid #475569;display:flex;align-items:center;justify-content:center;
+      font-size:11px;font-weight:900;color:#0B0F17;flex:none;transition:background .15s,border-color .15s}
+  .good{background:#3CEB6E;border-color:#3CEB6E}
+  .almost{background:#FFAF00;border-color:#FFAF00}
+  .fix{background:#F54646;border-color:#F54646;color:#fff}
+  .unsure{background:#475569;border-color:#475569;color:#CBD5E1}
+  #banner{position:absolute;left:0;right:0;bottom:0;padding:16px 20px 22px;text-align:center;font-weight:800;font-size:19px;
+          line-height:1.3;background:linear-gradient(to top,rgba(9,12,19,.96),rgba(9,12,19,.72) 70%,transparent);
+          border-bottom:5px solid transparent}
   #banner.good{border-color:#3CEB6E} #banner.almost{border-color:#FFAF00} #banner.fix{border-color:#F54646}
-  #msg{position:absolute;left:0;right:0;top:40%;text-align:center;padding:0 24px;font-size:16px;color:#CBD5E1}
-  #sum{position:absolute;inset:0;background:rgba(11,15,23,.96);display:none;align-items:center;justify-content:center;overflow:auto}
-  #sum .card{width:100%;max-width:420px;padding:22px}
-  #sum .big{font-size:26px;font-weight:800;margin-bottom:6px} #sum .nx{margin-top:18px;color:#6EEB3C;font-size:20px}
-  #sum .sub{color:#94A3B8;margin-bottom:14px} #sum .srow{display:flex;align-items:center;gap:10px;margin:8px 0} #sum .srow b{width:64px}
-  #sum p{font-size:17px;line-height:1.4;margin:8px 0} #done{margin-top:18px;width:100%;padding:14px;border-radius:12px;background:#0284C7;border:0;color:#fff;font-size:17px;font-weight:800}
-  #btns{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:8px}
-  button{background:rgba(22,18,16,.78);color:#F8FAFC;border:1px solid #334155;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:700}
+  #msg{position:absolute;left:0;right:0;top:44%;text-align:center;padding:0 26px;font-size:15px;line-height:1.5;color:#CBD5E1}
+  #sum{position:absolute;inset:0;background:rgba(11,15,23,.98);display:none;align-items:center;justify-content:center;overflow:auto;z-index:6}
+  #sum .card{width:100%;max-width:430px;padding:24px}
+  #sum .big{font-size:25px;font-weight:800;margin-bottom:4px}
+  #sum .nx{margin-top:22px;color:#6EEB3C;font-size:18px;font-weight:800}
+  #sum .sub{color:#94A3B8;margin-bottom:16px}
+  #sum .srow{display:flex;align-items:center;gap:8px;margin:9px 0;font-weight:700}
+  #sum .srow b{width:62px;color:#94A3B8;font-size:13px}
+  #sum p{font-size:16px;line-height:1.45;margin:9px 0}
+  #done{margin-top:20px;width:100%;padding:15px;border-radius:13px;background:#0284C7;border:0;color:#fff;font-size:17px;font-weight:800}
+  #btns{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:8px}
+  button.side{background:rgba(12,16,24,.78);color:#F8FAFC;border:1px solid #334155;border-radius:11px;
+              padding:9px 13px;font-size:13px;font-weight:700;backdrop-filter:blur(8px)}
 </style></head>
 <body>
 <div id="stage"><div id="wrap"><video id="v" playsinline muted></video><canvas id="c"></canvas></div></div>
-<div id="hud"><div class="t" id="rep">GET READY</div>
-  <div class="row"><div class="ic" id="i_depth"></div>Depth</div>
-  <div class="row"><div class="ic" id="i_hands"></div>Hands</div>
-  <div class="row"><div class="ic" id="i_lockout"></div>Lockout</div>
-  <div class="row"><div class="ic" id="i_speed"></div>Speed</div></div>
-<div id="btns"><button id="flip">Flip camera</button><button id="reset">New set</button></div>
-<div id="msg">Loading the coach…</div>
+<div id="hud"><div class="t" id="rep">GET READY</div><div id="rows"></div></div>
+<div id="btns"><button class="side" id="flip">Flip camera</button><button class="side" id="reset">New set</button></div>
+<div id="msg"></div>
 <div id="sum"></div>
-<div id="banner">Place your phone about 2 m away, beside you, so your arms are in view. Hold the weights up for a second to start.</div>
-<script>${CORE_JS}</script>
+<div id="banner"></div>
+<script>${RUNTIME_JS}</script>
 <script type="module">
   import { PoseLandmarker, FilesetResolver } from "${VISION}/vision_bundle.mjs";
+
   var q = new URLSearchParams(location.search);
-  var cfg = window.__CONFIG || {};
+  var cfg = Object.assign(${JSON.stringify(cfg)}, window.__CONFIG || {});
   var src = q.get("src") || cfg.src || null;
   var facing = q.get("facing") || cfg.facing || "user";
-  var lang = q.get("lang") || cfg.lang || "hi";  // "hi" = Hinglish, "en" = English
+  var lang = q.get("lang") || cfg.lang || "hi";   // "hi" = Hinglish, "en" = English
+  var exerciseId = q.get("exercise") || cfg.exercise || "";
+
   function T(en, hi) { return lang === "hi" ? hi : en; }
   var v = document.getElementById("v"), c = document.getElementById("c"), ctx = c.getContext("2d");
   var msg = document.getElementById("msg"), banner = document.getElementById("banner");
-  function post(o) { try { window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify(o)); } catch (e) {} }
-  function status(t) { msg.textContent = t; msg.style.display = t ? "block" : "none"; post({ type: "status", text: t }); }
-  window.__live = { reps: [], view: null, done: false, frames: 0, error: null, log: [] };
-  var logUrl = q.get("log");  // test hook: ship every landmark frame to a collector so a run can be replayed offline
+  var sumEl = document.getElementById("sum");
+  var rowsEl = document.getElementById("rows");
 
-  var coach = CORE.createCoach();
+  function post(o) { try { window.ReactNativeWebView && window.ReactNativeWebView.postMessage(JSON.stringify(o)); } catch (e) {} }
+  function status(t) { msg.textContent = t || ""; msg.style.display = t ? "block" : "none"; if (t) post({ type: "status", text: t }); }
+
+  window.__live = { reps: [], frames: 0, error: null, exercise: exerciseId, calibrated: false };
+
+  // ---- the rubric decides which rows the HUD shows. Nothing here hardcodes check names, so
+  // adding an exercise is a JSON edit, not a page edit.
+  var rubric = null, RUBRIC_ERR = null;
+  try { rubric = LIVE.engine.getRubric(exerciseId); }
+  catch (e) { RUBRIC_ERR = String(e && e.message || e); }
+  var CHECKS = rubric ? rubric.checks : [];
+  var REQUIRED_VIEW = rubric ? rubric.view : undefined;
+  // Which geometry counts a rep for THIS exercise. A press is wrist-off-shoulder; a squat is
+  // hip-above-foot. The rubric declares it, so adding a family is still a JSON edit.
+  var TRACK = rubric && rubric.track ? rubric.track : undefined;
+  // What "ready to start" looks like depends on the movement: a press starts with the weight held
+  // up, a squat starts standing. Telling a squatting user to "hold the weights up" was leftover
+  // press wording that only made sense for one family.
+  var START = rubric && rubric.start_cue ? rubric.start_cue : {
+    en: "Hold the weights up, then lower them slowly.",
+    hi: "Weight upar pakdo, phir dheere neeche lao."
+  };
+
+  rowsEl.innerHTML = "";
+  CHECKS.forEach(function (ch) {
+    var row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML = '<span class="ic" id="ic_' + ch.id + '"></span><span>' + ch.label + '</span><span class="v" id="val_' + ch.id + '"></span>';
+    rowsEl.appendChild(row);
+  });
+  function iconEl(id) { return document.getElementById("ic_" + id); }
+  function valEl(id) { return document.getElementById("val_" + id); }
+  var GLYPH = { good: "\\u2713", almost: "!", fix: "\\u2715", unsure: "?" };
+  function showCheck(ch, st, value, unit) {
+    var el = iconEl(ch.id); if (!el) return;
+    el.className = "ic" + (st ? " " + st : "");
+    el.textContent = st ? GLYPH[st] : "";
+    var vv = valEl(ch.id);
+    if (vv) vv.textContent = Number.isFinite(value) ? Math.round(value) + (unit || "") : "";
+  }
+
+  // ---- which joints to highlight: the check tells us the joint, the segmenter tells us the side
+  var JOINT_PART = { elbow: "elbow", knee: "knee", wrist: "wrist", ankle: "ankle", shoulder: "shoulder" };
+
+  // ---- landmarks: MediaPipe index -> "<side>_<part>", carrying world coords for the 3D measures
   var IDX = { shoulder: [11, 12], elbow: [13, 14], wrist: [15, 16], hip: [23, 24] };
-  function toFrame(res, t) {
+  function toLandmarks(res) {
     var lm = res.landmarks && res.landmarks[0], wl = res.worldLandmarks && res.worldLandmarks[0];
-    if (!lm || !wl) return null;
-    var kp = {};
+    if (!lm) return null;
+    var out = {};
     ["left", "right"].forEach(function (side, si) {
       Object.keys(IDX).forEach(function (part) {
-        var i = IDX[part][si], a = lm[i], b = wl[i];
-        kp[side + "_" + part] = [a.x, a.y, a.visibility == null ? 0.9 : a.visibility, b.x, b.y, b.z];
+        var i = IDX[part][si], a = lm[i];
+        if (!a) return;
+        var b = (wl && wl[i]) || null;
+        out[side + "_" + part] = {
+          x: a.x, y: a.y, vis: a.visibility == null ? 0.9 : a.visibility,
+          wx: b ? b.x : undefined, wy: b ? b.y : undefined, wz: b ? b.z : undefined
+        };
       });
     });
-    return { t: t, w: v.videoWidth, h: v.videoHeight, kp: kp };
+    return out;
   }
 
-  function icon(id, st) {
-    var el = document.getElementById("i_" + id);
-    el.className = "ic" + (st ? " " + st : "");
-    el.textContent = st === "good" ? "\\u2713" : st === "almost" ? "!" : st === "fix" ? "\\u2715" : st === "unsure" ? "?" : "";
-  }
-  function line(a, b, col, w) { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(a[0] * c.width, a[1] * c.height); ctx.lineTo(b[0] * c.width, b[1] * c.height); ctx.stroke(); }
-  function dot(p, col, r) { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(p[0] * c.width, p[1] * c.height, r, 0, 7); ctx.fill(); }
-
-  function render(view) {
+  // ---- overlay: the lifter's REAL skeleton, thin and grey, with only the judged joint coloured.
+  // A bone is drawn only when both of its landmarks were actually tracked, so a lost limb leaves a
+  // gap instead of inventing an arm -- which is what made the old ghost look like a cartoon.
+  function paint(lm, verdicts) {
     ctx.clearRect(0, 0, c.width, c.height);
-    var k = c.width / 540, thick = Math.max(8, c.width * 0.03);
-    view.arms.forEach(function (a) {
-      if (a.gel) {
-        ctx.globalAlpha = 0.5;
-        line(a.sh, a.gel, "#6EEB3C", thick); line(a.gel, a.gwr, "#6EEB3C", thick); dot(a.gel, "#6EEB3C", thick * 0.8); dot(a.gwr, "#6EEB3C", thick * 0.8);
-        ctx.globalAlpha = 1;
-        line(a.wr, a.gwr, "#FFC300", Math.max(3, thick / 4));
-      }
-      var fore = view.checks.hands === "fix" ? "#F54646" : view.checks.hands === "almost" ? "#FFAF00" : "#FAFAFA";
-      line(a.sh, a.el, "#FAFAFA", Math.max(3, thick / 4)); line(a.el, a.wr, fore, Math.max(3, thick / 4));
-      dot(a.sh, "#FAFAFA", thick / 3); dot(a.el, "#FAFAFA", thick / 3); dot(a.wr, "#FAFAFA", thick / 3);
+    if (!lm) return;
+    var W = c.width, H = c.height;
+    var worst = LIVE.engine.worstCue(verdicts);
+    var highlight = null;
+    if (worst) {
+      var spec = null;
+      for (var i = 0; i < CHECKS.length; i++) if (CHECKS[i].id === worst.id) spec = CHECKS[i];
+      var part = spec && JOINT_PART[spec.joint || ""] || null;
+      var side = seg ? seg.side() : null;
+      if (part && side) highlight = side + "_" + part;
+    }
+    var hlColor = worst ? (worst.status === "fix" ? "#F54646" : worst.status === "almost" ? "#FFAF00" : "#3CEB6E") : "#3CEB6E";
+    var items = LIVE.overlay.buildSkeleton(lm, {
+      width: 2,
+      color: "rgba(226,232,240,0.40)",
+      highlight: highlight,
+      highlightColor: hlColor,
+      vis: 0.5
     });
-    ["depth", "hands", "lockout", "speed"].forEach(function (key) { icon(key, view.checks[key] || null); });
-    document.getElementById("rep").textContent = view.repIndex ? "REP " + view.repIndex : "GET READY";
-    banner.textContent = lang === "hi" ? view.messageHi : view.message;
-    banner.className = view.tone === "good" || view.tone === "almost" || view.tone === "fix" ? view.tone : "";
+    for (var j = 0; j < items.length; j++) {
+      var it = items[j];
+      if (it.kind === "bone") {
+        ctx.strokeStyle = it.color; ctx.lineWidth = it.width; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(it.a.x * W, it.a.y * H); ctx.lineTo(it.b.x * W, it.b.y * H); ctx.stroke();
+      } else if (it.kind === "joint") {
+        ctx.fillStyle = it.color;
+        ctx.beginPath(); ctx.arc(it.at.x * W, it.at.y * H, it.r * 1.6, 0, 7); ctx.fill();
+      }
+    }
   }
 
-  var modelName = q.get("model") || cfg.model || "heavy";  // most accurate; drops to a lighter one by itself if the phone is slow
+  // ---- session state
+  var modelName = q.get("model") || cfg.model || "heavy";
   var ORDER = ["heavy", "full", "lite"];
   var MODELS = ${JSON.stringify(MODELS)};
-  var files, landmarker, stream = null, running = false, lastTs = -1, lastMedia = -1, summaryShown = false;
-  var shown = { text: "", tone: "", checks: "", rep: "" };
+  var files, landmarker, stream = null, running = false;
+  var lastTs = -1, lastMedia = -1, summaryShown = false, speakAt = 0;
+  var seg = null, frameWindow = [], repsDone = [], lastCueKey = "";
+  var viewOk = false, gateReason = "";
 
   async function makeLandmarker(name) {
-    var make = function (delegate) { return PoseLandmarker.createFromOptions(files, { baseOptions: { modelAssetPath: MODELS[name], delegate: delegate }, runningMode: "VIDEO", numPoses: 1 }); };
+    var make = function (delegate) {
+      return PoseLandmarker.createFromOptions(files, {
+        baseOptions: { modelAssetPath: MODELS[name], delegate: delegate },
+        runningMode: "VIDEO", numPoses: 1
+      });
+    };
     try { return await make("GPU"); } catch (e) { return await make("CPU"); }
   }
 
   async function startSource() {
     if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
     if (src) { v.src = src; v.muted = true; v.playsInline = true; await v.play(); document.getElementById("stage").classList.remove("mirror"); return; }
-    // A small picture is plenty for pose and keeps every frame cheap to analyse.
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 480 }, height: { ideal: 360 }, frameRate: { ideal: 30 } }, audio: false });
+    // 480x360 is plenty for pose and keeps every frame cheap; the picture is still sharp on screen.
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: facing, width: { ideal: 480 }, height: { ideal: 360 }, frameRate: { ideal: 30 } },
+      audio: false
+    });
     v.srcObject = stream; await v.play();
     document.getElementById("stage").classList.toggle("mirror", facing === "user");
   }
 
-  // Analyse each NEW camera frame exactly once. If we are behind, frames are skipped, never queued, so the picture stays live.
   function next() {
     if (!running) return;
     if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(onFrame);
-    else setTimeout(function () { onFrame(performance.now(), null); }, 30);
+    else setTimeout(function () { onFrame(performance.now()); }, 30);
   }
-  function onFrame(now, meta) {
+
+  function onFrame(now) {
     if (!running) return;
     var pause = false;
-    try { pause = process(now, meta); } catch (e) { window.__live.error = String(e && e.stack || e); status("Problem: " + (e && e.message || e)); return; }
-    if (src && v.ended) { window.__live.done = true; if (logUrl) fetch(logUrl, { method: "POST", body: JSON.stringify({ width: v.videoWidth, height: v.videoHeight, frames: window.__live.log }) }); return; }
+    try { pause = process(now); }
+    catch (e) { window.__live.error = String(e && e.stack || e); status("Problem: " + (e && e.message || e)); return; }
+    if (src && v.ended) { window.__live.done = true; showSummary(); return; }
     if (!pause) next();
   }
 
-  function setView(view) {
-    var txt = lang === "hi" ? view.messageHi : view.message;
-    var tone = view.tone === "good" || view.tone === "almost" || view.tone === "fix" ? view.tone : "";
-    if (txt !== shown.text) { banner.textContent = txt; shown.text = txt; }
-    if (tone !== shown.tone) { banner.className = tone; shown.tone = tone; }
-    var ck = JSON.stringify(view.checks);
-    if (ck !== shown.checks) { shown.checks = ck; ["depth", "hands", "lockout", "speed"].forEach(function (key) { icon(key, view.checks[key] || null); }); }
-    var rep = view.repIndex ? "REP " + view.repIndex : "GET READY";
-    if (rep !== shown.rep) { document.getElementById("rep").textContent = rep; shown.rep = rep; }
+  function setBanner(text, tone) {
+    if (banner.textContent !== text) banner.textContent = text;
+    var cls = tone === "good" || tone === "almost" || tone === "fix" ? tone : "";
+    if (banner.className !== cls) banner.className = cls;
   }
 
-  function process(now, meta) {
+  // Speak a cue at most once per ~2 s, and only when the cue actually changes. Reading the same
+  // sentence every frame is what made the old coach feel like it was nagging.
+  function say(key, en, hi) {
+    if (key === lastCueKey) return;
+    var t = performance.now();
+    if (t - speakAt < 1800) return;
+    lastCueKey = key; speakAt = t;
+    post({ type: "speak", en: en, hi: hi });
+  }
+
+  function process(now) {
     if (!(v.readyState >= 2 && v.videoWidth)) return false;
-    var mt = meta && meta.mediaTime != null ? meta.mediaTime : v.currentTime;
-    if (mt === lastMedia) return false;  // this frame was already analysed
+    var mt = src ? v.currentTime : 0;
+    if (src && mt === lastMedia) return false;
     lastMedia = mt;
     if (c.width !== v.videoWidth) { c.width = v.videoWidth; c.height = v.videoHeight; }
     var ts = src ? Math.round(mt * 1000) : Math.round(now);
     if (ts <= lastTs) ts = lastTs + 1;
     lastTs = ts;
-    var L = window.__live, t0 = performance.now();
+
+    var t0 = performance.now();
     var res = landmarker.detectForVideo(v, ts);
     var ms = performance.now() - t0;
+    var L = window.__live;
     L.ms = L.ms ? L.ms * 0.9 + ms * 0.1 : ms; L.msMax = Math.max(L.msMax || 0, ms);
     L.frames++;
-    var f = toFrame(res, src ? mt : now / 1000);
-    if (f && logUrl) L.log.push(f);
-    if (f) {
-      var out = coach.update(f);
-      render(out.view);
-      setView(out.view);
-      L.view = out.view; L.reps = coach.reps();
-      out.events.forEach(function (e) {
-        if (e.type === "rep_done") { post({ type: "speak", en: e.speak.en, hi: e.speak.hi }); post({ type: "rep", index: e.index, checks: e.checks }); }
-      });
-    } else {
-      ctx.clearRect(0, 0, c.width, c.height);
-      var txt = T("I cannot see you. Step back so your arms are in view.", "Main aapko dekh nahi pa raha. Peeche hato, haath dikhne chahiye.");
-      if (txt !== shown.text) { banner.textContent = txt; banner.className = ""; shown.text = txt; shown.tone = ""; }
+
+    var lm = toLandmarks(res);
+    if (!lm) {
+      paint(null, []);
+      setBanner(T("I cannot see you. Step back so your whole body is in view.",
+                  "Main aapko dekh nahi pa raha. Peeche hato, poora shareer dikhna chahiye."), "");
+      return false;
     }
-    // Slow phone? After a short warm-up, step down to a lighter model once, instead of letting the picture lag.
-    if (!src && L.frames === 30 && L.ms > 85 && ORDER.indexOf(modelName) < ORDER.length - 1) { downgrade(); return true; }
+
+    var aspect = c.width / c.height;
+    // Frames are kept with their timestamps so a finished rep can be judged on exactly the
+    // frames that spanned it, and so each check can be sliced to its own phase.
+    frameWindow.push({ t: src ? mt : now / 1000, lm: lm });
+    if (frameWindow.length > 240) frameWindow.shift();
+
+    // ---- view gate, before any judging. A wrong camera distorts every number the same way, so
+    // this says "move" instead of producing a confident verdict from a bad angle.
+    if (frameWindow.length % 5 === 0) {
+      var reading = LIVE.engine.detectView(frameWindow.slice(-30).map(function (fr) { return fr.lm; }), c.width / c.height);
+      var gate = LIVE.engine.gateView(reading.view, REQUIRED_VIEW);
+      if (gate.ok !== viewOk || (gate.ok === false && gate.reason !== gateReason)) {
+        viewOk = gate.ok; gateReason = gate.reason;
+        post({ type: "ready", view: reading.view, reason: gate.reason });
+        if (!viewOk) lastCueKey = "";
+      }
+    }
+    if (REQUIRED_VIEW && REQUIRED_VIEW !== "any" && !viewOk) {
+      paint(lm, []);
+      setBanner(gateText(), "");
+      return false;
+    }
+
+    if (!seg) seg = LIVE.segment.createSegmenter({ track: TRACK });
+    var rep = seg.update(lm, src ? mt : now / 1000);
+
+    // Live feedback while the rep is in flight: judge the frames so far, so the cue lands DURING
+    // the set, not only at the end. This is the "start to end" part.
+    if (!rep) {
+      var pending = seg.pending();
+      if (pending) {
+        var live = judge(pending, aspect);
+        live.forEach(function (vd) { showCheck(specFor(vd.id), vd.status, vd.value, ""); });
+        paint(lm, live);
+        var w = LIVE.engine.worstCue(live);
+        if (w) {
+          setBanner(lang === "hi" ? w.cue.hi : w.cue.en, w.status);
+          say(w.id + ":" + w.status, w.cue.en, w.cue.hi);
+        } else if (pending.progress.length > 5) {
+          setBanner(T("Good. Keep going.", "Badhiya. Chalte raho."), "good");
+        }
+      } else {
+        paint(lm, []);
+        setBanner(T(START.en, START.hi), "");
+      }
+    } else {
+      finishRep(rep, lm, aspect);
+    }
+
+    // Slow phone? After a short warm-up, step down one model once instead of letting the picture lag.
+    if (!src && L.frames === 40 && L.ms > 90 && ORDER.indexOf(modelName) < ORDER.length - 1) { downgrade(); return true; }
     return false;
+  }
+
+  function specFor(id) {
+    for (var i = 0; i < CHECKS.length; i++) if (CHECKS[i].id === id) return CHECKS[i];
+    return { id: id, label: id, good: [0, 0] };
+  }
+
+  // Judge a rep against the rubric, on exactly the frames that span it. The progress array is
+  // passed through so each check can be graded at its own phase: "depth" on the bottom frames,
+  // "lockout" on the top ones. Without it, a bottom-only band gets applied to the whole rep and
+  // reports "too shallow" on a perfect rep.
+  function judge(r, aspect) {
+    var side = seg.side() || "right";
+    var t0 = r.times && r.times.length ? r.times[0] : r.startT;
+    var t1 = r.times && r.times.length ? r.times[r.times.length - 1] : r.endT;
+    var win = frameWindow.filter(function (fr) { return fr.t >= t0 - 1e-3 && fr.t <= t1 + 1e-3; });
+    var frames = (win.length >= 3 ? win : frameWindow.slice(-Math.max(3, r.progress.length))).map(function (fr) { return fr.lm; });
+    var progress = win.length >= 3 && r.progress.length === frames.length ? r.progress : undefined;
+    return LIVE.engine.evaluateAll({
+      exerciseId: exerciseId,
+      side: side,
+      frames: frames,
+      aspect: aspect,
+      progress: progress,
+      secondsAvailable: r.eccentricSeconds == null ? undefined : r.eccentricSeconds,
+      pressAxis: seg.axis() || undefined
+    });
+  }
+
+  function finishRep(r, lm, aspect) {
+    var verdicts = judge(r, aspect);
+    verdicts.forEach(function (vd) { showCheck(specFor(vd.id), vd.status, vd.value, ""); });
+    paint(lm, verdicts);
+
+    var index = repsDone.length + 1;
+    var entry = { index: index, checks: verdicts.map(function (x) { return { id: x.id, label: x.label, status: x.status, value: x.value, cue: x.cue }; }) };
+    repsDone.push(entry);
+    window.__live.reps = repsDone;
+    post({ type: "rep", index: index, checks: entry.checks });
+
+    var w = LIVE.engine.worstCue(verdicts);
+    var anyUnsure = verdicts.some(function (x) { return x.status === "unsure"; });
+    if (w) {
+      setBanner(lang === "hi" ? w.cue.hi : w.cue.en, w.status);
+      say("rep" + index + ":" + w.id, "Rep " + index + ". " + w.cue.en, "Rep " + index + ". " + w.cue.hi);
+    } else if (anyUnsure) {
+      setBanner(T("Good so far.", "Abhi tak badhiya."), "good");
+      say("rep" + index + ":unsure", "Rep " + index + ". Good so far.", "Rep " + index + ". Abhi tak badhiya.");
+    } else {
+      setBanner(T("Good rep!", "Badhiya rep!"), "good");
+      say("rep" + index + ":good", "Rep " + index + ". Good rep.", "Rep " + index + ". Badhiya rep.");
+    }
+    lastCueKey = "";
+  }
+
+  function gateText() {
+    if (gateReason === "view_unknown") {
+      return T("Step back so I can see your shoulders.", "Peeche hato taaki kandhe dikhein.");
+    }
+    // REQUIRED_VIEW may be a set of acceptable views, so pick the instruction from whichever one
+    // the rubric would have judged: a rubric that accepts a profile wants "turn sideways", one
+    // that accepts the front wants "face the phone".
+    var want = Array.isArray(REQUIRED_VIEW) ? REQUIRED_VIEW : [REQUIRED_VIEW];
+    if (want.indexOf("side") >= 0) {
+      return T("Turn sideways to the phone, about 2 m away.", "Phone ki taraf side se khade ho, 2 meter door.");
+    }
+    if (want.indexOf("front") >= 0) {
+      return T("Face the phone, about 2 m away.", "Phone ki taraf muh karo, 2 meter door.");
+    }
+    return T("Stand at a slight angle to the phone, about 2 m away.", "Phone se thoda angle par khade ho, 2 meter door.");
   }
 
   async function downgrade() {
@@ -197,37 +422,70 @@ export function liveHtml(): string {
     status(""); running = true; next();
   }
 
-  // ---------- end-of-set summary
+  // ---- end-of-set summary: one row per rep, then the single most important thing to fix
   function showSummary() {
+    if (summaryShown) return;
     summaryShown = true; running = false;
-    document.getElementById("banner").style.display = "none"; document.getElementById("hud").style.display = "none"; document.getElementById("btns").style.display = "none";
+    banner.style.display = "none"; document.getElementById("hud").style.display = "none";
+    document.getElementById("btns").style.display = "none";
     if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
-    var sm = CORE.summarize(coach.reps());
-    var el = document.getElementById("sum");
-    var h = '<div class="card"><div class="big">' + T("Your set", "Aapka set") + '</div><div class="sub">' + sm.count + ' ' + T(sm.count === 1 ? "rep" : "reps", "rep") + '</div>';
-    sm.rows.forEach(function (r) {
+
+    var h = '<div class="card"><div class="big">' + T("Your set", "Aapka set") + '</div>';
+    h += '<div class="sub">' + repsDone.length + ' ' + T(repsDone.length === 1 ? "rep" : "reps", "rep") + '</div>';
+    repsDone.forEach(function (r) {
       h += '<div class="srow"><b>Rep ' + r.index + '</b>';
-      r.checks.forEach(function (c) { h += '<span class="ic ' + c.status + '">' + (c.status === "good" ? "\u2713" : c.status === "almost" ? "!" : c.status === "fix" ? "\u2715" : "?") + '</span>'; });
+      r.checks.forEach(function (ck) {
+        h += '<span class="ic ' + ck.status + '">' + (GLYPH[ck.status] || "") + '</span>';
+      });
       h += '</div>';
     });
+
+    // The focus list: the worst failure per check across the set, one sentence each.
+    var worstBy = {};
+    repsDone.forEach(function (r) {
+      r.checks.forEach(function (ck) {
+        if (ck.status !== "fix" && ck.status !== "almost") return;
+        var cur = worstBy[ck.id];
+        if (!cur || (cur.status !== "fix" && ck.status === "fix")) worstBy[ck.id] = ck;
+      });
+    });
+    var focus = Object.keys(worstBy).map(function (k) { return worstBy[k]; });
     h += '<div class="big nx">' + T("Next set", "Agla set") + '</div>';
-    if (!sm.count) h += '<p>' + T("I did not see a full rep. Hold the weights up, lower them, and push back up.", "Mujhe poora rep nahi dikha. Weight upar pakdo, neeche lao, phir upar dhakelo.") + '</p>';
-    else if (!sm.focus.length) h += '<p>' + T("Clean set. Keep it up!", "Badhiya set. Aise hi chalte raho!") + '</p>';
-    sm.focus.forEach(function (f) { h += '<p>' + (lang === "hi" ? f.hi : f.en) + '</p>'; });
+    if (!repsDone.length) {
+      h += '<p>' + T("I did not see a full rep. " + START.en,
+                     "Mujhe poora rep nahi dikha. " + START.hi) + '</p>';
+    } else if (!focus.length) {
+      h += '<p>' + T("Clean set. Keep it up!", "Badhiya set. Aise hi chalte raho!") + '</p>';
+    }
+    focus.forEach(function (f) { h += '<p>' + (lang === "hi" ? f.cue.hi : f.cue.en) + '</p>'; });
     h += '<button id="done">' + T("Done", "Theek hai") + '</button></div>';
-    el.innerHTML = h; el.style.display = "flex";
+
+    sumEl.innerHTML = h; sumEl.style.display = "flex";
     document.getElementById("done").onclick = function () { post({ type: "done" }); };
-    var spoken = sm.count ? (sm.focus.length ? (lang === "hi" ? sm.focus[0].hi : sm.focus[0].en) : T("Clean set.", "Badhiya set.")) : "";
-    if (spoken) post({ type: "speak", en: sm.count + " reps. " + (sm.focus[0] ? sm.focus[0].en : "Clean set."), hi: sm.count + " rep. " + (sm.focus[0] ? sm.focus[0].hi : "Badhiya set.") });
+
+    if (repsDone.length) {
+      var lead = focus[0];
+      post({
+        type: "speak",
+        en: repsDone.length + " reps. " + (lead ? lead.cue.en : "Clean set."),
+        hi: repsDone.length + " rep. " + (lead ? lead.cue.hi : "Badhiya set.")
+      });
+    }
   }
   window.__finish = showSummary;
   window.__setLang = function (l) {
-    lang = l; shown.text = "";
-    document.getElementById("flip").textContent = T("Flip camera", "Camera badlo"); document.getElementById("reset").textContent = T("New set", "Naya set");
-    if (window.__live.view) setView(window.__live.view);
+    lang = l; lastCueKey = "";
+    document.getElementById("flip").textContent = T("Flip camera", "Camera badlo");
+    document.getElementById("reset").textContent = T("New set", "Naya set");
   };
 
   async function boot() {
+    if (!rubric) {
+      status(T("This exercise is not supported in the live coach yet.",
+               "Yeh exercise live coach mein abhi supported nahi hai."));
+      banner.textContent = RUBRIC_ERR || "";
+      return;
+    }
     try {
       status(T("Loading the coach… (first time takes a moment)", "Coach load ho raha hai… (pehli baar time lagta hai)"));
       files = await FilesetResolver.forVisionTasks("${VISION}/wasm");
@@ -236,16 +494,29 @@ export function liveHtml(): string {
       status(T("Starting the camera…", "Camera shuru ho raha hai…"));
       await startSource();
       status("");
+      banner.textContent = T("Place your phone about 2 m away beside you, so your whole body is in view.",
+                             "Phone ko 2 meter door apni side mein rakho, poora shareer dikhna chahiye.");
       running = true; next();
     } catch (e) {
       window.__live.error = String(e && e.message || e);
       status(T("Could not start: ", "Shuru nahi hua: ") + window.__live.error);
     }
   }
-  banner.textContent = T("Place your phone about 2 m away, beside you, so your arms are in view. Hold the weights up for a second to start.", "Phone ko 2 meter door, apni side mein rakho, haath dikhne chahiye. Shuru karne ke liye weight ek second upar pakdo.");
-  document.getElementById("flip").textContent = T("Flip camera", "Camera badlo"); document.getElementById("reset").textContent = T("New set", "Naya set");
-  document.getElementById("flip").onclick = function () { facing = facing === "user" ? "environment" : "user"; lastMedia = -1; startSource(); };
-  document.getElementById("reset").onclick = function () { coach = CORE.createCoach(); window.__live.reps = []; shown = { text: "", tone: "", checks: "", rep: "" }; ["depth", "hands", "lockout", "speed"].forEach(function (k) { icon(k, null); }); banner.textContent = T("New set. Hold the weights up for a second.", "Naya set. Weight ek second upar pakdo."); banner.className = ""; };
+
+  document.getElementById("flip").textContent = T("Flip camera", "Camera badlo");
+  document.getElementById("reset").textContent = T("New set", "Naya set");
+  document.getElementById("flip").onclick = function () {
+    facing = facing === "user" ? "environment" : "user";
+    lastMedia = -1; startSource();
+  };
+  document.getElementById("reset").onclick = function () {
+    seg = LIVE.segment.createSegmenter({ track: TRACK });
+    frameWindow = []; repsDone = []; lastCueKey = "";
+    window.__live.reps = [];
+    CHECKS.forEach(function (ch) { showCheck(ch, null, NaN, ""); });
+    banner.textContent = T("New set. ", "Naya set. ") + T(START.en, START.hi);
+    banner.className = "";
+  };
   if (src) document.getElementById("btns").style.display = "none";
   boot();
 </script>

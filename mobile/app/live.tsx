@@ -1,29 +1,39 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Platform } from "react-native";
-import { useRouter } from "expo-router";
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, ScrollView } from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { WebView, WebViewMessageEvent } from "react-native-webview";
 import { useCameraPermissions } from "expo-camera";
 import { useKeepAwake } from "expo-keep-awake";
 import * as Speech from "expo-speech";
 import { liveHtml } from "../src/live/liveHtml";
+import { listExercises, getRubric } from "../src/live/engine";
 import { sayCoach } from "../src/services/coachVoice";
 import { Lang, useLang } from "../src/services/lang";
 
-// The camera opens straight away. The page itself shows how to place the phone until you hold the weights up.
+// Two steps, on purpose. The coach judges against one exercise's rubric, and the old screen only
+// had one exercise's thresholds baked in, so a squat was graded as a press. Choosing first makes
+// that impossible: the picker offers exactly the exercises that have a rubric.
 export default function LiveCoach() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ exercise?: string }>();
   const [permission, requestPermission] = useCameraPermissions();
   const [lang, setLang] = useLang();
   const [status, setStatus] = useState("");
   const [voiceOn, setVoiceOn] = useState(true);
+  const [exercise, setExercise] = useState<string | null>(params.exercise ?? null);
   const webRef = useRef<any>(null);
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   const voiceRef = useRef(true);
   const langRef = useRef<Lang>(lang);
   voiceRef.current = voiceOn;
   langRef.current = lang;
-  const html = useMemo(() => liveHtml(), []);
   const first = useRef(true);
+
+  const exercises = useMemo(() => listExercises(), []);
+  const html = useMemo(
+    () => (exercise ? liveHtml({ exerciseId: exercise, lang, facing: "environment" }) : ""),
+    [exercise], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   useKeepAwake(); // the screen must stay on during a set
 
@@ -52,6 +62,37 @@ export default function LiveCoach() {
       // ignore malformed messages
     }
   };
+
+  if (!exercise) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.title}>{lang === "hi" ? "Kaunsi exercise?" : "Which exercise?"}</Text>
+        <Text style={styles.sub}>
+          {lang === "hi"
+            ? "Live coach har exercise ke apne rules se judge karta hai. Pehle exercise chuno."
+            : "The live coach judges each exercise by its own rules. Pick one to start."}
+        </Text>
+        <ScrollView style={styles.list} contentContainerStyle={{ gap: 10 }}>
+          {exercises.map((id) => {
+            const r = getRubric(id) as any;
+            return (
+              <TouchableOpacity key={id} style={styles.card} onPress={() => setExercise(id)}>
+                <Text style={styles.cardTitle}>{r.name || id}</Text>
+                <Text style={styles.cardSub}>
+                  {(lang === "hi" ? "Camera: " : "Camera: ") + viewLabel(r.view, lang)}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+        {!exercises.length ? (
+          <Text style={styles.warn}>
+            {lang === "hi" ? "Abhi koi exercise ready nahi hai." : "No exercise is ready yet."}
+          </Text>
+        ) : null}
+      </View>
+    );
+  }
 
   if (Platform.OS !== "web" && !permission?.granted) {
     return (
@@ -90,7 +131,7 @@ export default function LiveCoach() {
           style={styles.web}
           originWhitelist={["*"]}
           source={{ html, baseUrl: "https://lastrepeasy.app" }}
-          injectedJavaScriptBeforeContentLoaded={`window.__CONFIG={facing:"user",lang:"${lang}"};true;`}
+          injectedJavaScriptBeforeContentLoaded={`window.__CONFIG={facing:"environment",lang:"${lang}",exercise:"${exercise}"};true;`}
           javaScriptEnabled
           domStorageEnabled
           allowsInlineMediaPlayback
@@ -103,8 +144,11 @@ export default function LiveCoach() {
         />
       )}
       <View style={styles.bar}>
+        <TouchableOpacity onPress={() => { Speech.stop(); setExercise(null); }}>
+          <Text style={styles.barBtn}>{lang === "hi" ? "Badlo" : "Change"}</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => { Speech.stop(); setVoiceOn((v) => !v); }}>
-          <Text style={styles.barBtn}>{voiceOn ? "Voice on" : "Voice off"}</Text>
+          <Text style={styles.barBtn}>{voiceOn ? (lang === "hi" ? "Awaaz on" : "Voice on") : (lang === "hi" ? "Awaaz off" : "Voice off")}</Text>
         </TouchableOpacity>
         <View style={styles.langRow}>
           {(["hi", "en"] as Lang[]).map((l) => (
@@ -122,6 +166,21 @@ export default function LiveCoach() {
   );
 }
 
+// A rubric may accept several camera positions (a press reads equally well face-on and at 45),
+// so this takes the first one that is not "any" and describes that.
+function viewLabel(view: string | string[] | undefined, lang: Lang): string {
+  const map: Record<string, [string, string]> = {
+    side: ["side on", "side se"],
+    front: ["face on", "saamne se"],
+    "45": ["slight angle", "thode angle se"],
+    any: ["any", "koi bhi"],
+  };
+  const list = Array.isArray(view) ? view : view ? [view] : ["any"];
+  const pick = list.find((v) => v !== "any") ?? "any";
+  const pair = map[pick] ?? map.any;
+  return lang === "hi" ? pair[1] : pair[0];
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0B0F17" },
   center: { flex: 1, backgroundColor: "#0B0F17", padding: 24, justifyContent: "center" },
@@ -129,6 +188,10 @@ const styles = StyleSheet.create({
   title: { color: "#F8FAFC", fontSize: 26, fontWeight: "800" },
   sub: { color: "#94A3B8", fontSize: 15, lineHeight: 21, marginTop: 8 },
   warn: { color: "#FCD34D", fontSize: 14, marginTop: 14 },
+  list: { marginTop: 20, maxHeight: 420 },
+  card: { backgroundColor: "#141B28", borderRadius: 14, padding: 16, borderWidth: 1, borderColor: "#1F2937" },
+  cardTitle: { color: "#F8FAFC", fontSize: 17, fontWeight: "800" },
+  cardSub: { color: "#94A3B8", fontSize: 13, marginTop: 4 },
   go: { backgroundColor: "#0284C7", borderRadius: 14, paddingVertical: 16, alignItems: "center", marginTop: 20 },
   goText: { color: "#FFFFFF", fontSize: 17, fontWeight: "800" },
   bar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, backgroundColor: "#0B0F17" },

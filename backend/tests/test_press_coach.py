@@ -98,9 +98,16 @@ def test_every_message_has_a_hinglish_twin_that_is_also_short_and_plain():
     assert all(c.message_hi for r in reps for c in r.checks)
 
 
-def test_live_js_coach_uses_exactly_the_same_sentences_sync():
-    js = (Path(__file__).resolve().parents[2] / "mobile" / "src" / "live" / "liveCore.ts").read_text()
+def test_live_page_speaks_the_rubric_not_a_second_copy():
+    """The live page must take its sentences from the rubric, not carry its own copy.
+
+    There used to be a `liveCore.ts` with the same five sentences retyped in JS, and this test
+    existed to keep the two copies in step. That is the arrangement that let a squat get judged
+    with press thresholds: two sources of truth, one of them silently stale. The page now renders
+    whatever the rubric says, so the guard becomes "the page has no sentences of its own".
+    """
+    js = (Path(__file__).resolve().parents[2] / "mobile" / "src" / "live" / "liveHtml.ts").read_text()
     for table in (MESSAGES, MESSAGES_HI):
         for group in table.values():
             for sentence in group.values():
-                assert sentence in js, f"missing in liveCore.ts: {sentence}"
+                assert sentence not in js, f"liveHtml.ts must not hardcode a cue: {sentence}"

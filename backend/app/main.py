@@ -20,10 +20,13 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.schemas import (
+    AdjudicateRequest,
+    AdjudicateResponse,
     AnalyzeYoutubeRequest,
     AngleSeriesPoint,
     JobStatus,
@@ -34,7 +37,7 @@ from app.schemas import (
 )
 from app.services.flow_renderer import render_keyframes_and_flow_videos
 from app.services.coach_overlay import render_compare, render_ghost_video, render_speed
-from app.services.ghost import build_ghost_track
+from app.services.ghost import GHOST_PROFILES, build_ghost_track
 from app.services.press_coach import analyze_reps, set_lines, set_score
 from app.services.nippard_ai import (
     JEFF_NIPPARD_PRESETS,
@@ -186,10 +189,11 @@ def _run_analysis_pipeline(
             public_base_url=public_base_url,
         )
 
-        # Ghost-arm coaching video (supported exercises only)
+        # Ghost-arm coaching video. Only for a clip we can actually identify: an unrecognised
+        # exercise gets no ghost at all, rather than being coached against a press's geometry.
         ghost_lines: List[str] = []
         ghost_pts: Optional[int] = None
-        if source_type == "upload":
+        if source_type == "upload" and profile_id in GHOST_PROFILES:
             try:
                 cap = cv2.VideoCapture(video_path)
                 vw, vh = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -425,3 +429,80 @@ def get_job_status(job_id: str):
     if not job:
         raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
     return job
+
+
+# ------------------------------------------------------------------ live coach (tier 1)
+
+def _adjudicate_blocking(payload: AdjudicateRequest, rubric: dict, local: dict):
+    from app.services import vlm_judge
+
+    evidence = {
+        "exercise": payload.exercise_id,
+        "rep": payload.rep_index,
+        "view": payload.view,
+        "keyframes": payload.keyframes,
+        "landmarks": payload.landmarks,
+    }
+    return vlm_judge.adjudicate(evidence, rubric, local)
+
+
+@app.post("/api/live/adjudicate", response_model=AdjudicateResponse)
+async def live_adjudicate(payload: AdjudicateRequest):
+    """Second opinion on one rep from the vision model.
+
+    The phone judges every rep on-device in ~20 ms and that verdict is what the lifter hears while
+    the set is happening. This is the slower, more accurate check that catches what a single 2D
+    angle cannot see, and it is deliberately non-blocking: if it fails, the on-device verdict
+    already stood and the response says so rather than surfacing an error mid-rep.
+    """
+    from app.services import vlm_judge
+    from app.services.rubric_engine import load_rubric
+
+    if not payload.keyframes:
+        raise HTTPException(status_code=400, detail="at least one keyframe is required")
+    if len(payload.keyframes) > vlm_judge.MAX_IMAGES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"at most {vlm_judge.MAX_IMAGES} keyframes; more adds latency without accuracy",
+        )
+
+    try:
+        rubric = load_rubric(payload.exercise_id)
+    except KeyError as exc:
+        # A 404 here is the honest answer: there is no rubric, so there is nothing to judge against.
+        raise HTTPException(status_code=404, detail=str(exc).strip('"')) from exc
+
+    rubric_dict = {
+        "id": rubric.id,
+        "family": rubric.family,
+        "view": list(rubric.view) if isinstance(rubric.view, tuple) else rubric.view,
+        "checks": list(rubric.checks),
+    }
+    local = {c.id: c.status for c in payload.checks}
+
+    # The key pool is synchronous and a call is 1-3 s, so it runs off the event loop.
+    try:
+        verdict = await run_in_threadpool(_adjudicate_blocking, payload, rubric_dict, local)
+    except Exception as exc:
+        # Never fail the set over a second opinion. The local verdict is reported as final and the
+        # caller can see that no remote opinion was obtained.
+        return AdjudicateResponse(
+            checks=[{"id": c.id, "status": c.status, "reason": "local only: remote unavailable"} for c in payload.checks],
+            overall="",
+            confidence=0.0,
+            agrees_with_local=True,
+            disagreements=[f"remote_unavailable: {type(exc).__name__}"],
+        )
+
+    try:
+        vlm_judge.log_adjudication(f"{payload.exercise_id}/{payload.rep_index}", local, verdict)
+    except Exception:
+        traceback.print_exc()  # the verdict is already computed; logging must not lose it
+
+    return AdjudicateResponse(
+        checks=verdict.checks,
+        overall=verdict.overall,
+        confidence=verdict.confidence,
+        agrees_with_local=verdict.agrees_with_local,
+        disagreements=verdict.disagreements,
+    )

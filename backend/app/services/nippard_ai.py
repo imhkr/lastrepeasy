@@ -87,15 +87,38 @@ JEFF_NIPPARD_PRESETS: List[PresetCatalogItem] = [
 ]
 
 
-def detect_exercise_profile(hint_or_url: str) -> str:
-    text = (hint_or_url or "").lower()
-    if any(k in text for k in ["incline", "press", "chest", "bench", "8fxfwg4ftaq"]):
-        return "incline_press_nippard"
+def detect_exercise_profile(hint_or_url: str) -> Optional[str]:
+    """Pick the coaching profile for a clip, or None when nothing fits.
+
+    Returning None matters. This used to fall through to `lat_pullover_nippard`, and bare "press"
+    matched the incline-press profile, so a triceps pressdown was coached with bench-press bands
+    and a squatted clip was coached as a lat pullover. Judging an exercise with another
+    exercise's rules is the bug the whole rubric rewrite exists to remove, so an unrecognised
+    hint now yields no profile and the caller skips coaching rather than inventing it.
+    """
+    text = re.sub(r"[-_]+", " ", (hint_or_url or "").lower()).strip()
+    if not text:
+        return None
+    # Check the movements that merely CONTAIN a press word first. "Triceps pressdown" and
+    # "machine shoulder press" are not chest presses, and "leg press" is not one either.
+    if any(k in text for k in ["triceps", "pressdown", "skull", "french", "kickback", "dip"]):
+        return None
+    if "leg press" in text or "calf press" in text:
+        return None
+    if any(k in text for k in ["squat", "lunge", "leg extension", "leg curl"]):
+        return None
     if any(k in text for k in ["curl", "bicep", "bayesian", "i1ygfzb6ali"]):
         return "bayesian_curl_nippard"
     if any(k in text for k in ["rdl", "deadlift", "hinge", "hamstring", "7j-2w4-p14i"]):
         return "rdl_hinge_nippard"
-    return "lat_pullover_nippard"
+    if any(k in text for k in ["incline", "chest press", "bench", "pec", "flye", "fly", "8fxfwg4ftaq"]):
+        return "incline_press_nippard"
+    # A bare "press" is only a chest press when nothing named a different body part.
+    if "shoulder" in text or "overhead" in text or "ohp" in text:
+        return None
+    if "press" in text:
+        return "incline_press_nippard"
+    return None
 
 
 def _status_for_range(val: float, low: float, high: float) -> str:
@@ -107,7 +130,7 @@ def _status_for_range(val: float, low: float, high: float) -> str:
 
 
 def build_exercise_analysis(
-    profile_id: str,
+    profile_id: Optional[str],
     phase_tuples: List[Tuple[str, str, float, float, FramePoseMetrics]],
     keyframe_urls: Dict[str, str],
     custom_hint: Optional[str] = None,
@@ -119,6 +142,10 @@ def build_exercise_analysis(
     - Key Science-Based Takeaways
     - 5 Step-by-Step Start-to-End Flow Phases with Measured vs Ideal Angles
     - English & Hinglish Voice Coaching Scripts
+
+    `profile_id` may be None when the clip could not be identified. The caller is expected to skip
+    the coaching output in that case; this function still returns a named result rather than
+    silently borrowing another exercise's cues.
     """
     preset = next((p for p in JEFF_NIPPARD_PRESETS if p.preset_id == profile_id), JEFF_NIPPARD_PRESETS[0])
     exercise_name = custom_hint.strip() if (custom_hint and len(custom_hint.strip()) > 3) else preset.title

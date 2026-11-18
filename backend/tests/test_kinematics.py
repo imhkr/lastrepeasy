@@ -196,7 +196,13 @@ def test_torso_axis_points_up_in_image_space():
 
 
 def test_detect_view_front_side_and_45():
-    """Shoulder separation relative to torso length decides the view."""
+    """Shoulder separation relative to torso length decides the view.
+
+    The gap is expressed in NORMALIZED units, and normalized x and y are on different scales on a
+    non-square frame, so the thresholds only make sense after the aspect correction. On a 1280x720
+    frame a 0.35-tall torso corresponds to 0.62 of horizontal width, which means a 0.11 gap is
+    really a face-on shoulder span -- the value that used to be read as 45 degrees.
+    """
     def frame_with_shoulder_gap(gap_norm):
         kp = {
             "left_shoulder": KP(0.5 - gap_norm / 2, 0.4),
@@ -207,8 +213,24 @@ def test_detect_view_front_side_and_45():
         return Frame(kp)
 
     assert detect_view([frame_with_shoulder_gap(0.24)], WH)[0] == "front"
-    assert detect_view([frame_with_shoulder_gap(0.02)], WH)[0] == "side"
-    assert detect_view([frame_with_shoulder_gap(0.11)], WH)[0] == "45"
+    assert detect_view([frame_with_shoulder_gap(0.015)], WH)[0] == "side"
+    assert detect_view([frame_with_shoulder_gap(0.045)], WH)[0] == "45"
+
+
+def test_detect_view_is_aspect_independent():
+    """The same physical pose must classify the same way whatever shape the frame is. Without the
+    correction a 16:9 clip inflates the ratio by 1.78 and reads a side view as 45."""
+    def frame(gap_norm):
+        return Frame({
+            "left_shoulder": KP(0.5 - gap_norm / 2, 0.4),
+            "right_shoulder": KP(0.5 + gap_norm / 2, 0.4),
+            "left_hip": KP(0.46, 0.75),
+            "right_hip": KP(0.54, 0.75),
+        })
+
+    # Same 0.24 shoulder span on a square frame: both are a front view.
+    assert detect_view([frame(0.24)], WH_SQ)[0] == "front"
+    assert detect_view([frame(0.24)], WH)[0] == "front"
 
 
 def test_detect_view_without_landmarks_is_unknown():

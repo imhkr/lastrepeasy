@@ -53,8 +53,10 @@ export type Rubric = {
   track?: {
     joint: "elbow" | "knee" | "shoulder" | "hip" | "ankle";
     origin: "shoulder" | "hip" | "ankle";
-    point: "wrist" | "elbow" | "knee" | "hip" | "ankle" | "foot_index";
-    axis: "forearm" | "distance";
+    point: "wrist" | "elbow" | "knee" | "hip" | "ankle" | "foot_index" | "shoulder";
+    axis: "forearm" | "distance" | "angle";
+    invert?: boolean;
+    eccentric?: "outbound" | "return";
   };
   phases?: string[];
   setup?: RubricCheck[];
@@ -66,8 +68,16 @@ const RANGES: Record<string, [number, number]> = {
   elbow: [20, 180], knee: [20, 180], shoulder: [0, 195], hip: [20, 200], ankle: [30, 160],
 };
 
+// Plan ids are hyphenated (`low-incline-db-press`) while rubric files are underscored, because the
+// two were written in different places. A tap on an exercise card therefore asked for a rubric that
+// existed and was told it did not. Only the FORMAT is unified; an id with no rubric still throws.
+export function normalizeId(exerciseId: string): string {
+  return exerciseId.replace(/-/g, "_").trim().toLowerCase();
+}
+
 export function getRubric(exerciseId: string): Rubric {
-  const r = (RUBRICS as Record<string, unknown>)[exerciseId] as Rubric | undefined;
+  const all = RUBRICS as Record<string, unknown>;
+  const r = (all[exerciseId] ?? all[normalizeId(exerciseId)]) as Rubric | undefined;
   if (!r) {
     // Loud, not silent. Judging an unknown exercise with a guessed rubric is the original bug.
     throw new Error(

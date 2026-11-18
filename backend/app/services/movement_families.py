@@ -34,12 +34,21 @@ FAMILIES: Dict[str, Dict] = {
         "faults": ["depth", "lockout", "hands", "speed", "one side lagging"],
     },
     "lateral_raise": {
-        "track": {"joint": "elbow", "origin": "shoulder", "point": "wrist", "axis": "distance"},
+        # ANGLE, not distance. A raise keeps shoulder-to-wrist almost constant -- the arm swings but
+        # does not change length -- so a distance signal sees a flat line and counts no reps at all.
+        # The shoulder component is what moves: TRIPLES["shoulder"] is hip-shoulder-elbow, which is
+        # ~10 deg with the arm at the side and ~90 deg with the arm out at shoulder height. `invert`
+        # because the machine needs progress 1 to mean "at rest, ready for the next rep", and here
+        # rest is the SMALL end of the joint's range -- the opposite of a press or a squat.
+        "track": {"joint": "shoulder", "origin": "shoulder", "point": "wrist", "axis": "angle", "invert": True},
         "measures": ["shoulder_angle", "eccentric_seconds", "side_difference"],
         "faults": ["too low", "too high", "speed", "one side lagging"],
     },
     "row_pulldown": {
-        "track": {"joint": "elbow", "origin": "shoulder", "point": "wrist", "axis": "forearm"},
+        # Distance, not the press's learned axis. A row's shoulder-to-wrist length changes plenty as
+        # the elbow bends, and nothing in this family's checks compares a limb to "up", so the
+        # simpler axis-free signal is strictly more robust than learning a direction.
+        "track": {"joint": "elbow", "origin": "shoulder", "point": "wrist", "axis": "distance"},
         "measures": ["elbow_angle", "torso_lean", "eccentric_seconds", "side_difference"],
         "faults": ["range", "lean", "speed", "one side lagging"],
     },
@@ -69,12 +78,20 @@ FAMILIES: Dict[str, Dict] = {
         "faults": ["range", "speed"],
     },
     "hip_isolation": {
-        "track": {"joint": "hip", "origin": "shoulder", "point": "hip", "axis": "distance"},
+        # ANGLE. The old spec said origin=shoulder, point=hip, which is the torso itself -- a
+        # constant. A leg swinging out to the side changes the hip angle, not any segment length.
+        # No invert: with this triple the angle is largest standing (leg down) and shrinks as the
+        # leg abducts, so the rest position is already the large end, which is where the count starts.
+        "track": {"joint": "hip", "origin": "shoulder", "point": "knee", "axis": "angle"},
         "measures": ["hip_angle", "eccentric_seconds"],
         "faults": ["range", "speed"],
     },
     "calf": {
-        "track": {"joint": "ankle", "origin": "knee", "point": "foot_index", "axis": "distance"},
+        # ANGLE. Knee-to-toe barely changes across a calf raise; the ankle joint is what travels.
+        # Invert: TRIPLES["ankle"] is knee-ankle-toe, which is LARGEST with the heel dropped and
+        # SMALLEST at the top of the raise -- the opposite of every other family, where the top is
+        # the large end. Without the inversion the heel-dropped rest position would read as the top.
+        "track": {"joint": "ankle", "origin": "knee", "point": "foot_index", "axis": "angle", "invert": True},
         "measures": ["ankle_angle", "eccentric_seconds"],
         "faults": ["range", "speed"],
     },
@@ -91,10 +108,13 @@ UNCLASSIFIED = "unclassified"
 # triceps pressdown contains "press" and must not reach the chest family; a leg press contains
 # "press" and is not a chest press either.
 RULES: List[Tuple[str, str]] = [
+    # "glute kickback" before the triceps list, which would otherwise claim it on the word
+    # "kickback" and coach a hip extension as an elbow movement.
+    (r"glute kickback", "hip_isolation"),
     (r"skull|french|pressdown|kickback|katana|triceps|pushdown", "triceps"),
     (r"crunch|vaccum|vacuum|russian twist|leg raise|rollout|ab wheel|ab-wheel", "core"),
     (r"calf|ankle", "calf"),
-    (r"hip adduction|hip abduction|glute kickback", "hip_isolation"),
+    (r"hip adduction|hip abduction", "hip_isolation"),
     (r"leg press|leg extension|leg curl|sissy|seated leg|lying leg|single leg", "leg_isolation"),
     (r"rdl|deadlift|hinge|hyperextension|roman chair|good morning", "hinge"),
     (r"squat|lunge|hack squat|split squat|step up", "squat_lunge"),

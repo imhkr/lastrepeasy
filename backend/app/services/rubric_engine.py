@@ -151,6 +151,17 @@ def _parse(path: Path) -> Rubric:
     )
 
 
+def normalize_id(exercise_id: str) -> str:
+    """Plan ids are hyphenated (`low-incline-db-press`), rubric files are underscored.
+
+    The two sets of ids come from different places -- plans.json was written by hand and the
+    rubrics follow the Python module name -- so without this a tap on an exercise card asks for a
+    rubric that exists and is told it does not. Only the FORMAT is unified here; a genuinely
+    unknown id still raises.
+    """
+    return exercise_id.replace("-", "_").strip().lower()
+
+
 def load_rubric(exercise_id: str) -> Rubric:
     """Find the rubric by the `id` inside the file, not by filename.
 
@@ -158,15 +169,16 @@ def load_rubric(exercise_id: str) -> Rubric:
     exercise with another's bands. Parsed rubrics are cached because the phone asks for the
     same rubric every rep.
     """
-    if exercise_id in _CACHE:
-        return _CACHE[exercise_id]
+    wanted = normalize_id(exercise_id)
+    if wanted in _CACHE:
+        return _CACHE[wanted]
     known: List[str] = []
     for path in sorted(RUBRIC_DIR.glob("*.json")):
         rubric = _parse(path)
-        _CACHE[rubric.id] = rubric
+        _CACHE[normalize_id(rubric.id)] = rubric
         known.append(rubric.id)
-    if exercise_id in _CACHE:
-        return _CACHE[exercise_id]
+    if wanted in _CACHE:
+        return _CACHE[wanted]
     raise KeyError(f"unknown rubric {exercise_id!r}; known rubrics: {sorted(known)}")
 
 

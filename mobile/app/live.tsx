@@ -7,6 +7,7 @@ import { useKeepAwake } from "expo-keep-awake";
 import * as Speech from "expo-speech";
 import { liveHtml } from "../src/live/liveHtml";
 import { listExercises, getRubric } from "../src/live/engine";
+import { adjudicateRep } from "../src/api/client";
 import { sayCoach } from "../src/services/coachVoice";
 import { Lang, useLang } from "../src/services/lang";
 
@@ -25,8 +26,12 @@ export default function LiveCoach() {
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   const voiceRef = useRef(true);
   const langRef = useRef<Lang>(lang);
+  // Read inside the rep handler, which is created once and outlives any single render.
+  const exerciseRef = useRef<string | null>(exercise);
+  const viewRef = useRef<string>("");
   voiceRef.current = voiceOn;
   langRef.current = lang;
+  exerciseRef.current = exercise;
   const first = useRef(true);
 
   const exercises = useMemo(() => listExercises(), []);
@@ -58,9 +63,51 @@ export default function LiveCoach() {
       if (m.type === "status") setStatus(m.text);
       if (m.type === "speak" && voiceRef.current) sayCoach(langRef.current === "hi" ? m.hi : m.en, langRef.current === "hi");
       if (m.type === "done") router.back();
+      if (m.type === "ready" && m.view) viewRef.current = m.view;
+      if (m.type === "rep") secondOpinion(m);
     } catch {
       // ignore malformed messages
     }
+  };
+
+  // The phone has already judged this rep and already said it out loud, so a second opinion is
+  // deliberately off the critical path: it is asked for, never waited on, and a failure is
+  // swallowed. What it is FOR is catching the faults a single 2D angle cannot see -- a shrug, a
+  // flared elbow -- so when it disagrees with the on-device verdict it says so once, quietly.
+  //
+  // ONE at a time. A vision call takes several seconds, which is longer than a rep, so firing one
+  // per rep would stack requests, and the answers would arrive after the set ended and get spoken
+  // over the next one. A rep that arrives while a call is in flight is dropped: the on-device
+  // verdict for it already stood, and the next rep will be checked instead.
+  //
+  // The phone holds no API key. This endpoint is the only thing that talks to the model.
+  const inFlight = useRef(false);
+  const secondOpinion = (m: any) => {
+    const keyframes: string[] = Array.isArray(m.keyframes) ? m.keyframes.filter(Boolean) : [];
+    if (!keyframes.length || !exerciseRef.current || inFlight.current) return;
+    inFlight.current = true;
+    adjudicateRep({
+      exerciseId: exerciseRef.current,
+      repIndex: m.index ?? 1,
+      view: viewRef.current || undefined,
+      checks: (m.checks ?? []).map((c: any) => ({ id: c.id, status: c.status })),
+      keyframes,
+      landmarks: Array.isArray(m.nrm) ? m.nrm : [],
+    })
+      .then((r) => {
+        if (!r || r.agrees_with_local || !r.checks?.length) return;
+        const worse = r.checks.find((c) => {
+          const local = (m.checks ?? []).find((x: any) => x.id === c.id);
+          return local && local.status === "good" && c.status === "fix" && c.cue;
+        });
+        if (worse?.cue) sayCoach(langRef.current === "hi" ? worse.cue.hi : worse.cue.en, langRef.current === "hi");
+      })
+      .catch(() => {
+        // A missing second opinion is not a failed rep. The verdict already spoken stands.
+      })
+      .finally(() => {
+        inFlight.current = false;
+      });
   };
 
   if (!exercise) {

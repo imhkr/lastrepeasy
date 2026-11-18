@@ -312,7 +312,19 @@ export function liveHtml(opts: LiveHtmlOpts): string {
     }
 
     if (!seg) seg = LIVE.segment.createSegmenter({ track: TRACK });
-    var rep = seg.update(lm, src ? mt : now / 1000);
+    var nowT = src ? mt : now / 1000;
+    var rep = seg.update(lm, nowT);
+
+    // Snapshot the bottom as it happens. A live camera cannot be rewound, so the only way to send
+    // the backend the frame where the lifter was lowest is to notice the moment it is happening:
+    // the segmenter moves its own bottomT when a new low is reached, and that is the trigger.
+    if (seg.pending()) {
+      var pend = seg.pending();
+      if (pend && pend.bottomT >= nowT - 1e-3 && pend.bottomT !== kfBottomT) {
+        kfBottomT = pend.bottomT;
+        kfBottom = snap();
+      }
+    }
 
     // Live feedback while the rep is in flight: judge the frames so far, so the cue lands DURING
     // the set, not only at the end. This is the "start to end" part.
@@ -369,6 +381,59 @@ export function liveHtml(opts: LiveHtmlOpts): string {
     });
   }
 
+  // ---- keyframes for the second opinion
+  //
+  // The on-device judge is the authority during the set, but a 2D angle cannot see a shoulder
+  // shrug or a flared elbow, so the backend gets a look at two stills: the bottom of the rep and
+  // the top. Only two, because each one is a round trip and the model charges per image.
+  //
+  // Capture happens AS the rep happens, not afterwards, because a live camera cannot be rewound.
+  // The deepest point is detected from the segmenter's own bottom timestamp, so the frame captured
+  // really is the bottom rather than whichever frame happened to be current at the end.
+  var kfBottom = null, kfBottomT = null;
+  var kfWant = true;
+  // One JPEG, small enough to send: 640 px on the long side is plenty for a model to see a
+  // posture, and keeps the upload under a few tens of KB.
+  function snap() {
+    try {
+      if (!kfWant || !v || !v.videoWidth) return null;
+      var maxSide = 640;
+      var s = Math.min(1, maxSide / Math.max(v.videoWidth, v.videoHeight));
+      var w = Math.max(1, Math.round(v.videoWidth * s)), h = Math.max(1, Math.round(v.videoHeight * s));
+      var sc = document.createElement("canvas");
+      sc.width = w; sc.height = h;
+      sc.getContext("2d").drawImage(v, 0, 0, w, h);
+      // The backend wants raw base64 with no data: prefix, and a JPEG is far smaller than a PNG
+      // for a photo of a person.
+      return sc.toDataURL("image/jpeg", 0.6).split(",")[1] || null;
+    } catch (e) { return null; }
+  }
+
+  function grabKeyframes(r) {
+    if (!kfWant) return [];
+    var out = [];
+    var top = snap();
+    if (kfBottom) out.push(kfBottom);
+    if (top) out.push(top);
+    kfBottom = null; kfBottomT = null;
+    return out;
+  }
+
+  // Numbers the model can check instead of only guessing from pixels. The phone already measured
+  // every check, so sending the values lets the backend see a disagreement it can name.
+  function landmarkSummary(r, aspect) {
+    var out = [];
+    try {
+      var verdicts = judge(r, aspect);
+      var side = seg.side() || "right";
+      verdicts.forEach(function (vd) {
+        if (!isFinite(vd.value)) return;
+        out.push({ check: vd.id, side: side, value: Math.round(vd.value * 10) / 10, status: vd.status });
+      });
+    } catch (e) {}
+    return out;
+  }
+
   function finishRep(r, lm, aspect) {
     var verdicts = judge(r, aspect);
     verdicts.forEach(function (vd) { showCheck(specFor(vd.id), vd.status, vd.value, ""); });
@@ -378,7 +443,11 @@ export function liveHtml(opts: LiveHtmlOpts): string {
     var entry = { index: index, checks: verdicts.map(function (x) { return { id: x.id, label: x.label, status: x.status, value: x.value, cue: x.cue }; }) };
     repsDone.push(entry);
     window.__live.reps = repsDone;
-    post({ type: "rep", index: index, checks: entry.checks });
+    // Keyframes ride along so the app can ask the backend for a second opinion. They are captured
+    // at the bottom of the rep, which is the frame that shows depth and joint alignment, plus the
+    // current frame as the top. Sending them costs nothing locally; whether to actually ask the
+    // backend is the app's decision, and it throttles that to one call at a time.
+    post({ type: "rep", index: index, checks: entry.checks, keyframes: grabKeyframes(r), nrm: landmarkSummary(r, aspect) });
 
     var w = LIVE.engine.worstCue(verdicts);
     var anyUnsure = verdicts.some(function (x) { return x.status === "unsure"; });

@@ -1,0 +1,201 @@
+{
+  "id": "paused_assisted_dip",
+  "name": "Paused Assisted Dip",
+  "family": "chest_press",
+  "view": [
+    "front",
+    "45"
+  ],
+  "rubric_version": "2026-11-18",
+  "_generated": true,
+  "validated": false,
+  "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
+  "track": {
+    "joint": "elbow",
+    "origin": "shoulder",
+    "point": "wrist",
+    "axis": "forearm"
+  },
+  "start_cue": {
+    "en": "Hold the weight up, then lower it slowly.",
+    "hi": "Weight upar pakdo, phir dheere neeche lao."
+  },
+  "phases": [
+    "setup",
+    "eccentric",
+    "bottom",
+    "concentric",
+    "lockout"
+  ],
+  "setup": [],
+  "checks": [
+    {
+      "id": "depth",
+      "label": "Depth",
+      "joint": "elbow",
+      "at": "bottom",
+      "robust": "min_of_3",
+      "capture": "in_plane",
+      "min_visibility": 0.55,
+      "good": [
+        25,
+        100
+      ],
+      "almost": [
+        100,
+        112
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You went down low enough.",
+          "hi": "Badhiya. Aap kaafi neeche gaye."
+        },
+        "fix": {
+          "en": "Take the weight down to your chest.",
+          "hi": "Weight chest tak neeche lao."
+        },
+        "above": {
+          "en": "Go lower. Take the weight down to your chest.",
+          "hi": "Neeche jao. Weight chest tak lao."
+        },
+        "below": {
+          "en": "That is very deep. Stop when your upper arm is level.",
+          "hi": "Yeh bahut neeche hai. Upper arm level aate hi ruko."
+        },
+        "almost": {
+          "en": "Take the weight down to your chest.",
+          "hi": "Weight chest tak neeche lao."
+        }
+      }
+    },
+    {
+      "id": "lockout",
+      "label": "Lockout",
+      "joint": "elbow",
+      "at": "lockout",
+      "robust": "max",
+      "capture": "in_plane",
+      "min_visibility": 0.6,
+      "good": [
+        160,
+        180
+      ],
+      "almost": [
+        145,
+        160
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. Your arms finished straight.",
+          "hi": "Badhiya. Haath poore seedhe hue."
+        },
+        "fix": {
+          "en": "Push all the way up and straighten your arms.",
+          "hi": "Poora upar dhakelo aur haath seedhe karo."
+        },
+        "almost": {
+          "en": "Push all the way up and straighten your arms.",
+          "hi": "Poora upar dhakelo aur haath seedhe karo."
+        }
+      }
+    },
+    {
+      "id": "hands",
+      "label": "Hands",
+      "joint": "wrist",
+      "at": "eccentric",
+      "robust": "median",
+      "capture": "in_plane",
+      "min_visibility": 0.6,
+      "measure": "wrist_vs_elbow_stack",
+      "good": [
+        0,
+        30
+      ],
+      "almost": [
+        30,
+        50
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. Your hands stayed over your elbows.",
+          "hi": "Badhiya. Haath kohni ke upar rahe."
+        },
+        "fix": {
+          "en": "Your hands drift. Keep wrists stacked over elbows.",
+          "hi": "Haath hat rahe hain. Kohni ke seedha upar rakho."
+        },
+        "almost": {
+          "en": "Your hands drift. Keep wrists stacked over elbows.",
+          "hi": "Haath hat rahe hain. Kohni ke seedha upar rakho."
+        }
+      }
+    },
+    {
+      "id": "tempo",
+      "label": "Speed",
+      "at": "eccentric",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "eccentric_seconds",
+      "good": [
+        0.9,
+        3.0
+      ],
+      "almost": [
+        0.45,
+        0.9
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You controlled the weight.",
+          "hi": "Badhiya. Aapne weight control kiya."
+        },
+        "fix": {
+          "en": "Too fast. Do not drop the weight. Count 2 seconds.",
+          "hi": "Bahut tez hai. Weight girao mat. 2 tak gino."
+        },
+        "below": {
+          "en": "Too fast. Do not drop the weight. Count 2 seconds.",
+          "hi": "Bahut tez hai. Weight girao mat. 2 tak gino."
+        },
+        "almost": {
+          "en": "A bit fast. Count 2 seconds on the way down.",
+          "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
+        }
+      }
+    },
+    {
+      "id": "even",
+      "label": "Arms",
+      "joint": "elbow",
+      "at": "bottom",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "side_difference",
+      "min_visibility": 0.7,
+      "good": [
+        0,
+        12
+      ],
+      "almost": [
+        12,
+        20
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. Both arms moved together.",
+          "hi": "Badhiya. Dono haath saath chale."
+        },
+        "fix": {
+          "en": "One arm is much lower. Move both arms together.",
+          "hi": "Ek haath bahut neeche hai. Dono haath saath chalao."
+        },
+        "almost": {
+          "en": "One side is a little behind. Move them together.",
+          "hi": "Ek side thoda peeche hai. Dono saath chalao."
+        }
+      }
+    }
+  ]
+}

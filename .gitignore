@@ -18,6 +18,8 @@ backend/storage/uploads/*
 backend/storage/outputs/*
 backend/storage/frames/*
 backend/storage/models/*.task
+# One line per adjudicated rep, appended forever. Runtime data, never source.
+backend/storage/adjudications/*
 !backend/storage/uploads/.gitkeep
 !backend/storage/outputs/.gitkeep
 !backend/storage/frames/.gitkeep

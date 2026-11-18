@@ -22,9 +22,27 @@ from app.services.movement_families import (
 def test_every_family_declares_a_track_and_its_measures():
     for name, spec in FAMILIES.items():
         assert spec["track"]["joint"], name
-        assert spec["track"]["axis"] in ("forearm", "distance"), name
+        assert spec["track"]["axis"] in ("forearm", "distance", "angle"), name
         assert spec["measures"], name
         assert spec["faults"], name
+
+
+def test_the_angle_axis_is_used_only_where_length_cannot_move():
+    """The angle axis exists for one situation: the tracked segment's LENGTH does not change.
+
+    A raise swings the arm with a near-constant shoulder-to-wrist distance, so the distance signal
+    reads a flat line and the press's axis has nothing to learn. Every other family must stay on a
+    length or direction signal, because measuring an angle where a length changes is strictly worse:
+    an angle is a derived quantity and inherits the tracker's depth error twice over.
+    """
+    for name, spec in FAMILIES.items():
+        if spec["track"]["axis"] != "angle":
+            continue
+        assert name in ("lateral_raise", "hip_isolation", "calf"), name
+    assert FAMILIES["lateral_raise"]["track"]["axis"] == "angle"
+    # The raise is inverted: hip-shoulder-elbow is ~10 deg with the arm down, so the rest position
+    # -- which every family needs at progress 1 -- is the SMALL end of its range.
+    assert FAMILIES["lateral_raise"]["track"]["invert"] is True
 
 
 def test_the_track_matches_the_joint_a_family_is_judged_on():
@@ -34,6 +52,8 @@ def test_the_track_matches_the_joint_a_family_is_judged_on():
     assert FAMILIES["chest_press"]["track"]["joint"] == "elbow"
     assert FAMILIES["curl"]["track"]["joint"] == "elbow"
     assert FAMILIES["calf"]["track"]["joint"] == "ankle"
+    # The shoulder is tracked by its own angle, not by the elbow that never bends.
+    assert FAMILIES["lateral_raise"]["track"]["joint"] == "shoulder"
     # Only the press counts off a learned press line; everything else is axis-free.
     assert FAMILIES["chest_press"]["track"]["axis"] == "forearm"
     assert FAMILIES["squat_lunge"]["track"]["axis"] == "distance"

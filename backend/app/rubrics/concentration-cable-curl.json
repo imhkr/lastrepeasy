@@ -1,0 +1,170 @@
+{
+  "id": "concentration_cable_curl",
+  "name": "Concentration Cable Curl",
+  "family": "curl",
+  "view": [
+    "side",
+    "45"
+  ],
+  "rubric_version": "2026-11-18",
+  "_generated": true,
+  "validated": false,
+  "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
+  "track": {
+    "joint": "elbow",
+    "origin": "shoulder",
+    "point": "wrist",
+    "axis": "distance",
+    "eccentric": "return"
+  },
+  "start_cue": {
+    "en": "Stand tall with your arms down, then curl up.",
+    "hi": "Seedhe khade ho, haath neeche, phir upar curl karo."
+  },
+  "phases": [
+    "setup",
+    "eccentric",
+    "bottom",
+    "concentric",
+    "lockout"
+  ],
+  "setup": [],
+  "checks": [
+    {
+      "id": "range",
+      "label": "Range",
+      "joint": "elbow",
+      "at": "bottom",
+      "robust": "min_of_3",
+      "capture": "in_plane",
+      "min_visibility": 0.55,
+      "good": [
+        20,
+        70
+      ],
+      "almost": [
+        70,
+        95
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You curled all the way up.",
+          "hi": "Badhiya. Aap poora upar aaye."
+        },
+        "fix": {
+          "en": "Curl higher before you lower.",
+          "hi": "Neeche laane se pehle aur upar karo."
+        },
+        "above": {
+          "en": "Do not swing that high. Stop before your elbow pinches.",
+          "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
+        },
+        "below": {
+          "en": "Curl higher, squeeze at the top.",
+          "hi": "Aur upar karo, upar squeeze karo."
+        },
+        "almost": {
+          "en": "Curl higher before you lower.",
+          "hi": "Neeche laane se pehle aur upar karo."
+        }
+      }
+    },
+    {
+      "id": "lockout",
+      "label": "Bottom",
+      "joint": "elbow",
+      "at": "lockout",
+      "robust": "max",
+      "capture": "in_plane",
+      "min_visibility": 0.6,
+      "good": [
+        150,
+        180
+      ],
+      "almost": [
+        135,
+        150
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You lowered your arms fully.",
+          "hi": "Badhiya. Aapne haath poore neeche kiye."
+        },
+        "fix": {
+          "en": "Lower all the way down so the muscle can stretch.",
+          "hi": "Poora neeche lao taaki muscle stretch ho."
+        },
+        "almost": {
+          "en": "Lower all the way down so the muscle can stretch.",
+          "hi": "Poora neeche lao taaki muscle stretch ho."
+        }
+      }
+    },
+    {
+      "id": "lean",
+      "label": "Body",
+      "joint": "torso",
+      "at": "bottom",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "torso_lean",
+      "min_visibility": 0.6,
+      "good": [
+        0,
+        12
+      ],
+      "almost": [
+        12,
+        22
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. Your body stayed still.",
+          "hi": "Badhiya. Aapka shareer sthir raha."
+        },
+        "fix": {
+          "en": "You are swinging your body. Keep your back still and curl.",
+          "hi": "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."
+        },
+        "almost": {
+          "en": "You are swinging your body. Keep your back still and curl.",
+          "hi": "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."
+        }
+      }
+    },
+    {
+      "id": "tempo",
+      "label": "Speed",
+      "at": "eccentric",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "eccentric_seconds",
+      "good": [
+        0.9,
+        3.5
+      ],
+      "almost": [
+        0.45,
+        0.9
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You controlled the weight.",
+          "hi": "Badhiya. Aapne weight control kiya."
+        },
+        "fix": {
+          "en": "Too fast. Do not let it drop. Count 2 seconds.",
+          "hi": "Bahut tez hai. Girne mat do. 2 tak gino."
+        },
+        "below": {
+          "en": "Too fast. Do not let it drop. Count 2 seconds.",
+          "hi": "Bahut tez hai. Girne mat do. 2 tak gino."
+        },
+        "almost": {
+          "en": "A bit fast. Count 2 seconds on the way down.",
+          "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
+        }
+      }
+    }
+  ]
+}

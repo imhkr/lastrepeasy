@@ -1,0 +1,201 @@
+{
+  "id": "straight_bar_lat_prayer",
+  "name": "Straight Bar Lat Prayer",
+  "family": "row_pulldown",
+  "view": [
+    "side",
+    "45"
+  ],
+  "rubric_version": "2026-11-18",
+  "_generated": true,
+  "validated": false,
+  "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
+  "track": {
+    "joint": "elbow",
+    "origin": "shoulder",
+    "point": "wrist",
+    "axis": "distance"
+  },
+  "start_cue": {
+    "en": "Start with your arms long, then pull in.",
+    "hi": "Haath seedhe karke shuru karo, phir andar kheencho."
+  },
+  "phases": [
+    "setup",
+    "eccentric",
+    "bottom",
+    "concentric",
+    "lockout"
+  ],
+  "setup": [],
+  "checks": [
+    {
+      "id": "range",
+      "label": "Range",
+      "joint": "elbow",
+      "at": "bottom",
+      "robust": "min_of_3",
+      "capture": "in_plane",
+      "min_visibility": 0.55,
+      "good": [
+        20,
+        75
+      ],
+      "almost": [
+        75,
+        95
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You pulled all the way in.",
+          "hi": "Badhiya. Aap poora kheench laaye."
+        },
+        "fix": {
+          "en": "Pull further. Bring the weight all the way in.",
+          "hi": "Aur kheencho. Weight poora andar lao."
+        },
+        "above": {
+          "en": "Do not pull past your body. Stop when the elbow is behind you.",
+          "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+        },
+        "below": {
+          "en": "Pull further, all the way in.",
+          "hi": "Aur kheencho, poora andar tak."
+        },
+        "almost": {
+          "en": "Pull further. Bring the weight all the way in.",
+          "hi": "Aur kheencho. Weight poora andar lao."
+        }
+      }
+    },
+    {
+      "id": "stretch",
+      "label": "Stretch",
+      "joint": "elbow",
+      "at": "lockout",
+      "robust": "max",
+      "capture": "in_plane",
+      "min_visibility": 0.6,
+      "good": [
+        145,
+        180
+      ],
+      "almost": [
+        130,
+        145
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You let the weight stretch you out.",
+          "hi": "Badhiya. Aapne weight ko khulne diya."
+        },
+        "fix": {
+          "en": "Let your arms straighten fully at the top.",
+          "hi": "Upar jaate time haath poore seedhe hone do."
+        },
+        "almost": {
+          "en": "Let your arms straighten fully at the top.",
+          "hi": "Upar jaate time haath poore seedhe hone do."
+        }
+      }
+    },
+    {
+      "id": "lean",
+      "label": "Back",
+      "joint": "torso",
+      "at": "bottom",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "torso_lean",
+      "min_visibility": 0.6,
+      "good": [
+        0,
+        25
+      ],
+      "almost": [
+        25,
+        40
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. Your body stayed still.",
+          "hi": "Badhiya. Aapka shareer sthir raha."
+        },
+        "fix": {
+          "en": "You are swinging. Keep your body still and pull.",
+          "hi": "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."
+        },
+        "almost": {
+          "en": "You are swinging. Keep your body still and pull.",
+          "hi": "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."
+        }
+      }
+    },
+    {
+      "id": "tempo",
+      "label": "Speed",
+      "at": "eccentric",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "eccentric_seconds",
+      "good": [
+        0.8,
+        3.5
+      ],
+      "almost": [
+        0.4,
+        0.8
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You controlled the weight.",
+          "hi": "Badhiya. Aapne weight control kiya."
+        },
+        "fix": {
+          "en": "Too fast. Control the stretch. Count 2 seconds.",
+          "hi": "Bahut tez hai. Khulne mein control rakho. 2 tak gino."
+        },
+        "below": {
+          "en": "Too fast. Control the stretch. Count 2 seconds.",
+          "hi": "Bahut tez hai. Khulne mein control rakho. 2 tak gino."
+        },
+        "almost": {
+          "en": "A bit fast. Count 2 seconds on the way down.",
+          "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
+        }
+      }
+    },
+    {
+      "id": "even",
+      "label": "Both arms",
+      "joint": "elbow",
+      "at": "bottom",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "side_difference",
+      "min_visibility": 0.7,
+      "good": [
+        0,
+        12
+      ],
+      "almost": [
+        12,
+        20
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. Both arms pulled together.",
+          "hi": "Badhiya. Dono haath saath khinche."
+        },
+        "fix": {
+          "en": "One arm is doing less. Pull with both evenly.",
+          "hi": "Ek haath kam kar raha hai. Dono se barabar kheencho."
+        },
+        "almost": {
+          "en": "One side is a little behind. Move them together.",
+          "hi": "Ek side thoda peeche hai. Dono saath chalao."
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,166 @@
+{
+  "id": "cable_triceps_kickback",
+  "name": "Cable Triceps Kickback",
+  "family": "triceps",
+  "view": [
+    "side",
+    "45"
+  ],
+  "rubric_version": "2026-11-18",
+  "_generated": true,
+  "validated": false,
+  "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
+  "track": {
+    "joint": "elbow",
+    "origin": "shoulder",
+    "point": "wrist",
+    "axis": "distance",
+    "eccentric": "return"
+  },
+  "start_cue": {
+    "en": "Set your elbow still, then straighten your arm.",
+    "hi": "Kohni sthir rakho, phir haath seedha karo."
+  },
+  "phases": [
+    "setup",
+    "eccentric",
+    "bottom",
+    "concentric",
+    "lockout"
+  ],
+  "setup": [],
+  "checks": [
+    {
+      "id": "range",
+      "label": "Range",
+      "joint": "elbow",
+      "at": "bottom",
+      "robust": "min_of_3",
+      "capture": "in_plane",
+      "min_visibility": 0.55,
+      "good": [
+        20,
+        80
+      ],
+      "almost": [
+        80,
+        100
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You straightened your arms fully.",
+          "hi": "Badhiya. Aapne haath poore seedhe kiye."
+        },
+        "fix": {
+          "en": "Straighten your arms all the way.",
+          "hi": "Haath poore seedhe karo."
+        },
+        "below": {
+          "en": "Do not hyperextend. Stop when the arm is straight.",
+          "hi": "Seedhe se zyada nahi. Seedha hote hi ruko."
+        },
+        "almost": {
+          "en": "Straighten your arms all the way.",
+          "hi": "Haath poore seedhe karo."
+        }
+      }
+    },
+    {
+      "id": "stretch",
+      "label": "Stretch",
+      "joint": "elbow",
+      "at": "lockout",
+      "robust": "max",
+      "capture": "in_plane",
+      "min_visibility": 0.6,
+      "good": [
+        40,
+        110
+      ],
+      "almost": [
+        110,
+        130
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You let the elbow close fully.",
+          "hi": "Badhiya. Kohni poora band hui."
+        },
+        "fix": {
+          "en": "Let the elbow close all the way so the muscle stretches.",
+          "hi": "Kohni poora band hone do taaki muscle stretch ho."
+        },
+        "almost": {
+          "en": "Let the elbow close all the way so the muscle stretches.",
+          "hi": "Kohni poora band hone do taaki muscle stretch ho."
+        }
+      }
+    },
+    {
+      "id": "lean",
+      "label": "Body",
+      "joint": "torso",
+      "at": "bottom",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "torso_lean",
+      "min_visibility": 0.6,
+      "good": [
+        0,
+        18
+      ],
+      "almost": [
+        18,
+        30
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. Your body stayed still.",
+          "hi": "Badhiya. Aapka shareer sthir raha."
+        },
+        "fix": {
+          "en": "You are leaning into it. Keep your body still.",
+          "hi": "Aap shareer se dhakel rahe hain. Shareer sthir rakho."
+        },
+        "almost": {
+          "en": "You are leaning into it. Keep your body still.",
+          "hi": "Aap shareer se dhakel rahe hain. Shareer sthir rakho."
+        }
+      }
+    },
+    {
+      "id": "tempo",
+      "label": "Speed",
+      "at": "eccentric",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "eccentric_seconds",
+      "good": [
+        0.9,
+        3.5
+      ],
+      "almost": [
+        0.45,
+        0.9
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You controlled the weight.",
+          "hi": "Badhiya. Aapne weight control kiya."
+        },
+        "fix": {
+          "en": "Too fast. Control the return. Count 2 seconds.",
+          "hi": "Bahut tez hai. Wapas aane mein control rakho. 2 tak gino."
+        },
+        "below": {
+          "en": "Too fast. Control the return. Count 2 seconds.",
+          "hi": "Bahut tez hai. Wapas aane mein control rakho. 2 tak gino."
+        },
+        "almost": {
+          "en": "A bit fast. Count 2 seconds on the way down.",
+          "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
+        }
+      }
+    }
+  ]
+}

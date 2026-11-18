@@ -88,3 +88,44 @@ export async function fetchJobResult(jobId: string): Promise<WorkoutAnalysisResu
   }
   return res.json();
 }
+
+export type AdjudicateCheck = { id: string; status: string };
+
+export type AdjudicateResult = {
+  checks: { id: string; status: string; cue?: { en: string; hi: string } }[];
+  overall: string;
+  confidence: number;
+  agrees_with_local: boolean;
+  disagreements: string[];
+};
+
+// The second opinion on one finished rep. The phone has already judged it and already told the
+// lifter, so this is deliberately not on the critical path: it returns whatever the server says
+// and the caller decides what to do with a disagreement. No key material is involved here -- the
+// phone holds none, and the backend is the only thing that talks to the model.
+export async function adjudicateRep(input: {
+  exerciseId: string;
+  repIndex: number;
+  view?: string;
+  checks: AdjudicateCheck[];
+  keyframes: string[];
+  landmarks?: Record<string, number>[];
+}): Promise<AdjudicateResult> {
+  const res = await fetch(`${API_BASE_URL}/api/live/adjudicate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      exercise_id: input.exerciseId,
+      rep_index: input.repIndex,
+      view: input.view,
+      checks: input.checks,
+      keyframes: input.keyframes,
+      landmarks: input.landmarks ?? [],
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Adjudication failed (${res.status}): ${text}`);
+  }
+  return res.json();
+}

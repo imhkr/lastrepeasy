@@ -1,0 +1,102 @@
+{
+  "id": "machine_hip_abduction",
+  "name": "Machine Hip Abduction",
+  "family": "hip_isolation",
+  "view": [
+    "front",
+    "45"
+  ],
+  "rubric_version": "2026-11-18",
+  "_generated": true,
+  "validated": false,
+  "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
+  "track": {
+    "joint": "hip",
+    "origin": "shoulder",
+    "point": "knee",
+    "axis": "angle"
+  },
+  "start_cue": {
+    "en": "Stand tall, then move your leg out to the side.",
+    "hi": "Seedhe khade ho, phir pair side mein le jao."
+  },
+  "phases": [
+    "setup",
+    "eccentric",
+    "bottom",
+    "concentric",
+    "lockout"
+  ],
+  "setup": [],
+  "checks": [
+    {
+      "id": "range",
+      "label": "Range",
+      "joint": "hip",
+      "at": "bottom",
+      "robust": "min_of_3",
+      "capture": "in_plane",
+      "min_visibility": 0.55,
+      "good": [
+        15,
+        70
+      ],
+      "almost": [
+        8,
+        15
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You moved through a full range.",
+          "hi": "Badhiya. Aapne poora range cover kiya."
+        },
+        "fix": {
+          "en": "Move further out to the side.",
+          "hi": "Side mein aur door le jao."
+        },
+        "below": {
+          "en": "Move further out to the side.",
+          "hi": "Side mein aur door le jao."
+        },
+        "almost": {
+          "en": "Move further out to the side.",
+          "hi": "Side mein aur door le jao."
+        }
+      }
+    },
+    {
+      "id": "tempo",
+      "label": "Speed",
+      "at": "eccentric",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "eccentric_seconds",
+      "good": [
+        0.9,
+        4.0
+      ],
+      "almost": [
+        0.45,
+        0.9
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You controlled the weight.",
+          "hi": "Badhiya. Aapne weight control kiya."
+        },
+        "fix": {
+          "en": "Too fast. Control the way back. Count 2 seconds.",
+          "hi": "Bahut tez hai. Wapas aane mein control rakho. 2 tak gino."
+        },
+        "below": {
+          "en": "Too fast. Control the way back. Count 2 seconds.",
+          "hi": "Bahut tez hai. Wapas aane mein control rakho. 2 tak gino."
+        },
+        "almost": {
+          "en": "A bit fast. Count 2 seconds on the way down.",
+          "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
+        }
+      }
+    }
+  ]
+}

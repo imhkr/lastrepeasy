@@ -1,0 +1,166 @@
+{
+  "id": "snatch_grip_rdl",
+  "name": "Snatch Grip RDL",
+  "family": "hinge",
+  "view": [
+    "side",
+    "45"
+  ],
+  "rubric_version": "2026-11-18",
+  "_generated": true,
+  "validated": false,
+  "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
+  "track": {
+    "joint": "knee",
+    "origin": "ankle",
+    "point": "hip",
+    "axis": "distance",
+    "eccentric": "return"
+  },
+  "start_cue": {
+    "en": "Stand tall, then push your hips back with a flat back.",
+    "hi": "Seedhe khade ho, phir back flat rakhte hue hips peeche le jao."
+  },
+  "phases": [
+    "setup",
+    "eccentric",
+    "bottom",
+    "concentric",
+    "lockout"
+  ],
+  "setup": [],
+  "checks": [
+    {
+      "id": "lean",
+      "label": "Back flat",
+      "joint": "torso",
+      "at": "bottom",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "torso_lean",
+      "min_visibility": 0.6,
+      "good": [
+        45,
+        95
+      ],
+      "almost": [
+        35,
+        45
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. Your back stayed flat as you hinged.",
+          "hi": "Badhiya. Hinge karte time back flat rahi."
+        },
+        "fix": {
+          "en": "Your back is rounding. Keep your chest proud and push your hips back.",
+          "hi": "Back mud rahi hai. Chest aage rakho aur hips peeche le jao."
+        },
+        "almost": {
+          "en": "Your back is rounding. Keep your chest proud and push your hips back.",
+          "hi": "Back mud rahi hai. Chest aage rakho aur hips peeche le jao."
+        }
+      }
+    },
+    {
+      "id": "stretch",
+      "label": "Stretch",
+      "joint": "knee",
+      "at": "bottom",
+      "robust": "min_of_3",
+      "capture": "in_plane",
+      "min_visibility": 0.55,
+      "good": [
+        110,
+        165
+      ],
+      "almost": [
+        95,
+        110
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You pushed your hips back far enough.",
+          "hi": "Badhiya. Aapne hips kaafi peeche kiye."
+        },
+        "fix": {
+          "en": "Push your hips further back to feel the stretch.",
+          "hi": "Hips aur peeche le jao taaki stretch mehsoos ho."
+        },
+        "below": {
+          "en": "Do not squat it. Keep a small bend in the knee.",
+          "hi": "Squat mat karo. Knee mein halka bend rakho."
+        },
+        "almost": {
+          "en": "Push your hips further back to feel the stretch.",
+          "hi": "Hips aur peeche le jao taaki stretch mehsoos ho."
+        }
+      }
+    },
+    {
+      "id": "lockout",
+      "label": "Standing",
+      "joint": "knee",
+      "at": "lockout",
+      "robust": "max",
+      "capture": "in_plane",
+      "min_visibility": 0.6,
+      "good": [
+        160,
+        180
+      ],
+      "almost": [
+        145,
+        160
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You stood all the way up.",
+          "hi": "Badhiya. Aap poore khade ho gaye."
+        },
+        "fix": {
+          "en": "Finish the rep standing tall with your glutes tight.",
+          "hi": "Rep poora karo, seedhe khade ho aur glutes tight karo."
+        },
+        "almost": {
+          "en": "Finish the rep standing tall with your glutes tight.",
+          "hi": "Rep poora karo, seedhe khade ho aur glutes tight karo."
+        }
+      }
+    },
+    {
+      "id": "tempo",
+      "label": "Speed",
+      "at": "eccentric",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "eccentric_seconds",
+      "good": [
+        0.9,
+        4.0
+      ],
+      "almost": [
+        0.45,
+        0.9
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You controlled the weight.",
+          "hi": "Badhiya. Aapne weight control kiya."
+        },
+        "fix": {
+          "en": "Too fast. Control the way down and count 2.",
+          "hi": "Bahut tez hai. Neeche control karo aur 2 gino."
+        },
+        "below": {
+          "en": "Too fast. Control the way down and count 2.",
+          "hi": "Bahut tez hai. Neeche control karo aur 2 gino."
+        },
+        "almost": {
+          "en": "A bit fast. Count 2 seconds on the way down.",
+          "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
+        }
+      }
+    }
+  ]
+}

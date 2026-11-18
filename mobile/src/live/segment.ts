@@ -54,16 +54,28 @@ export type TrackSpec = {
   // the shoulder for a press, the planted foot for a squat. Measuring a squat's hip against the
   // shoulder fails because both drop together and the difference barely changes.
   origin: "shoulder" | "hip" | "ankle";
-  point: "wrist" | "elbow" | "knee" | "hip" | "ankle" | "foot_index";
-  // Where "up" comes from. A press derives it from the lifter's own forearm at lockout, because
-  // the press line is tilted by the bench.
+  point: "wrist" | "elbow" | "knee" | "hip" | "ankle" | "foot_index" | "shoulder";
+  // Where "up" comes from. Three signals, because no single one covers every movement:
   //
-  // A squat cannot use a direction at all. Hip-travel projected onto the torso axis means a lifter
-  // who folds forward rotates the reference until their descent no longer registers -- the fault
-  // the lean check exists to catch would silence the rep counter. Its hip-to-foot DISTANCE shortens
-  // monotonically as the knee bends, whatever the torso does and however the phone is tilted, so
-  // that is the signal.
-  axis: "forearm" | "distance";
+  //  * forearm - the press. Learned from the forearm at lockout, because the press line is tilted
+  //    by the bench.
+  //  * distance - hip-to-planted-foot for a squat, shoulder-to-wrist for a curl. The two ends of
+  //    the moving segment get closer as the joint bends, with no direction involved, so a lifter
+  //    who folds forward does not rotate the reference out from under their own rep counter.
+  //  * angle - the tracked joint's own interior angle. The only signal that works when the segment
+  //    length does not change: a lateral raise keeps shoulder-to-wrist constant and simply swings
+  //    the arm, so both the press's axis and the distance test see nothing at all.
+  axis: "forearm" | "distance" | "angle";
+  // Angle axis only. Most joints read LARGEST at rest (a standing hip, a flat ankle), so progress
+  // 1 -- which every family uses for "at rest, ready for the next rep" -- is already the high end.
+  // A few read smallest at rest: an arm hanging at the side has a near-zero shoulder angle, and a
+  // calf's heel-dropped start is the closed end of the ankle. Those invert.
+  invert?: boolean;
+  // Which half of the rep is the lowering. A press and a squat start at the top and lower under
+  // load, so it is the FIRST half; a curl, raise, pressdown or leg extension starts relaxed and
+  // lifts first, so the lowering is the RETURN half. Timing the wrong half reports a slow
+  // concentric as a fast eccentric.
+  eccentric?: "outbound" | "return";
 };
 
 export const PRESS_TRACK: TrackSpec = { joint: "elbow", origin: "shoulder", point: "wrist", axis: "forearm" };
@@ -162,7 +174,17 @@ function lockoutAxis(buf: { deg: number; dir: V3 }[]): V3 | null {
   return unit3(sum);
 }
 
-export function createSegmenter(opts: SegmentOpts = {}): Segmenter {  const o = { ...DEFAULT_OPTS, ...opts };
+export function createSegmenter(opts: SegmentOpts = {}): Segmenter {
+  const o = { ...DEFAULT_OPTS, ...opts };
+
+  // `rise` is in torso-lengths on the axis and distance axes, but in DEGREES on the angle axis.
+  // The priors are expressed in rise units, so they have to switch with it: a 0.45 torso-length
+  // prior applied to a degree reading would put the reference 0.45 degrees below the top, and
+  // every frame would read as a complete rep.
+  const angleAxis = (o.track ?? PRESS_TRACK).axis === "angle";
+  const priorDepth = angleAxis ? 45 : PRIOR_DEPTH;
+  const maxDepth = angleAxis ? 140 : MAX_DEPTH;
+  const minRange = angleAxis ? 25 : o.minRange;
 
   let trackSide: "left" | "right" | null = null;
   let sideMissed = 0;
@@ -281,6 +303,10 @@ export function createSegmenter(opts: SegmentOpts = {}): Segmenter {  const o = 
 
     const deg = angleDeg3(worldOf(a.prox)!, worldOf(a.piv)!, worldOf(a.dist)!);
     if (Number.isFinite(deg)) bestDeg = Math.max(bestDeg, deg);
+    // `extended` only ever decides which frames may define the press line, so it is meaningless for
+    // every other axis. World landmarks are a learned depth lift, so a genuinely locked-out elbow
+    // often reads 140-145; an absolute gate alone would never fire, which is why it is relative to
+    // this lifter's own straightest frame.
     const extended = Number.isFinite(deg) && deg >= EXTENDED_ABS && deg >= bestDeg * EXTENDED_FRAC;
 
   // How far the travelling point has travelled toward the "top" position, in torso lengths. Deeper
@@ -301,6 +327,15 @@ export function createSegmenter(opts: SegmentOpts = {}): Segmenter {  const o = 
     }
     if (!up) return null; // no lockout seen yet: cannot tell which way is up
     rise = dot3(sub3(worldOf(a.pt)!, worldOf(a.org)!), up) / torso;
+  } else if (track.axis === "angle") {
+    // The tracked joint's own interior angle. The only signal that survives a movement where the
+    // segment length never changes: a lateral raise keeps shoulder-to-wrist constant and simply
+    // swings the arm, so both the press's learned axis and the distance test see nothing at all.
+    if (!Number.isFinite(deg)) return null;
+    // The state machine assumes bigger rise == nearer the top in every family. Most joints match
+    // that already (a raise's shoulder angle is largest with the arm at the side); the ones that
+    // are highest at the flexed end declare `invert`, so the direction is decided in one place.
+    rise = track.invert ? 180 - deg : deg;
   } else {
     // Axis-free: the straight-line distance between the two ends of the moving segment, in torso
     // lengths. Hip-to-planted-foot shortens as the knee bends; shoulder-to-wrist shortens as the
@@ -309,6 +344,13 @@ export function createSegmenter(opts: SegmentOpts = {}): Segmenter {  const o = 
     // to judge instead of silencing the count.
     rise = norm3(sub3(worldOf(a.pt)!, worldOf(a.org)!)) / torso;
   }
+
+  // What closes a rep is "the joint is back where the rep started". For a press and a squat that
+  // is a straightened joint, which `extended` finds precisely -- and closing earlier than that
+  // would put the lockout frame outside the rep it belongs to. The angle axis has no such joint to
+  // straighten (a raise's arm is straight throughout), so it closes on `nearTop` alone, which is
+  // already expressed in `rise` units and therefore already knows about `invert`.
+  const atTopEnd = track.axis === "angle" ? true : extended;
     hist.push({ t, rise });
     if (hist.length > WINDOW) hist.shift();
 
@@ -317,8 +359,8 @@ export function createSegmenter(opts: SegmentOpts = {}): Segmenter {  const o = 
     // lands on the first frame of the drop.
     if (topRise === null) topRise = rise;
     if (rise > topRise) topRise = rise;
-    if (bottomRise === null) bottomRise = topRise - PRIOR_DEPTH;
-    if (rise < bottomRise) bottomRise = Math.max(rise, topRise - MAX_DEPTH);
+    if (bottomRise === null) bottomRise = topRise - priorDepth;
+    if (rise < bottomRise) bottomRise = Math.max(rise, topRise - maxDepth);
 
     const span = Math.max(topRise - bottomRise, 1e-6);
     const p = Math.min(1, Math.max(0, (rise - bottomRise) / span));
@@ -368,7 +410,7 @@ export function createSegmenter(opts: SegmentOpts = {}): Segmenter {  const o = 
       // shallow press moves the hands barely at all but bends the elbow 40 degrees; a press done
       // by swinging the forearm travels the full range with almost no elbow bend.
       const arc = Number.isFinite(repMaxDeg) && Number.isFinite(repMinDeg) ? repMaxDeg - repMinDeg : 0;
-      const realRep = arc >= o.minArc || repSpan >= o.minRange;
+      const realRep = arc >= o.minArc || repSpan >= minRange;
       //
       // A rep ends when the arm is EXTENDED again, not when progress creeps back past a threshold.
       // Progress is anchored to a top mark that keeps rising as the arm straightens, so it can
@@ -380,7 +422,7 @@ export function createSegmenter(opts: SegmentOpts = {}): Segmenter {  const o = 
       // the lockout check graded the approach and called a locked-out rep "almost".
       const nearTop = repPeakAt < t && repHiRise - rise >= 0 && rise >= repHiRise - Math.max(repSpan * 0.08, 1e-3);
       if (
-        extended &&
+        atTopEnd &&
         realRep &&
         nearTop &&
         rep.progress.length > 5 &&
@@ -388,7 +430,7 @@ export function createSegmenter(opts: SegmentOpts = {}): Segmenter {  const o = 
         t - lastRepEnd >= o.minRepSeconds
       ) {
         rep.endT = t;
-        rep.eccentricSeconds = eccentricSeconds(hist, rep.startT, t, o);
+        rep.eccentricSeconds = eccentricSeconds(hist, rep.startT, t, o, track.eccentric === "return");
         const done: PhaseLandmarks = { ...rep };
         state = "top";
         rep = null;
@@ -418,11 +460,17 @@ export function createSegmenter(opts: SegmentOpts = {}): Segmenter {  const o = 
 // Seconds from 80% to 20% of the rep's own range. Using the rep's own range instead of a global
 // one is what lets the first rep be judged on equal footing: a short first rep would otherwise
 // appear slower than it was.
+//
+// WHICH half of the rep is the eccentric depends on the family, and getting it backwards times the
+// concentric and calls it slow. A press starts at lockout and lowers under load, so its eccentric
+// is the first half (progress falling 1 -> 0). A curl or a raise starts relaxed and lifts first, so
+// its eccentric is the RETURN half (progress rising 0 -> 1). Declared per family as `eccentric`.
 function eccentricSeconds(
   hist: { t: number; rise: number }[],
   startT: number,
   endT: number,
   o: Required<Omit<SegmentOpts, "track">>,
+  returnHalf: boolean,
 ): number | null {
   const seg = hist.filter((s) => s.t >= startT - 1.5 && s.t <= endT + 1e-4);
   if (seg.length < 4) return null;
@@ -436,20 +484,25 @@ function eccentricSeconds(
   const norm = (v: number) => (v - lo) / (hi - lo);
   let iMin = 0;
   for (let i = 1; i < seg.length; i++) if (seg[i].rise < seg[iMin].rise) iMin = i;
-  let iTop = -1;
-  for (let i = 0; i < iMin; i++) if (norm(seg[i].rise) >= o.topEnter) iTop = i;
-  if (iTop < 1) return null;
-  const cross = (level: number): number | null => {
-    for (let j = Math.max(iTop, 1); j <= iMin; j++) {
+
+  // Where the trace crosses `level`, searched in the direction this family's eccentric travels.
+  // Bounds are clamped to the array: `iMin` can be either endpoint, and an unclamped `to` walks off
+  // the end of `seg` and throws on a rep that bottoms at the first or last frame.
+  const cross = (level: number, rising: boolean): number | null => {
+    const from = Math.max(rising ? iMin : 1, 1);
+    const to = Math.min(rising ? seg.length - 1 : iMin, seg.length - 1);
+    for (let j = from; j <= to; j++) {
       const a = norm(seg[j - 1].rise);
       const b = norm(seg[j].rise);
-      if (b <= level && a > level) {
-        return seg[j - 1].t + ((seg[j].t - seg[j - 1].t) * (a - level)) / (a - b);
-      }
+      const hit = rising ? b >= level && a < level : b <= level && a > level;
+      if (hit) return seg[j - 1].t + ((seg[j].t - seg[j - 1].t) * (level - a)) / (b - a);
     }
     return null;
   };
-  const t80 = cross(o.topEnter);
-  const t20 = cross(0.2);
-  return t80 !== null && t20 !== null && t20 > t80 ? t20 - t80 : null;
+
+  const tA = returnHalf ? cross(0.2, true) : cross(o.topEnter, false);
+  const tB = returnHalf ? cross(0.8, true) : cross(0.2, false);
+  if (tA === null || tB === null) return null;
+  const dt = Math.abs(tB - tA);
+  return dt > 0 ? dt : null;
 }

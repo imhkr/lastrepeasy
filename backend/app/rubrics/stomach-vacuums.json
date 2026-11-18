@@ -1,0 +1,65 @@
+{
+  "id": "stomach_vacuums",
+  "name": "Stomach Vacuums",
+  "family": "core",
+  "view": [
+    "side",
+    "45"
+  ],
+  "rubric_version": "2026-11-18",
+  "_generated": true,
+  "validated": false,
+  "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
+  "track": {
+    "joint": "hip",
+    "origin": "shoulder",
+    "point": "knee",
+    "axis": "distance"
+  },
+  "start_cue": {
+    "en": "Lie back, then curl your ribs toward your hips.",
+    "hi": "Peeche leto, phir ribs ko hips ki taraf curl karo."
+  },
+  "phases": [
+    "setup",
+    "eccentric",
+    "bottom",
+    "concentric",
+    "lockout"
+  ],
+  "setup": [],
+  "checks": [
+    {
+      "id": "hold",
+      "label": "Hold",
+      "joint": "torso",
+      "at": "eccentric",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "eccentric_seconds",
+      "min_visibility": 0.5,
+      "good": [
+        3.0,
+        30.0
+      ],
+      "almost": [
+        1.5,
+        3.0
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You held the vacuum.",
+          "hi": "Badhiya. Aapne vacuum hold kiya."
+        },
+        "fix": {
+          "en": "Hold it longer, at least 3 seconds.",
+          "hi": "Aur der hold karo, kam se kam 3 second."
+        },
+        "almost": {
+          "en": "Hold it longer, at least 3 seconds.",
+          "hi": "Aur der hold karo, kam se kam 3 second."
+        }
+      }
+    }
+  ]
+}

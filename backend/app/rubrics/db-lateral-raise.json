@@ -1,0 +1,142 @@
+{
+  "id": "db-lateral-raise",
+  "name": "DB Lateral Raise",
+  "family": "lateral_raise",
+  "view": [
+    "front",
+    "45"
+  ],
+  "rubric_version": "2026-11-18",
+  "_generated": true,
+  "validated": false,
+  "validation_note": "Bands are standard lateral-raise coaching ranges, not measured against a labelled clip. No reference footage has confirmed them.",
+  "track": {
+    "joint": "shoulder",
+    "origin": "shoulder",
+    "point": "wrist",
+    "axis": "angle",
+    "invert": true
+  },
+  "start_cue": {
+    "en": "Stand tall with the weights at your sides.",
+    "hi": "Seedhe khade ho, weight haath ke bagal mein."
+  },
+  "phases": [
+    "setup",
+    "concentric",
+    "top",
+    "eccentric"
+  ],
+  "setup": [],
+  "checks": [
+    {
+      "id": "range",
+      "label": "Height",
+      "joint": "shoulder",
+      "at": "bottom",
+      "robust": "max",
+      "capture": "in_plane",
+      "min_visibility": 0.6,
+      "good": [
+        75,
+        105
+      ],
+      "almost": [
+        60,
+        75
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You raised the weights to shoulder height.",
+          "hi": "Badhiya. Weight kandhe tak uthaya."
+        },
+        "almost": {
+          "en": "A little higher. Lift to shoulder height.",
+          "hi": "Thoda aur upar. Kandhe ki height tak uthao."
+        },
+        "above": {
+          "en": "Not above the shoulder. Stop at shoulder height.",
+          "hi": "Kandhe se zyada upar nahi. Kandhe tak hi ruko."
+        },
+        "below": {
+          "en": "Lift higher, up to shoulder height.",
+          "hi": "Aur upar uthao, kandhe ki height tak."
+        },
+        "fix": {
+          "en": "Lift to shoulder height, no higher.",
+          "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+        }
+      }
+    },
+    {
+      "id": "tempo",
+      "label": "Speed",
+      "at": "eccentric",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "eccentric_seconds",
+      "good": [
+        0.9,
+        3.5
+      ],
+      "almost": [
+        0.45,
+        0.9
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You lowered the weights slowly.",
+          "hi": "Badhiya. Weight dheere neeche laaya."
+        },
+        "almost": {
+          "en": "A bit fast. Count 2 seconds coming down.",
+          "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
+        },
+        "below": {
+          "en": "Too fast. Do not drop the weights. Count 2.",
+          "hi": "Bahut tez hai. Weight girao mat. 2 tak gino."
+        },
+        "above": {
+          "en": "Very slow. Keep a steady 2 seconds down.",
+          "hi": "Bahut dheere hai. Neeche aane mein 2 second rakho."
+        },
+        "fix": {
+          "en": "Too fast. Do not drop the weights. Count 2.",
+          "hi": "Bahut tez hai. Weight girao mat. 2 tak gino."
+        }
+      }
+    },
+    {
+      "id": "even",
+      "label": "Both arms",
+      "joint": "shoulder",
+      "at": "lockout",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "side_difference",
+      "min_visibility": 0.7,
+      "good": [
+        0,
+        12
+      ],
+      "almost": [
+        12,
+        20
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. Both arms went up together.",
+          "hi": "Badhiya. Dono haath saath uthe."
+        },
+        "almost": {
+          "en": "One arm is a little lower. Raise both evenly.",
+          "hi": "Ek haath thoda neeche hai. Dono barabar uthao."
+        },
+        "fix": {
+          "en": "One arm is much lower. Raise both arms together.",
+          "hi": "Ek haath bahut neeche hai. Dono haath saath uthao."
+        }
+      }
+    }
+  ]
+}

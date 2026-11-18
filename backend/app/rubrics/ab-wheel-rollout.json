@@ -1,0 +1,137 @@
+{
+  "id": "ab_wheel_rollout",
+  "name": "Ab Wheel Rollout",
+  "family": "core",
+  "view": [
+    "side",
+    "45"
+  ],
+  "rubric_version": "2026-11-18",
+  "_generated": true,
+  "validated": false,
+  "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
+  "track": {
+    "joint": "hip",
+    "origin": "shoulder",
+    "point": "knee",
+    "axis": "distance"
+  },
+  "start_cue": {
+    "en": "Lie back, then curl your ribs toward your hips.",
+    "hi": "Peeche leto, phir ribs ko hips ki taraf curl karo."
+  },
+  "phases": [
+    "setup",
+    "eccentric",
+    "bottom",
+    "concentric",
+    "lockout"
+  ],
+  "setup": [],
+  "checks": [
+    {
+      "id": "range",
+      "label": "Range",
+      "joint": "hip",
+      "at": "bottom",
+      "robust": "min_of_3",
+      "capture": "in_plane",
+      "min_visibility": 0.55,
+      "good": [
+        20,
+        80
+      ],
+      "almost": [
+        80,
+        100
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You curled all the way through.",
+          "hi": "Badhiya. Aap poora curl kiye."
+        },
+        "fix": {
+          "en": "Crunch further, bring your ribs to your hips.",
+          "hi": "Aur crunch karo, ribs ko hips ke paas lao."
+        },
+        "above": {
+          "en": "That is enough. Do not pull your back.",
+          "hi": "Itna hi kaafi hai. Back ko kheencho mat."
+        },
+        "below": {
+          "en": "Crunch further so your abs do the work.",
+          "hi": "Aur crunch karo taaki abs kaam karein."
+        },
+        "almost": {
+          "en": "Crunch further, bring your ribs to your hips.",
+          "hi": "Aur crunch karo, ribs ko hips ke paas lao."
+        }
+      }
+    },
+    {
+      "id": "stretch",
+      "label": "Return",
+      "joint": "hip",
+      "at": "lockout",
+      "robust": "max",
+      "capture": "in_plane",
+      "min_visibility": 0.55,
+      "good": [
+        120,
+        180
+      ],
+      "almost": [
+        105,
+        120
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You opened up fully at the bottom.",
+          "hi": "Badhiya. Neeche aap poora khule."
+        },
+        "fix": {
+          "en": "Slow the return so the abs stretch.",
+          "hi": "Wapas dheere aao taaki abs stretch hon."
+        },
+        "almost": {
+          "en": "Slow the return so the abs stretch.",
+          "hi": "Wapas dheere aao taaki abs stretch hon."
+        }
+      }
+    },
+    {
+      "id": "tempo",
+      "label": "Speed",
+      "at": "eccentric",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "eccentric_seconds",
+      "good": [
+        0.8,
+        3.5
+      ],
+      "almost": [
+        0.4,
+        0.8
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You controlled the weight.",
+          "hi": "Badhiya. Aapne weight control kiya."
+        },
+        "fix": {
+          "en": "Too fast. Control the return. Count 2 seconds.",
+          "hi": "Bahut tez hai. Wapas aane mein control rakho. 2 tak gino."
+        },
+        "below": {
+          "en": "Too fast. Control the return. Count 2 seconds.",
+          "hi": "Bahut tez hai. Wapas aane mein control rakho. 2 tak gino."
+        },
+        "almost": {
+          "en": "A bit fast. Count 2 seconds on the way down.",
+          "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+{
+  "id": "smith_machine_reverse_lunge",
+  "name": "Smith Machine Reverse Lunge",
+  "family": "squat_lunge",
+  "view": [
+    "side",
+    "45"
+  ],
+  "rubric_version": "2026-11-18",
+  "_generated": true,
+  "validated": false,
+  "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
+  "track": {
+    "joint": "knee",
+    "origin": "ankle",
+    "point": "hip",
+    "axis": "distance"
+  },
+  "start_cue": {
+    "en": "Stand tall, then sit down slowly and stand back up.",
+    "hi": "Seedhe khade ho, phir dheere baitho aur upar aao."
+  },
+  "phases": [
+    "setup",
+    "eccentric",
+    "bottom",
+    "concentric",
+    "lockout"
+  ],
+  "setup": [],
+  "checks": [
+    {
+      "id": "depth",
+      "label": "Depth",
+      "joint": "knee",
+      "at": "bottom",
+      "robust": "min_of_3",
+      "capture": "in_plane",
+      "min_visibility": 0.55,
+      "good": [
+        60,
+        110
+      ],
+      "almost": [
+        110,
+        128
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You went down low enough.",
+          "hi": "Badhiya. Aap kaafi neeche gaye."
+        },
+        "fix": {
+          "en": "Go lower. Take your hips down between your feet.",
+          "hi": "Neeche jao. Hips pairon ke beech le jao."
+        },
+        "above": {
+          "en": "Go lower. Take your hips down between your feet.",
+          "hi": "Neeche jao. Hips pairon ke beech le jao."
+        },
+        "below": {
+          "en": "That is very deep. Come up until your thighs are level.",
+          "hi": "Yeh bahut neeche hai. Upar aao jab tak jaanghein level aayein."
+        },
+        "almost": {
+          "en": "Go lower. Take your hips down between your feet.",
+          "hi": "Neeche jao. Hips pairon ke beech le jao."
+        }
+      }
+    },
+    {
+      "id": "lockout",
+      "label": "Standing up",
+      "joint": "knee",
+      "at": "lockout",
+      "robust": "max",
+      "capture": "in_plane",
+      "min_visibility": 0.6,
+      "good": [
+        158,
+        180
+      ],
+      "almost": [
+        142,
+        158
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You stood all the way up.",
+          "hi": "Badhiya. Aap poore khade ho gaye."
+        },
+        "fix": {
+          "en": "Stand all the way up and straighten your legs.",
+          "hi": "Poora khade ho jao aur pairn seedhe karo."
+        },
+        "almost": {
+          "en": "Stand all the way up and straighten your legs.",
+          "hi": "Poora khade ho jao aur pairn seedhe karo."
+        }
+      }
+    },
+    {
+      "id": "lean",
+      "label": "Chest up",
+      "joint": "torso",
+      "at": "bottom",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "torso_lean",
+      "min_visibility": 0.6,
+      "good": [
+        0,
+        45
+      ],
+      "almost": [
+        45,
+        60
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. Your chest stayed up.",
+          "hi": "Badhiya. Aapka chest upar raha."
+        },
+        "fix": {
+          "en": "Your chest is falling. Keep it up as you sit down.",
+          "hi": "Chest gir raha hai. Neeche baithte time chest upar rakho."
+        },
+        "almost": {
+          "en": "Your chest is falling. Keep it up as you sit down.",
+          "hi": "Chest gir raha hai. Neeche baithte time chest upar rakho."
+        }
+      }
+    },
+    {
+      "id": "tempo",
+      "label": "Speed",
+      "at": "eccentric",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "eccentric_seconds",
+      "good": [
+        0.9,
+        3.5
+      ],
+      "almost": [
+        0.45,
+        0.9
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You controlled the weight.",
+          "hi": "Badhiya. Aapne weight control kiya."
+        },
+        "fix": {
+          "en": "Too fast. Control the way down and count 2.",
+          "hi": "Bahut tez hai. Neeche control karo aur 2 gino."
+        },
+        "below": {
+          "en": "Too fast. Control the way down and count 2.",
+          "hi": "Bahut tez hai. Neeche control karo aur 2 gino."
+        },
+        "almost": {
+          "en": "A bit fast. Count 2 seconds on the way down.",
+          "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
+        }
+      }
+    }
+  ]
+}

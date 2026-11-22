@@ -485,13 +485,11 @@ function eccentricSeconds(
   let iMin = 0;
   for (let i = 1; i < seg.length; i++) if (seg[i].rise < seg[iMin].rise) iMin = i;
 
-  // Where the trace crosses `level`, searched in the direction this family's eccentric travels.
-  // Bounds are clamped to the array: `iMin` can be either endpoint, and an unclamped `to` walks off
-  // the end of `seg` and throws on a rep that bottoms at the first or last frame.
-  const cross = (level: number, rising: boolean): number | null => {
-    const from = Math.max(rising ? iMin : 1, 1);
-    const to = Math.min(rising ? seg.length - 1 : iMin, seg.length - 1);
-    for (let j = from; j <= to; j++) {
+  // Where the trace crosses `level` between two frames, searching a bounded slice. Bounds are
+  // clamped to the array: `iMin` can be either endpoint, and an unclamped range walks off the end
+  // of `seg` and throws on a rep that bottoms at the first or last frame.
+  const cross = (level: number, rising: boolean, loIdx: number, hiIdx: number): number | null => {
+    for (let j = Math.max(1, loIdx + 1); j <= Math.min(hiIdx, seg.length - 1); j++) {
       const a = norm(seg[j - 1].rise);
       const b = norm(seg[j].rise);
       const hit = rising ? b >= level && a < level : b <= level && a > level;
@@ -500,8 +498,25 @@ function eccentricSeconds(
     return null;
   };
 
-  const tA = returnHalf ? cross(0.2, true) : cross(o.topEnter, false);
-  const tB = returnHalf ? cross(0.8, true) : cross(0.2, false);
+  // Timing runs over the rep's own travel, not from the first frame that dipped below the top mark.
+  // Searching forward from the start finds a wobble at lockout -- the arm settles a degree or two as
+  // the weight is set, which reads as "already descending" -- and then bills the pause above the
+  // chest to the lowering. On a real clip that turned a 0.5 s descent into 4.4 s, and the coach
+  // told a controlled rep it was too fast. So the lowering is timed from the LAST frame at the top
+  // before the bottom, which is where the arms actually start to travel.
+  let tA: number | null, tB: number | null;
+  if (returnHalf) {
+    // The lift half comes back up: time 20% -> 80% rising, starting at the bottom.
+    tA = cross(0.2, true, iMin, seg.length - 1);
+    tB = cross(0.8, true, iMin, seg.length - 1);
+  } else {
+    let topIdx = iMin;
+    for (let j = iMin; j >= 0; j--) {
+      if (norm(seg[j].rise) >= o.topEnter) { topIdx = j; break; }
+    }
+    tA = cross(o.topEnter, false, topIdx, iMin);
+    tB = cross(0.2, false, topIdx, iMin);
+  }
   if (tA === null || tB === null) return null;
   const dt = Math.abs(tB - tA);
   return dt > 0 ? dt : null;

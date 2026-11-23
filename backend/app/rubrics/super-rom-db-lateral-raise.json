@@ -41,7 +41,7 @@
       "min_visibility": 0.6,
       "good": [
         75,
-        105
+        165
       ],
       "almost": [
         60,
@@ -49,24 +49,24 @@
       ],
       "cue": {
         "good": {
-          "en": "Good. You raised to shoulder height.",
-          "hi": "Badhiya. Kandhe ki height tak uthaya."
+          "en": "Good. You raised to full height.",
+          "hi": "Badhiya. Poori height tak uthaya."
         },
         "fix": {
-          "en": "Lift to shoulder height, no higher.",
-          "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+          "en": "Lift higher, up to shoulder height.",
+          "hi": "Aur upar uthao, kandhe ki height tak."
         },
         "above": {
-          "en": "Not above the shoulder. Stop at shoulder height.",
-          "hi": "Kandhe se zyada upar nahi. Kandhe tak hi ruko."
+          "en": "Lower slightly if your shoulder pinches.",
+          "hi": "Agar kandhe mein dabav lage toh thoda kam uthao."
         },
         "below": {
           "en": "Lift higher, up to shoulder height.",
           "hi": "Aur upar uthao, kandhe ki height tak."
         },
         "almost": {
-          "en": "Lift to shoulder height, no higher.",
-          "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+          "en": "Lift higher, up to shoulder height.",
+          "hi": "Aur upar uthao, kandhe ki height tak."
         }
       }
     },
@@ -79,7 +79,7 @@
       "measure": "eccentric_seconds",
       "good": [
         0.9,
-        3.5
+        5.5
       ],
       "almost": [
         0.45,
@@ -93,6 +93,10 @@
         "fix": {
           "en": "Too fast. Do not drop the weight. Count 2 seconds.",
           "hi": "Bahut tez hai. Weight girao mat. 2 tak gino."
+        },
+        "above": {
+          "en": "Very slow. Good control — keep moving smoothly.",
+          "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
         },
         "below": {
           "en": "Too fast. Do not drop the weight. Count 2 seconds.",

@@ -15,7 +15,8 @@
     "origin": "knee",
     "point": "foot_index",
     "axis": "angle",
-    "invert": true
+    "invert": true,
+    "eccentric": "return"
   },
   "start_cue": {
     "en": "Stand on the edge of a step, then rise onto your toes.",
@@ -35,16 +36,16 @@
       "label": "Range",
       "joint": "ankle",
       "at": "bottom",
-      "robust": "min_of_3",
+      "robust": "max",
       "capture": "in_plane",
       "min_visibility": 0.55,
       "good": [
-        60,
-        105
+        110,
+        165
       ],
       "almost": [
-        105,
-        120
+        98,
+        110
       ],
       "cue": {
         "good": {
@@ -52,15 +53,15 @@
           "hi": "Badhiya. Aap poore toes par aaye."
         },
         "fix": {
-          "en": "Push up higher onto your toes.",
+          "en": "Rise higher onto your toes.",
           "hi": "Aur upar aao, toes par."
         },
-        "above": {
-          "en": "That is high enough. Do not roll your ankle.",
-          "hi": "Itna hi kaafi hai. Ankle mat mudo."
+        "below": {
+          "en": "Rise higher onto your toes.",
+          "hi": "Aur upar aao, toes par."
         },
         "almost": {
-          "en": "Push up higher onto your toes.",
+          "en": "Rise higher onto your toes.",
           "hi": "Aur upar aao, toes par."
         }
       }
@@ -70,16 +71,16 @@
       "label": "Stretch",
       "joint": "ankle",
       "at": "lockout",
-      "robust": "max",
+      "robust": "min_of_3",
       "capture": "in_plane",
       "min_visibility": 0.6,
       "good": [
-        60,
-        105
+        55,
+        100
       ],
       "almost": [
-        40,
-        60
+        100,
+        112
       ],
       "cue": {
         "good": {
@@ -87,12 +88,16 @@
           "hi": "Badhiya. Aapne heel poora neeche kiya."
         },
         "fix": {
-          "en": "Let your heel drop below the step for a stretch.",
-          "hi": "Heel ko step se neeche jaane do, stretch ke liye."
+          "en": "Drop your heels lower for a full stretch.",
+          "hi": "Heel ko aur neeche jaane do, stretch ke liye."
+        },
+        "above": {
+          "en": "Drop your heels lower for a full stretch.",
+          "hi": "Heel ko aur neeche jaane do, stretch ke liye."
         },
         "almost": {
-          "en": "Let your heel drop below the step for a stretch.",
-          "hi": "Heel ko step se neeche jaane do, stretch ke liye."
+          "en": "Drop your heels lower for a full stretch.",
+          "hi": "Heel ko aur neeche jaane do, stretch ke liye."
         }
       }
     },
@@ -105,7 +110,7 @@
       "measure": "eccentric_seconds",
       "good": [
         0.9,
-        3.5
+        5.5
       ],
       "almost": [
         0.45,
@@ -119,6 +124,10 @@
         "fix": {
           "en": "Too fast. Control the way down. Count 2 seconds.",
           "hi": "Bahut tez hai. Neeche aane mein control rakho. 2 tak gino."
+        },
+        "above": {
+          "en": "Very slow. Good control — keep moving smoothly.",
+          "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
         },
         "below": {
           "en": "Too fast. Control the way down. Count 2 seconds.",

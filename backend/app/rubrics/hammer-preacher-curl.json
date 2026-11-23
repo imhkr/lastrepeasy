@@ -40,11 +40,11 @@
       "min_visibility": 0.55,
       "good": [
         20,
-        70
+        75
       ],
       "almost": [
-        70,
-        95
+        75,
+        100
       ],
       "cue": {
         "good": {
@@ -56,12 +56,12 @@
           "hi": "Neeche laane se pehle aur upar karo."
         },
         "above": {
-          "en": "Do not swing that high. Stop before your elbow pinches.",
-          "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
-        },
-        "below": {
           "en": "Curl higher, squeeze at the top.",
           "hi": "Aur upar karo, upar squeeze karo."
+        },
+        "below": {
+          "en": "Do not swing that high. Stop before your elbow pinches.",
+          "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
         },
         "almost": {
           "en": "Curl higher before you lower.",
@@ -101,38 +101,6 @@
       }
     },
     {
-      "id": "lean",
-      "label": "Body",
-      "joint": "torso",
-      "at": "bottom",
-      "robust": "median",
-      "capture": "in_plane",
-      "measure": "torso_lean",
-      "min_visibility": 0.6,
-      "good": [
-        0,
-        12
-      ],
-      "almost": [
-        12,
-        22
-      ],
-      "cue": {
-        "good": {
-          "en": "Good. Your body stayed still.",
-          "hi": "Badhiya. Aapka shareer sthir raha."
-        },
-        "fix": {
-          "en": "You are swinging your body. Keep your back still and curl.",
-          "hi": "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."
-        },
-        "almost": {
-          "en": "You are swinging your body. Keep your back still and curl.",
-          "hi": "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."
-        }
-      }
-    },
-    {
       "id": "tempo",
       "label": "Speed",
       "at": "eccentric",
@@ -141,7 +109,7 @@
       "measure": "eccentric_seconds",
       "good": [
         0.9,
-        3.5
+        5.5
       ],
       "almost": [
         0.45,
@@ -155,6 +123,10 @@
         "fix": {
           "en": "Too fast. Do not let it drop. Count 2 seconds.",
           "hi": "Bahut tez hai. Girne mat do. 2 tak gino."
+        },
+        "above": {
+          "en": "Very slow. Good control — keep moving smoothly.",
+          "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
         },
         "below": {
           "en": "Too fast. Do not let it drop. Count 2 seconds.",

@@ -13,6 +13,7 @@ export interface PlanExercise {
   rest: string;
   subs: string[];
   technique?: string; // last-set intensity technique
+  note?: string;
   groups: SetGroup[];
   custom?: boolean; // added by the user, not part of the book plan
   edited?: boolean; // sets, reps, rest or name changed by the user
@@ -20,6 +21,7 @@ export interface PlanExercise {
 
 export interface PlanDay {
   day: string;
+  restAfter?: "optional" | "mandatory";
   custom?: boolean;
   hidden?: { id: string; name: string }[]; // book exercises the user removed from this day
   exercises: PlanExercise[];
@@ -44,6 +46,12 @@ export interface Plan {
   author: string;
   summary: string;
   unit?: string; // what one block of training is called: Week or Cycle
+  programNotes?: string[];
+  warmupProtocol?: {
+    general: string[];
+    pyramid: { sets: string; detail: string }[];
+  };
+  weakPointNotes?: { area: string; note: string }[];
   weeks: PlanWeek[];
   weakPoints?: WeakPoint[];
 }

@@ -14,7 +14,8 @@
     "joint": "hip",
     "origin": "shoulder",
     "point": "knee",
-    "axis": "distance"
+    "axis": "distance",
+    "eccentric": "return"
   },
   "start_cue": {
     "en": "Lie back, then curl your ribs toward your hips.",
@@ -38,12 +39,12 @@
       "capture": "in_plane",
       "min_visibility": 0.55,
       "good": [
-        20,
-        80
+        25,
+        90
       ],
       "almost": [
-        80,
-        100
+        90,
+        110
       ],
       "cue": {
         "good": {
@@ -55,12 +56,12 @@
           "hi": "Aur crunch karo, ribs ko hips ke paas lao."
         },
         "above": {
-          "en": "That is enough. Do not pull your back.",
-          "hi": "Itna hi kaafi hai. Back ko kheencho mat."
-        },
-        "below": {
           "en": "Crunch further so your abs do the work.",
           "hi": "Aur crunch karo taaki abs kaam karein."
+        },
+        "below": {
+          "en": "That is enough. Do not pull your back.",
+          "hi": "Itna hi kaafi hai. Back ko kheencho mat."
         },
         "almost": {
           "en": "Crunch further, bring your ribs to your hips.",
@@ -108,7 +109,7 @@
       "measure": "eccentric_seconds",
       "good": [
         0.8,
-        3.5
+        5.5
       ],
       "almost": [
         0.4,
@@ -122,6 +123,10 @@
         "fix": {
           "en": "Too fast. Control the return. Count 2 seconds.",
           "hi": "Bahut tez hai. Wapas aane mein control rakho. 2 tak gino."
+        },
+        "above": {
+          "en": "Very slow. Good control — keep moving smoothly.",
+          "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
         },
         "below": {
           "en": "Too fast. Control the return. Count 2 seconds.",

@@ -53,6 +53,9 @@ try {
   // Bilingual pages are a separate code path (every T() call flips), so check one of those too.
   const hi = liveHtml({ exerciseId: Object.keys(RUBRICS)[0], lang: "hi", facing: "environment" });
   parseBlocks(hi, "hinglish");
+  assert.ok(hi.includes("knee: [25, 26]") && hi.includes("ankle: [27, 28]") && hi.includes("foot_index: [31, 32]"), "page must map lower-body landmarks");
+  assert.ok(hi.includes("window.__showCue"), "page must expose window.__showCue");
+  assert.ok(!hi.includes("judge(pending"), "page must not judge mid-rep pending frames");
   console.log("PAGE_PARSE_OK");
 } finally {
   rmSync(dir, { recursive: true, force: true });

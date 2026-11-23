@@ -8,6 +8,10 @@ const INDEX_FILENAME = "saved_workouts_index.json";
 // In-memory fallback cache so storage never throws even if native modules are unavailable
 let memoryCache: WorkoutAnalysisResult[] = [];
 
+export function resetSavedWorkoutsCache(): void {
+  memoryCache = [];
+}
+
 function getFolderUri(): string | null {
   if (Platform.OS === "web") return null;
   const baseDir = FileSystem.documentDirectory;

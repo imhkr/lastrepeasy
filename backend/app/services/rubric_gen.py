@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -84,15 +85,25 @@ def tempo_check(good: Tuple[float, float], almost: Tuple[float, float],
     return {
         "id": "tempo", "label": "Speed", "at": "eccentric", "robust": "median",
         "capture": "in_plane", "measure": "eccentric_seconds",
-        "good": list(good), "almost": list(almost),
+        "good": [good[0], max(good[1], 5.5)], "almost": list(almost),
         "cue": cue(
             "Good. You controlled the weight.", "Badhiya. Aapne weight control kiya.",
             f"Too fast. {down}", f"Bahut tez hai. {down_hi}",
             almost="A bit fast. Count 2 seconds on the way down.",
             hi_almost="Thoda tez hai. Neeche aate time 2 tak gino.",
             below=f"Too fast. {down}", hi_below=f"Bahut tez hai. {down_hi}",
+            above="Very slow. Good control — keep moving smoothly.",
+            hi_above="Bahut slow hai. Control achha hai, smooth chalte raho.",
         ),
     }
+
+
+_NO_LEAN_RE = re.compile(
+    r"(pushup|skull|jm-press|kickback|lying|chest-supported|lean-back|incline-db-stretch|preacher|concentration|hyperextension)"
+)
+_UNILATERAL_RE = re.compile(
+    r"(1-arm|cross-body|cuffed-behind|single-leg|concentration|rear-delt-45)"
+)
 
 
 def lean_check(good: Tuple[float, float], almost: Tuple[float, float],
@@ -241,107 +252,119 @@ def shoulder_press(name: str, eid: str) -> List[Dict]:
 
 
 def lateral_raise(name: str, eid: str) -> List[Dict]:
-    return [
+    checks: List[Dict] = [
         {
             "id": "range", "label": "Height", "joint": "shoulder", "at": "bottom", "robust": "max",
             "capture": "in_plane", "min_visibility": 0.6,
-            "good": [75, 105], "almost": [60, 75],
-            "cue": cue("Good. You raised to shoulder height.",
-                       "Badhiya. Kandhe ki height tak uthaya.",
-                       "Lift to shoulder height, no higher.",
-                       "Kandhe ki height tak uthao, usse zyada nahi.",
-                       above="Not above the shoulder. Stop at shoulder height.",
-                       hi_above="Kandhe se zyada upar nahi. Kandhe tak hi ruko.",
+            "good": [75, 165] if ("y-raise" in eid or "super-rom" in eid) else [75, 115],
+            "almost": [60, 75],
+            "cue": cue("Good. You raised to full height.",
+                       "Badhiya. Poori height tak uthaya.",
+                       "Lift higher, up to shoulder height.",
+                       "Aur upar uthao, kandhe ki height tak.",
+                       above="Lower slightly if your shoulder pinches.",
+                       hi_above="Agar kandhe mein dabav lage toh thoda kam uthao.",
                        below="Lift higher, up to shoulder height.",
                        hi_below="Aur upar uthao, kandhe ki height tak."),
         },
         tempo_check((0.9, 3.5), (0.45, 0.9),
                     "Do not drop the weight. Count 2 seconds.",
                     "Weight girao mat. 2 tak gino."),
-        even_check("shoulder", "Both arms",
-                   "Good. Both arms went up together.", "Badhiya. Dono haath saath uthe.",
-                   "One arm is much lower. Raise both arms together.",
-                   "Ek haath bahut neeche hai. Dono haath saath uthao."),
     ]
+    if not _UNILATERAL_RE.search(eid):
+        checks.append(even_check("shoulder", "Both arms",
+                                 "Good. Both arms went up together.", "Badhiya. Dono haath saath uthe.",
+                                 "One arm is much lower. Raise both arms together.",
+                                 "Ek haath bahut neeche hai. Dono haath saath uthao."))
+    return checks
 
 
 def row_pulldown(name: str, eid: str) -> List[Dict]:
-    return [
-        joint_check("range", "Range", "elbow", "bottom", "min_of_3", (20, 75), (75, 95),
+    checks: List[Dict] = [
+        joint_check("range", "Range", "elbow", "bottom", "min_of_3", (20, 85), (85, 105),
                     cue("Good. You pulled all the way in.", "Badhiya. Aap poora kheench laaye.",
                         "Pull further. Bring the weight all the way in.",
                         "Aur kheencho. Weight poora andar lao.",
-                        above="Do not pull past your body. Stop when the elbow is behind you.",
-                        hi_above="Shareer se aage nahi. Kohni peeche aate hi ruko.",
-                        below="Pull further, all the way in.",
-                        hi_below="Aur kheencho, poora andar tak."),
+                        above="Pull further, all the way in.",
+                        hi_above="Aur kheencho, poora andar tak.",
+                        below="Do not pull past your body. Stop when the elbow is behind you.",
+                        hi_below="Shareer se aage nahi. Kohni peeche aate hi ruko."),
                     min_vis=0.55),
         joint_check("stretch", "Stretch", "elbow", "lockout", "max", (145, 180), (130, 145),
                     cue("Good. You let the weight stretch you out.",
                         "Badhiya. Aapne weight ko khulne diya.",
                         "Let your arms straighten fully at the top.",
                         "Upar jaate time haath poore seedhe hone do.")),
-        lean_check((0, 25), (25, 40), "Back",
-                   "Good. Your body stayed still.", "Badhiya. Aapka shareer sthir raha.",
-                   "You are swinging. Keep your body still and pull.",
-                   "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."),
-        tempo_check((0.8, 3.5), (0.4, 0.8),
-                    "Control the stretch. Count 2 seconds.",
-                    "Khulne mein control rakho. 2 tak gino."),
-        even_check("elbow", "Both arms",
-                   "Good. Both arms pulled together.", "Badhiya. Dono haath saath khinche.",
-                   "One arm is doing less. Pull with both evenly.",
-                   "Ek haath kam kar raha hai. Dono se barabar kheencho."),
     ]
+    if not _NO_LEAN_RE.search(eid):
+        checks.append(lean_check((0, 25), (25, 40), "Back",
+                                 "Good. Your body stayed still.", "Badhiya. Aapka shareer sthir raha.",
+                                 "You are swinging. Keep your body still and pull.",
+                                 "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."))
+    checks.append(tempo_check((0.8, 3.5), (0.4, 0.8),
+                              "Control the stretch. Count 2 seconds.",
+                              "Khulne mein control rakho. 2 tak gino."))
+    if not _UNILATERAL_RE.search(eid):
+        checks.append(even_check("elbow", "Both arms",
+                                 "Good. Both arms pulled together.", "Badhiya. Dono haath saath khinche.",
+                                 "One arm is doing less. Pull with both evenly.",
+                                 "Ek haath kam kar raha hai. Dono se barabar kheencho."))
+    return checks
 
 
 def curl(name: str, eid: str) -> List[Dict]:
-    return [
-        joint_check("range", "Range", "elbow", "bottom", "min_of_3", (20, 70), (70, 95),
+    checks: List[Dict] = [
+        joint_check("range", "Range", "elbow", "bottom", "min_of_3", (20, 75), (75, 100),
                     cue("Good. You curled all the way up.", "Badhiya. Aap poora upar aaye.",
                         "Curl higher before you lower.",
                         "Neeche laane se pehle aur upar karo.",
-                        above="Do not swing that high. Stop before your elbow pinches.",
-                        hi_above="Itna zyada upar nahi. Kohni mein khinchne se pehle ruko.",
-                        below="Curl higher, squeeze at the top.",
-                        hi_below="Aur upar karo, upar squeeze karo."),
+                        above="Curl higher, squeeze at the top.",
+                        hi_above="Aur upar karo, upar squeeze karo.",
+                        below="Do not swing that high. Stop before your elbow pinches.",
+                        hi_below="Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."),
                     min_vis=0.55),
         joint_check("lockout", "Bottom", "elbow", "lockout", "max", (150, 180), (135, 150),
                     cue("Good. You lowered your arms fully.", "Badhiya. Aapne haath poore neeche kiye.",
                         "Lower all the way down so the muscle can stretch.",
                         "Poora neeche lao taaki muscle stretch ho.")),
-        lean_check((0, 12), (12, 22), "Body",
-                   "Good. Your body stayed still.", "Badhiya. Aapka shareer sthir raha.",
-                   "You are swinging your body. Keep your back still and curl.",
-                   "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."),
-        tempo_check((0.9, 3.5), (0.45, 0.9),
-                    "Do not let it drop. Count 2 seconds.",
-                    "Girne mat do. 2 tak gino."),
     ]
+    if not _NO_LEAN_RE.search(eid):
+        checks.append(lean_check((0, 12), (12, 22), "Body",
+                                 "Good. Your body stayed still.", "Badhiya. Aapka shareer sthir raha.",
+                                 "You are swinging your body. Keep your back still and curl.",
+                                 "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."))
+    checks.append(tempo_check((0.9, 3.5), (0.45, 0.9),
+                              "Do not let it drop. Count 2 seconds.",
+                              "Girne mat do. 2 tak gino."))
+    return checks
 
 
 def triceps(name: str, eid: str) -> List[Dict]:
-    return [
-        joint_check("range", "Range", "elbow", "bottom", "min_of_3", (20, 80), (80, 100),
+    checks: List[Dict] = [
+        joint_check("range", "Lockout", "elbow", "lockout", "max", (145, 180), (130, 145),
                     cue("Good. You straightened your arms fully.",
                         "Badhiya. Aapne haath poore seedhe kiye.",
                         "Straighten your arms all the way.",
                         "Haath poore seedhe karo.",
-                        below="Do not hyperextend. Stop when the arm is straight.",
-                        hi_below="Seedhe se zyada nahi. Seedha hote hi ruko."),
+                        below="Straighten your arms all the way.",
+                        hi_below="Haath poore seedhe karo."),
                     min_vis=0.55),
-        joint_check("stretch", "Stretch", "elbow", "lockout", "max", (40, 110), (110, 130),
+        joint_check("stretch", "Stretch", "elbow", "bottom", "min_of_3", (35, 95), (95, 115),
                     cue("Good. You let the elbow close fully.", "Badhiya. Kohni poora band hui.",
-                        "Let the elbow close all the way so the muscle stretches.",
-                        "Kohni poora band hone do taaki muscle stretch ho.")),
-        lean_check((0, 18), (18, 30), "Body",
-                   "Good. Your body stayed still.", "Badhiya. Aapka shareer sthir raha.",
-                   "You are leaning into it. Keep your body still.",
-                   "Aap shareer se dhakel rahe hain. Shareer sthir rakho."),
-        tempo_check((0.9, 3.5), (0.45, 0.9),
-                    "Control the return. Count 2 seconds.",
-                    "Wapas aane mein control rakho. 2 tak gino."),
+                        "Bend your elbows more for a deeper stretch.",
+                        "Kohni aur zyada mudo taaki muscle stretch ho.",
+                        above="Bend your elbows more for a deeper stretch.",
+                        hi_above="Kohni aur zyada mudo taaki muscle stretch ho.")),
     ]
+    if not _NO_LEAN_RE.search(eid):
+        checks.append(lean_check((0, 18), (18, 30), "Body",
+                                 "Good. Your body stayed still.", "Badhiya. Aapka shareer sthir raha.",
+                                 "You are leaning into it. Keep your body still.",
+                                 "Aap shareer se dhakel rahe hain. Shareer sthir rakho."))
+    checks.append(tempo_check((0.9, 3.5), (0.45, 0.9),
+                              "Control the return. Count 2 seconds.",
+                              "Wapas aane mein control rakho. 2 tak gino."))
+    return checks
 
 
 def squat(name: str, eid: str) -> List[Dict]:
@@ -389,15 +412,15 @@ def hinge(name: str, eid: str) -> List[Dict]:
                    "Badhiya. Hinge karte time back flat rahi.",
                    "Your back is rounding. Keep your chest proud and push your hips back.",
                    "Back mud rahi hai. Chest aage rakho aur hips peeche le jao."),
-        joint_check("stretch", "Stretch", "knee", "bottom", "min_of_3", (110, 165), (95, 110),
+        joint_check("stretch", "Hinge", "hip", "bottom", "min_of_3", (65, 125), (125, 145),
                     cue("Good. You pushed your hips back far enough.",
                         "Badhiya. Aapne hips kaafi peeche kiye.",
                         "Push your hips further back to feel the stretch.",
                         "Hips aur peeche le jao taaki stretch mehsoos ho.",
-                        below="Do not squat it. Keep a small bend in the knee.",
-                        hi_below="Squat mat karo. Knee mein halka bend rakho."),
+                        above="Push your hips further back to feel the stretch.",
+                        hi_above="Hips aur peeche le jao taaki stretch mehsoos ho."),
                     min_vis=0.55),
-        joint_check("lockout", "Standing", "knee", "lockout", "max", (160, 180), (145, 160),
+        joint_check("lockout", "Standing", "hip", "lockout", "max", (155, 180), (140, 155),
                     cue("Good. You stood all the way up.", "Badhiya. Aap poore khade ho gaye.",
                         "Finish the rep standing tall with your glutes tight.",
                         "Rep poora karo, seedhe khade ho aur glutes tight karo.")),
@@ -440,13 +463,13 @@ def hip_isolation(name: str, eid: str) -> List[Dict]:
         {
             "id": "range", "label": "Range", "joint": "hip", "at": "bottom", "robust": "min_of_3",
             "capture": "in_plane", "min_visibility": 0.55,
-            "good": [15, 70], "almost": [8, 15],
+            "good": [90, 155], "almost": [155, 168],
             "cue": cue("Good. You moved through a full range.",
                        "Badhiya. Aapne poora range cover kiya.",
                        "Move further out to the side.",
                        "Side mein aur door le jao.",
-                       below="Move further out to the side.",
-                       hi_below="Side mein aur door le jao."),
+                       above="Move further out to the side.",
+                       hi_above="Side mein aur door le jao."),
         },
         tempo_check((0.9, 4.0), (0.45, 0.9),
                     "Control the way back. Count 2 seconds.",
@@ -456,19 +479,21 @@ def hip_isolation(name: str, eid: str) -> List[Dict]:
 
 def calf(name: str, eid: str) -> List[Dict]:
     return [
-        joint_check("range", "Range", "ankle", "bottom", "min_of_3", (60, 105), (105, 120),
+        joint_check("range", "Range", "ankle", "bottom", "max", (110, 165), (98, 110),
                     cue("Good. You came up onto your toes fully.",
                         "Badhiya. Aap poore toes par aaye.",
-                        "Push up higher onto your toes.",
+                        "Rise higher onto your toes.",
                         "Aur upar aao, toes par.",
-                        above="That is high enough. Do not roll your ankle.",
-                        hi_above="Itna hi kaafi hai. Ankle mat mudo."),
+                        below="Rise higher onto your toes.",
+                        hi_below="Aur upar aao, toes par."),
                     min_vis=0.55),
-        joint_check("stretch", "Stretch", "ankle", "lockout", "max", (60, 105), (40, 60),
+        joint_check("stretch", "Stretch", "ankle", "lockout", "min_of_3", (55, 100), (100, 112),
                     cue("Good. You let the heel drop fully.",
                         "Badhiya. Aapne heel poora neeche kiya.",
-                        "Let your heel drop below the step for a stretch.",
-                        "Heel ko step se neeche jaane do, stretch ke liye.")),
+                        "Drop your heels lower for a full stretch.",
+                        "Heel ko aur neeche jaane do, stretch ke liye.",
+                        above="Drop your heels lower for a full stretch.",
+                        hi_above="Heel ko aur neeche jaane do, stretch ke liye.")),
         tempo_check((0.9, 3.5), (0.45, 0.9),
                     "Control the way down. Count 2 seconds.",
                     "Neeche aane mein control rakho. 2 tak gino."),
@@ -488,15 +513,15 @@ def core(name: str, eid: str) -> List[Dict]:
             },
         ]
     return [
-        joint_check("range", "Range", "hip", "bottom", "min_of_3", (20, 80), (80, 100),
+        joint_check("range", "Range", "hip", "bottom", "min_of_3", (25, 90), (90, 110),
                     cue("Good. You curled all the way through.",
                         "Badhiya. Aap poora curl kiye.",
                         "Crunch further, bring your ribs to your hips.",
                         "Aur crunch karo, ribs ko hips ke paas lao.",
-                        above="That is enough. Do not pull your back.",
-                        hi_above="Itna hi kaafi hai. Back ko kheencho mat.",
-                        below="Crunch further so your abs do the work.",
-                        hi_below="Aur crunch karo taaki abs kaam karein."),
+                        above="Crunch further so your abs do the work.",
+                        hi_above="Aur crunch karo taaki abs kaam karein.",
+                        below="That is enough. Do not pull your back.",
+                        hi_below="Itna hi kaafi hai. Back ko kheencho mat."),
                     min_vis=0.55),
         {
             "id": "stretch", "label": "Return", "joint": "hip", "at": "lockout", "robust": "max",
@@ -623,12 +648,12 @@ def build(eid: str, family: str) -> Dict:
         # along the body's own line, so the press's learned axis is the right signal here.
         track = {"joint": "elbow", "origin": "shoulder", "point": "wrist", "axis": "forearm"}
     if family == "chest_press" and kind == "chest_flye":
-        # A flye's elbow stays softly fixed, so the rep is the shoulder opening and closing. Counting
-        # it off the press's forearm axis would find no lockout and report zero reps.
+        # A flye's elbow stays softly fixed, so the rep is the shoulder opening and closing.
+        # With invert: True, closed=1 and open=0, so opening (1->0) is outbound eccentric.
         track = {"joint": "shoulder", "origin": "shoulder", "point": "wrist",
-                 "axis": "angle", "invert": True, "eccentric": "return"}
-    if family in ("curl", "triceps", "lateral_raise", "hinge"):
-        # These start relaxed and lift first, so the lowering is the RETURN half of the rep.
+                 "axis": "angle", "invert": True}
+    if family in ("curl", "lateral_raise", "row_pulldown", "calf", "hip_isolation", "core") or "leg-curl" in eid:
+        # These start relaxed/open (p=1) and move into contraction (1->0), so lowering/returning (0->1) is eccentric.
         track["eccentric"] = "return"
 
     en, hi = START_CUE[family]

@@ -40,11 +40,11 @@
       "min_visibility": 0.55,
       "good": [
         20,
-        70
+        75
       ],
       "almost": [
-        70,
-        95
+        75,
+        100
       ],
       "cue": {
         "good": {
@@ -56,12 +56,12 @@
           "hi": "Neeche laane se pehle aur upar karo."
         },
         "above": {
-          "en": "Do not swing that high. Stop before your elbow pinches.",
-          "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
-        },
-        "below": {
           "en": "Curl higher, squeeze at the top.",
           "hi": "Aur upar karo, upar squeeze karo."
+        },
+        "below": {
+          "en": "Do not swing that high. Stop before your elbow pinches.",
+          "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
         },
         "almost": {
           "en": "Curl higher before you lower.",
@@ -141,7 +141,7 @@
       "measure": "eccentric_seconds",
       "good": [
         0.9,
-        3.5
+        5.5
       ],
       "almost": [
         0.45,
@@ -155,6 +155,10 @@
         "fix": {
           "en": "Too fast. Do not let it drop. Count 2 seconds.",
           "hi": "Bahut tez hai. Girne mat do. 2 tak gino."
+        },
+        "above": {
+          "en": "Very slow. Good control — keep moving smoothly.",
+          "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
         },
         "below": {
           "en": "Too fast. Do not let it drop. Count 2 seconds.",

@@ -140,7 +140,7 @@
       "measure": "eccentric_seconds",
       "good": [
         0.9,
-        3.5
+        5.5
       ],
       "almost": [
         0.45,
@@ -154,6 +154,10 @@
         "fix": {
           "en": "Too fast. Control the way down and count 2.",
           "hi": "Bahut tez hai. Neeche control karo aur 2 gino."
+        },
+        "above": {
+          "en": "Very slow. Good control — keep moving smoothly.",
+          "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
         },
         "below": {
           "en": "Too fast. Control the way down and count 2.",

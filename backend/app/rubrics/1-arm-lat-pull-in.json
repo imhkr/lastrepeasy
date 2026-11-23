@@ -14,7 +14,8 @@
     "joint": "elbow",
     "origin": "shoulder",
     "point": "wrist",
-    "axis": "distance"
+    "axis": "distance",
+    "eccentric": "return"
   },
   "start_cue": {
     "en": "Start with your arms long, then pull in.",
@@ -39,11 +40,11 @@
       "min_visibility": 0.55,
       "good": [
         20,
-        75
+        85
       ],
       "almost": [
-        75,
-        95
+        85,
+        105
       ],
       "cue": {
         "good": {
@@ -55,12 +56,12 @@
           "hi": "Aur kheencho. Weight poora andar lao."
         },
         "above": {
-          "en": "Do not pull past your body. Stop when the elbow is behind you.",
-          "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
-        },
-        "below": {
           "en": "Pull further, all the way in.",
           "hi": "Aur kheencho, poora andar tak."
+        },
+        "below": {
+          "en": "Do not pull past your body. Stop when the elbow is behind you.",
+          "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
         },
         "almost": {
           "en": "Pull further. Bring the weight all the way in.",
@@ -140,7 +141,7 @@
       "measure": "eccentric_seconds",
       "good": [
         0.8,
-        3.5
+        5.5
       ],
       "almost": [
         0.4,
@@ -155,6 +156,10 @@
           "en": "Too fast. Control the stretch. Count 2 seconds.",
           "hi": "Bahut tez hai. Khulne mein control rakho. 2 tak gino."
         },
+        "above": {
+          "en": "Very slow. Good control — keep moving smoothly.",
+          "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+        },
         "below": {
           "en": "Too fast. Control the stretch. Count 2 seconds.",
           "hi": "Bahut tez hai. Khulne mein control rakho. 2 tak gino."
@@ -162,38 +167,6 @@
         "almost": {
           "en": "A bit fast. Count 2 seconds on the way down.",
           "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
-        }
-      }
-    },
-    {
-      "id": "even",
-      "label": "Both arms",
-      "joint": "elbow",
-      "at": "bottom",
-      "robust": "median",
-      "capture": "in_plane",
-      "measure": "side_difference",
-      "min_visibility": 0.7,
-      "good": [
-        0,
-        12
-      ],
-      "almost": [
-        12,
-        20
-      ],
-      "cue": {
-        "good": {
-          "en": "Good. Both arms pulled together.",
-          "hi": "Badhiya. Dono haath saath khinche."
-        },
-        "fix": {
-          "en": "One arm is doing less. Pull with both evenly.",
-          "hi": "Ek haath kam kar raha hai. Dono se barabar kheencho."
-        },
-        "almost": {
-          "en": "One side is a little behind. Move them together.",
-          "hi": "Ek side thoda peeche hai. Dono saath chalao."
         }
       }
     }

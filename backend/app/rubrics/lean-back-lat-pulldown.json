@@ -14,7 +14,8 @@
     "joint": "elbow",
     "origin": "shoulder",
     "point": "wrist",
-    "axis": "distance"
+    "axis": "distance",
+    "eccentric": "return"
   },
   "start_cue": {
     "en": "Start with your arms long, then pull in.",
@@ -39,11 +40,11 @@
       "min_visibility": 0.55,
       "good": [
         20,
-        75
+        85
       ],
       "almost": [
-        75,
-        95
+        85,
+        105
       ],
       "cue": {
         "good": {
@@ -55,12 +56,12 @@
           "hi": "Aur kheencho. Weight poora andar lao."
         },
         "above": {
-          "en": "Do not pull past your body. Stop when the elbow is behind you.",
-          "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
-        },
-        "below": {
           "en": "Pull further, all the way in.",
           "hi": "Aur kheencho, poora andar tak."
+        },
+        "below": {
+          "en": "Do not pull past your body. Stop when the elbow is behind you.",
+          "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
         },
         "almost": {
           "en": "Pull further. Bring the weight all the way in.",
@@ -100,38 +101,6 @@
       }
     },
     {
-      "id": "lean",
-      "label": "Back",
-      "joint": "torso",
-      "at": "bottom",
-      "robust": "median",
-      "capture": "in_plane",
-      "measure": "torso_lean",
-      "min_visibility": 0.6,
-      "good": [
-        0,
-        25
-      ],
-      "almost": [
-        25,
-        40
-      ],
-      "cue": {
-        "good": {
-          "en": "Good. Your body stayed still.",
-          "hi": "Badhiya. Aapka shareer sthir raha."
-        },
-        "fix": {
-          "en": "You are swinging. Keep your body still and pull.",
-          "hi": "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."
-        },
-        "almost": {
-          "en": "You are swinging. Keep your body still and pull.",
-          "hi": "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."
-        }
-      }
-    },
-    {
       "id": "tempo",
       "label": "Speed",
       "at": "eccentric",
@@ -140,7 +109,7 @@
       "measure": "eccentric_seconds",
       "good": [
         0.8,
-        3.5
+        5.5
       ],
       "almost": [
         0.4,
@@ -154,6 +123,10 @@
         "fix": {
           "en": "Too fast. Control the stretch. Count 2 seconds.",
           "hi": "Bahut tez hai. Khulne mein control rakho. 2 tak gino."
+        },
+        "above": {
+          "en": "Very slow. Good control — keep moving smoothly.",
+          "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
         },
         "below": {
           "en": "Too fast. Control the stretch. Count 2 seconds.",

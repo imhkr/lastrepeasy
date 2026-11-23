@@ -474,6 +474,7 @@ async def live_adjudicate(payload: AdjudicateRequest):
 
     rubric_dict = {
         "id": rubric.id,
+        "name": getattr(rubric, "name", rubric.id),
         "family": rubric.family,
         "view": list(rubric.view) if isinstance(rubric.view, tuple) else rubric.view,
         "checks": list(rubric.checks),

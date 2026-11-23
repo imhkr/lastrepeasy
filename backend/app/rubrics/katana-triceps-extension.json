@@ -14,8 +14,7 @@
     "joint": "elbow",
     "origin": "shoulder",
     "point": "wrist",
-    "axis": "distance",
-    "eccentric": "return"
+    "axis": "distance"
   },
   "start_cue": {
     "en": "Set your elbow still, then straighten your arm.",
@@ -32,19 +31,19 @@
   "checks": [
     {
       "id": "range",
-      "label": "Range",
+      "label": "Lockout",
       "joint": "elbow",
-      "at": "bottom",
-      "robust": "min_of_3",
+      "at": "lockout",
+      "robust": "max",
       "capture": "in_plane",
       "min_visibility": 0.55,
       "good": [
-        20,
-        80
+        145,
+        180
       ],
       "almost": [
-        80,
-        100
+        130,
+        145
       ],
       "cue": {
         "good": {
@@ -56,8 +55,8 @@
           "hi": "Haath poore seedhe karo."
         },
         "below": {
-          "en": "Do not hyperextend. Stop when the arm is straight.",
-          "hi": "Seedhe se zyada nahi. Seedha hote hi ruko."
+          "en": "Straighten your arms all the way.",
+          "hi": "Haath poore seedhe karo."
         },
         "almost": {
           "en": "Straighten your arms all the way.",
@@ -69,17 +68,17 @@
       "id": "stretch",
       "label": "Stretch",
       "joint": "elbow",
-      "at": "lockout",
-      "robust": "max",
+      "at": "bottom",
+      "robust": "min_of_3",
       "capture": "in_plane",
       "min_visibility": 0.6,
       "good": [
-        40,
-        110
+        35,
+        95
       ],
       "almost": [
-        110,
-        130
+        95,
+        115
       ],
       "cue": {
         "good": {
@@ -87,12 +86,16 @@
           "hi": "Badhiya. Kohni poora band hui."
         },
         "fix": {
-          "en": "Let the elbow close all the way so the muscle stretches.",
-          "hi": "Kohni poora band hone do taaki muscle stretch ho."
+          "en": "Bend your elbows more for a deeper stretch.",
+          "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+        },
+        "above": {
+          "en": "Bend your elbows more for a deeper stretch.",
+          "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
         },
         "almost": {
-          "en": "Let the elbow close all the way so the muscle stretches.",
-          "hi": "Kohni poora band hone do taaki muscle stretch ho."
+          "en": "Bend your elbows more for a deeper stretch.",
+          "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
         }
       }
     },
@@ -137,7 +140,7 @@
       "measure": "eccentric_seconds",
       "good": [
         0.9,
-        3.5
+        5.5
       ],
       "almost": [
         0.45,
@@ -151,6 +154,10 @@
         "fix": {
           "en": "Too fast. Control the return. Count 2 seconds.",
           "hi": "Bahut tez hai. Wapas aane mein control rakho. 2 tak gino."
+        },
+        "above": {
+          "en": "Very slow. Good control — keep moving smoothly.",
+          "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
         },
         "below": {
           "en": "Too fast. Control the return. Count 2 seconds.",

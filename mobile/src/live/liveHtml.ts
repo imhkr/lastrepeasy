@@ -59,8 +59,8 @@ export function liveHtml(opts: LiveHtmlOpts): string {
   .almost{background:#FFAF00;border-color:#FFAF00}
   .fix{background:#F54646;border-color:#F54646;color:#fff}
   .unsure{background:#475569;border-color:#475569;color:#CBD5E1}
-  #banner{position:absolute;left:0;right:0;bottom:0;padding:16px 20px 22px;text-align:center;font-weight:800;font-size:19px;
-          line-height:1.3;background:linear-gradient(to top,rgba(9,12,19,.96),rgba(9,12,19,.72) 70%,transparent);
+  #banner{position:absolute;left:0;right:0;bottom:0;padding:18px 20px 24px;min-height:72px;text-align:center;font-weight:800;font-size:20px;
+          line-height:1.35;background:linear-gradient(to top,rgba(9,12,19,.96),rgba(9,12,19,.78) 72%,transparent);
           border-bottom:5px solid transparent}
   #banner.good{border-color:#3CEB6E} #banner.almost{border-color:#FFAF00} #banner.fix{border-color:#F54646}
   #msg{position:absolute;left:0;right:0;top:44%;text-align:center;padding:0 26px;font-size:15px;line-height:1.5;color:#CBD5E1}
@@ -139,14 +139,18 @@ export function liveHtml(opts: LiveHtmlOpts): string {
     el.className = "ic" + (st ? " " + st : "");
     el.textContent = st ? GLYPH[st] : "";
     var vv = valEl(ch.id);
-    if (vv) vv.textContent = Number.isFinite(value) ? Math.round(value) + (unit || "") : "";
+    if (vv) {
+      if (!Number.isFinite(value)) vv.textContent = "";
+      else if (ch && ch.measure === "eccentric_seconds") vv.textContent = value.toFixed(1) + "s";
+      else vv.textContent = Math.round(value) + (unit || "");
+    }
   }
 
   // ---- which joints to highlight: the check tells us the joint, the segmenter tells us the side
-  var JOINT_PART = { elbow: "elbow", knee: "knee", wrist: "wrist", ankle: "ankle", shoulder: "shoulder" };
+  var JOINT_PART = { elbow: "elbow", knee: "knee", wrist: "wrist", ankle: "ankle", shoulder: "shoulder", hip: "hip" };
 
   // ---- landmarks: MediaPipe index -> "<side>_<part>", carrying world coords for the 3D measures
-  var IDX = { shoulder: [11, 12], elbow: [13, 14], wrist: [15, 16], hip: [23, 24] };
+  var IDX = { shoulder: [11, 12], elbow: [13, 14], wrist: [15, 16], hip: [23, 24], knee: [25, 26], ankle: [27, 28], heel: [29, 30], foot_index: [31, 32] };
   function toLandmarks(res) {
     var lm = res.landmarks && res.landmarks[0], wl = res.worldLandmarks && res.worldLandmarks[0];
     if (!lm) return null;
@@ -157,7 +161,7 @@ export function liveHtml(opts: LiveHtmlOpts): string {
         if (!a) return;
         var b = (wl && wl[i]) || null;
         out[side + "_" + part] = {
-          x: a.x, y: a.y, vis: a.visibility == null ? 0.9 : a.visibility,
+          x: a.x, y: a.y, vis: a.visibility == null ? 0 : a.visibility,
           wx: b ? b.x : undefined, wy: b ? b.y : undefined, wz: b ? b.z : undefined
         };
       });
@@ -209,6 +213,7 @@ export function liveHtml(opts: LiveHtmlOpts): string {
   var lastTs = -1, lastMedia = -1, summaryShown = false, speakAt = 0;
   var seg = null, frameWindow = [], repsDone = [], lastCueKey = "";
   var viewOk = false, gateReason = "";
+  var lastVerdicts = [], lastBanner = null, lostPoseFrames = 0, badViewFrames = 0;
 
   async function makeLandmarker(name) {
     var make = function (delegate) {
@@ -253,12 +258,18 @@ export function liveHtml(opts: LiveHtmlOpts): string {
     if (banner.className !== cls) banner.className = cls;
   }
 
-  // Speak a cue at most once per ~2 s, and only when the cue actually changes. Reading the same
-  // sentence every frame is what made the old coach feel like it was nagging.
-  function say(key, en, hi) {
+  function showStickyBanner() {
+    if (!lastBanner) return false;
+    var prefix = lastBanner.repIndex ? "Rep " + lastBanner.repIndex + " · " : "";
+    setBanner(prefix + T(lastBanner.en, lastBanner.hi), lastBanner.tone);
+    return true;
+  }
+
+  // Speak completed-rep verdicts immediately (deduplicated by rep+cue key); throttle non-rep cues.
+  function say(key, en, hi, immediate) {
     if (key === lastCueKey) return;
     var t = performance.now();
-    if (t - speakAt < 1800) return;
+    if (!immediate && t - speakAt < 1800) return;
     lastCueKey = key; speakAt = t;
     post({ type: "speak", en: en, hi: hi });
   }
@@ -282,21 +293,27 @@ export function liveHtml(opts: LiveHtmlOpts): string {
 
     var lm = toLandmarks(res);
     if (!lm) {
+      lostPoseFrames++;
       paint(null, []);
-      setBanner(T("I cannot see you. Step back so your whole body is in view.",
-                  "Main aapko dekh nahi pa raha. Peeche hato, poora shareer dikhna chahiye."), "");
+      if (lostPoseFrames >= 15 && !showStickyBanner()) {
+        setBanner(T("I cannot see you. Step back so your whole body is in view.",
+                    "Main aapko dekh nahi pa raha. Peeche hato, poora shareer dikhna chahiye."), "");
+      } else if (lostPoseFrames >= 15 && lastBanner) {
+        showStickyBanner();
+      }
       return false;
     }
+    lostPoseFrames = 0;
 
     var aspect = c.width / c.height;
     // Frames are kept with their timestamps so a finished rep can be judged on exactly the
     // frames that spanned it, and so each check can be sliced to its own phase.
     frameWindow.push({ t: src ? mt : now / 1000, lm: lm });
-    if (frameWindow.length > 240) frameWindow.shift();
+    if (frameWindow.length > 600) frameWindow.shift();
 
     // ---- view gate, before any judging. A wrong camera distorts every number the same way, so
     // this says "move" instead of producing a confident verdict from a bad angle.
-    if (frameWindow.length % 5 === 0) {
+    if (L.frames % 5 === 0) {
       var reading = LIVE.engine.detectView(frameWindow.slice(-30).map(function (fr) { return fr.lm; }), c.width / c.height);
       var gate = LIVE.engine.gateView(reading.view, REQUIRED_VIEW);
       if (gate.ok !== viewOk || (gate.ok === false && gate.reason !== gateReason)) {
@@ -305,9 +322,11 @@ export function liveHtml(opts: LiveHtmlOpts): string {
         if (!viewOk) lastCueKey = "";
       }
     }
-    if (REQUIRED_VIEW && REQUIRED_VIEW !== "any" && !viewOk) {
-      paint(lm, []);
-      setBanner(gateText(), "");
+    if (viewOk) badViewFrames = 0;
+    else badViewFrames++;
+    if (REQUIRED_VIEW && REQUIRED_VIEW !== "any" && !viewOk && (!(seg && seg.pending()) || badViewFrames >= 15)) {
+      paint(lm, lastVerdicts);
+      if (!showStickyBanner()) setBanner(gateText(), "");
       return false;
     }
 
@@ -321,30 +340,18 @@ export function liveHtml(opts: LiveHtmlOpts): string {
     if (seg.pending()) {
       var pend = seg.pending();
       if (pend && pend.bottomT >= nowT - 1e-3 && pend.bottomT !== kfBottomT) {
-        kfBottomT = pend.bottomT;
-        kfBottom = snap();
+        if (!kfBottomT || nowT - kfBottomT >= 0.25) {
+          kfBottomT = pend.bottomT;
+          kfBottom = snap();
+        }
       }
     }
 
-    // Live feedback while the rep is in flight: judge the frames so far, so the cue lands DURING
-    // the set, not only at the end. This is the "start to end" part.
+    // Keep the last completed rep's verdicts/banner visible between reps so the lifter can read
+    // the mistake without it flashing away mid-rest or during the next rep's setup.
     if (!rep) {
-      var pending = seg.pending();
-      if (pending) {
-        var live = judge(pending, aspect);
-        live.forEach(function (vd) { showCheck(specFor(vd.id), vd.status, vd.value, ""); });
-        paint(lm, live);
-        var w = LIVE.engine.worstCue(live);
-        if (w) {
-          setBanner(lang === "hi" ? w.cue.hi : w.cue.en, w.status);
-          say(w.id + ":" + w.status, w.cue.en, w.cue.hi);
-        } else if (pending.progress.length > 5) {
-          setBanner(T("Good. Keep going.", "Badhiya. Chalte raho."), "good");
-        }
-      } else {
-        paint(lm, []);
-        setBanner(T(START.en, START.hi), "");
-      }
+      paint(lm, lastVerdicts);
+      if (!showStickyBanner()) setBanner(T(START.en, START.hi), "");
     } else {
       finishRep(rep, lm, aspect);
     }
@@ -359,17 +366,31 @@ export function liveHtml(opts: LiveHtmlOpts): string {
     return { id: id, label: id, good: [0, 0] };
   }
 
-  // Judge a rep against the rubric, on exactly the frames that span it. The progress array is
-  // passed through so each check can be graded at its own phase: "depth" on the bottom frames,
-  // "lockout" on the top ones. Without it, a bottom-only band gets applied to the whole rep and
-  // reports "too shallow" on a perfect rep.
+  // Judge a rep against the rubric, on exactly the frames that span it. Two-pointer timestamp
+  // matching keeps frames and progress aligned even if a frame was dropped mid-rep.
   function judge(r, aspect) {
     var side = seg.side() || "right";
-    var t0 = r.times && r.times.length ? r.times[0] : r.startT;
-    var t1 = r.times && r.times.length ? r.times[r.times.length - 1] : r.endT;
-    var win = frameWindow.filter(function (fr) { return fr.t >= t0 - 1e-3 && fr.t <= t1 + 1e-3; });
-    var frames = (win.length >= 3 ? win : frameWindow.slice(-Math.max(3, r.progress.length))).map(function (fr) { return fr.lm; });
-    var progress = win.length >= 3 && r.progress.length === frames.length ? r.progress : undefined;
+    var times = r.times && r.times.length ? r.times : [];
+    var frames = [], progress = [];
+    if (times.length && r.progress && r.progress.length === times.length) {
+      var wi = 0;
+      for (var i = 0; i < times.length; i++) {
+        var targetT = times[i];
+        while (wi < frameWindow.length && frameWindow[wi].t < targetT - 1e-4) wi++;
+        if (wi < frameWindow.length && Math.abs(frameWindow[wi].t - targetT) <= 1e-4) {
+          frames.push(frameWindow[wi].lm);
+          progress.push(r.progress[i]);
+          wi++;
+        }
+      }
+    }
+    if (frames.length < 3) {
+      var t0 = times.length ? times[0] : r.startT;
+      var t1 = times.length ? times[times.length - 1] : r.endT;
+      var win = frameWindow.filter(function (fr) { return fr.t >= t0 - 1e-3 && fr.t <= t1 + 1e-3; });
+      frames = (win.length >= 3 ? win : frameWindow.slice(-Math.max(3, r.progress.length))).map(function (fr) { return fr.lm; });
+      progress = undefined;
+    }
     return LIVE.engine.evaluateAll({
       exerciseId: exerciseId,
       side: side,
@@ -421,10 +442,9 @@ export function liveHtml(opts: LiveHtmlOpts): string {
 
   // Numbers the model can check instead of only guessing from pixels. The phone already measured
   // every check, so sending the values lets the backend see a disagreement it can name.
-  function landmarkSummary(r, aspect) {
+  function landmarkSummary(verdicts) {
     var out = [];
     try {
-      var verdicts = judge(r, aspect);
       var side = seg.side() || "right";
       verdicts.forEach(function (vd) {
         if (!isFinite(vd.value)) return;
@@ -436,10 +456,12 @@ export function liveHtml(opts: LiveHtmlOpts): string {
 
   function finishRep(r, lm, aspect) {
     var verdicts = judge(r, aspect);
+    lastVerdicts = verdicts;
     verdicts.forEach(function (vd) { showCheck(specFor(vd.id), vd.status, vd.value, ""); });
     paint(lm, verdicts);
 
     var index = repsDone.length + 1;
+    document.getElementById("rep").textContent = "REP " + index;
     var entry = { index: index, checks: verdicts.map(function (x) { return { id: x.id, label: x.label, status: x.status, value: x.value, cue: x.cue }; }) };
     repsDone.push(entry);
     window.__live.reps = repsDone;
@@ -447,21 +469,23 @@ export function liveHtml(opts: LiveHtmlOpts): string {
     // at the bottom of the rep, which is the frame that shows depth and joint alignment, plus the
     // current frame as the top. Sending them costs nothing locally; whether to actually ask the
     // backend is the app's decision, and it throttles that to one call at a time.
-    post({ type: "rep", index: index, checks: entry.checks, keyframes: grabKeyframes(r), nrm: landmarkSummary(r, aspect) });
+    post({ type: "rep", index: index, checks: entry.checks, keyframes: grabKeyframes(r), nrm: landmarkSummary(verdicts) });
 
     var w = LIVE.engine.worstCue(verdicts);
-    var anyUnsure = verdicts.some(function (x) { return x.status === "unsure"; });
+    var allUnsure = verdicts.length > 0 && verdicts.every(function (x) { return x.status === "unsure"; });
     if (w) {
-      setBanner(lang === "hi" ? w.cue.hi : w.cue.en, w.status);
-      say("rep" + index + ":" + w.id, "Rep " + index + ". " + w.cue.en, "Rep " + index + ". " + w.cue.hi);
-    } else if (anyUnsure) {
-      setBanner(T("Good so far.", "Abhi tak badhiya."), "good");
-      say("rep" + index + ":unsure", "Rep " + index + ". Good so far.", "Rep " + index + ". Abhi tak badhiya.");
+      lastBanner = { en: w.cue.en, hi: w.cue.hi, tone: w.status, repIndex: index };
+      showStickyBanner();
+      say("rep" + index + ":" + w.id, "Rep " + index + ". " + w.cue.en, "Rep " + index + ". " + w.cue.hi, true);
+    } else if (allUnsure) {
+      lastBanner = { en: "Can't see clearly — adjust camera.", hi: "Camera theek se set karo.", tone: "almost", repIndex: index };
+      showStickyBanner();
+      say("rep" + index + ":unsure", "Rep " + index + ". Adjust camera angle.", "Rep " + index + ". Camera theek se set karo.", true);
     } else {
-      setBanner(T("Good rep!", "Badhiya rep!"), "good");
-      say("rep" + index + ":good", "Rep " + index + ". Good rep.", "Rep " + index + ". Badhiya rep.");
+      lastBanner = { en: "Good rep!", hi: "Badhiya rep!", tone: "good", repIndex: index };
+      showStickyBanner();
+      say("rep" + index + ":good", "Rep " + index + ". Good rep.", "Rep " + index + ". Badhiya rep.", true);
     }
-    lastCueKey = "";
   }
 
   function gateText() {
@@ -520,9 +544,15 @@ export function liveHtml(opts: LiveHtmlOpts): string {
     });
     var focus = Object.keys(worstBy).map(function (k) { return worstBy[k]; });
     h += '<div class="big nx">' + T("Next set", "Agla set") + '</div>';
+    var allRepsUnsure = repsDone.length > 0 && repsDone.every(function (rep) {
+      return (rep.checks || []).every(function (c) { return c.status === "unsure"; });
+    });
     if (!repsDone.length) {
       h += '<p>' + T("I did not see a full rep. " + START.en,
                      "Mujhe poora rep nahi dikha. " + START.hi) + '</p>';
+    } else if (allRepsUnsure) {
+      h += '<p>' + T("Could not read your form clearly. Try a clearer camera angle.",
+                     "Form saaf nahi dikha. Camera angle thoda better rakho.") + '</p>';
     } else if (!focus.length) {
       h += '<p>' + T("Clean set. Keep it up!", "Badhiya set. Aise hi chalte raho!") + '</p>';
     }
@@ -542,10 +572,17 @@ export function liveHtml(opts: LiveHtmlOpts): string {
     }
   }
   window.__finish = showSummary;
+  window.__showCue = function (en, hi, tone, repIndex) {
+    if (!en && !hi) return;
+    lastBanner = { en: en || hi, hi: hi || en, tone: tone || "fix", repIndex: repIndex || repsDone.length || 0 };
+    showStickyBanner();
+  };
   window.__setLang = function (l) {
     lang = l; lastCueKey = "";
     document.getElementById("flip").textContent = T("Flip camera", "Camera badlo");
     document.getElementById("reset").textContent = T("New set", "Naya set");
+    if (!repsDone.length) document.getElementById("rep").textContent = T("GET READY", "TAIYAAR HO JAO");
+    showStickyBanner();
   };
 
   async function boot() {
@@ -576,12 +613,16 @@ export function liveHtml(opts: LiveHtmlOpts): string {
   document.getElementById("reset").textContent = T("New set", "Naya set");
   document.getElementById("flip").onclick = function () {
     facing = facing === "user" ? "environment" : "user";
+    seg = LIVE.segment.createSegmenter({ track: TRACK });
+    frameWindow = []; kfBottom = null; kfBottomT = null; badViewFrames = 0; viewOk = false;
     lastMedia = -1; startSource();
   };
   document.getElementById("reset").onclick = function () {
     seg = LIVE.segment.createSegmenter({ track: TRACK });
-    frameWindow = []; repsDone = []; lastCueKey = "";
+    frameWindow = []; repsDone = []; lastCueKey = ""; kfBottom = null; kfBottomT = null;
+    lastVerdicts = []; lastBanner = null; lostPoseFrames = 0; badViewFrames = 0;
     window.__live.reps = [];
+    document.getElementById("rep").textContent = T("GET READY", "TAIYAAR HO JAO");
     CHECKS.forEach(function (ch) { showCheck(ch, null, NaN, ""); });
     banner.textContent = T("New set. ", "Naya set. ") + T(START.en, START.hi);
     banner.className = "";

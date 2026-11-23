@@ -53,7 +53,7 @@ export type TrackSpec = {
   // The anchor the travelling point is measured against. It must be the part that does NOT move:
   // the shoulder for a press, the planted foot for a squat. Measuring a squat's hip against the
   // shoulder fails because both drop together and the difference barely changes.
-  origin: "shoulder" | "hip" | "ankle";
+  origin: "shoulder" | "hip" | "ankle" | "knee";
   point: "wrist" | "elbow" | "knee" | "hip" | "ankle" | "foot_index" | "shoulder";
   // Where "up" comes from. Three signals, because no single one covers every movement:
   //
@@ -245,9 +245,11 @@ export function createSegmenter(opts: SegmentOpts = {}): Segmenter {
   function limb(lm: Landmarks): Limb | null {
     const track = o.track ?? PRESS_TRACK;
     const [pn, vn, dn] = TRIPLES[track.joint];
+    const needTorso = !(track.axis === "angle" && track.joint === "ankle");
     const usable = (s: "left" | "right"): Limb | null => {
       const need: Record<string, true> = {};
-      for (const n of [pn, vn, dn, track.origin, track.point, "shoulder", "hip"]) need[n] = true;
+      const req = needTorso ? [pn, vn, dn, track.origin, track.point, "shoulder", "hip"] : [pn, vn, dn, track.origin, track.point];
+      for (const n of req) need[n] = true;
       const got: Record<string, Pt> = {};
       for (const n of Object.keys(need)) {
         const p = lm[`${s}_${n}`];
@@ -260,7 +262,7 @@ export function createSegmenter(opts: SegmentOpts = {}): Segmenter {
       return {
         prox: got[pn], piv: got[vn], dist: got[dn],
         org: got[track.origin], pt: got[track.point],
-        sh: got.shoulder, hip: got.hip,
+        sh: got.shoulder ?? got[pn], hip: got.hip ?? got[vn],
       };
     };
     if (trackSide) {
@@ -298,11 +300,12 @@ export function createSegmenter(opts: SegmentOpts = {}): Segmenter {
     // Torso length is rigid: it does not change as a joint bends, so it is the stable unit to
     // normalize by. Arm length collapses at the bottom of a press, which would make the same
     // vertical drop read as a bigger one exactly where the depth check is graded.
-    const torso = norm3(sub3(SH, HIP));
+    const needTorso = !(track.axis === "angle" && track.joint === "ankle");
+    const torso = needTorso ? norm3(sub3(SH, HIP)) : 1;
     if (torso < 1e-6) return null;
 
     const deg = angleDeg3(worldOf(a.prox)!, worldOf(a.piv)!, worldOf(a.dist)!);
-    if (Number.isFinite(deg)) bestDeg = Math.max(bestDeg, deg);
+    if (Number.isFinite(deg)) bestDeg = Math.max(bestDeg * 0.999, deg);
     // `extended` only ever decides which frames may define the press line, so it is meaningless for
     // every other axis. World landmarks are a learned depth lift, so a genuinely locked-out elbow
     // often reads 140-145; an absolute gate alone would never fire, which is why it is relative to
@@ -417,10 +420,9 @@ export function createSegmenter(opts: SegmentOpts = {}): Segmenter {
       // close the rep while the elbow is still bent -- and the lockout frame, which is the whole
       // point of the lockout check, would then fall outside the rep and be graded as missing.
       //
-      // Closing on the FIRST extended frame also ended a rep mid-press: on a clean clip the arm
-      // reached its extension threshold at 145 degrees and the next frames carried it to 172, so
-      // the lockout check graded the approach and called a locked-out rep "almost".
-      const nearTop = repPeakAt < t && repHiRise - rise >= 0 && rise >= repHiRise - Math.max(repSpan * 0.08, 1e-3);
+      // Relaxed 15% closure tolerance so slightly short/fatigued lockouts still close the rep and
+      // get graded instead of merging two reps into one.
+      const nearTop = repPeakAt < t && repHiRise - rise >= 0 && rise >= repHiRise - Math.max(repSpan * 0.15, 1e-3);
       if (
         atTopEnd &&
         realRep &&
@@ -472,7 +474,7 @@ function eccentricSeconds(
   o: Required<Omit<SegmentOpts, "track">>,
   returnHalf: boolean,
 ): number | null {
-  const seg = hist.filter((s) => s.t >= startT - 1.5 && s.t <= endT + 1e-4);
+  const seg = hist.filter((s) => s.t >= startT && s.t <= endT + 1e-4);
   if (seg.length < 4) return null;
   let hi = seg[0].rise;
   let lo = Infinity;
@@ -518,6 +520,6 @@ function eccentricSeconds(
     tB = cross(0.2, false, topIdx, iMin);
   }
   if (tA === null || tB === null) return null;
-  const dt = Math.abs(tB - tA);
+  const dt = tB - tA;
   return dt > 0 ? dt : null;
 }

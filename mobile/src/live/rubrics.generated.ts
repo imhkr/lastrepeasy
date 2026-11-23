@@ -14,23 +14,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          75,
-          95
+          85,
+          105
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not pull past your body. Stop when the elbow is behind you.",
-            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+            "en": "Pull further, all the way in.",
+            "hi": "Aur kheencho, poora andar tak."
           },
           "almost": {
             "en": "Pull further. Bring the weight all the way in.",
             "hi": "Aur kheencho. Weight poora andar lao."
           },
           "below": {
-            "en": "Pull further, all the way in.",
-            "hi": "Aur kheencho, poora andar tak."
+            "en": "Do not pull past your body. Stop when the elbow is behind you.",
+            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
           },
           "fix": {
             "en": "Pull further. Bring the weight all the way in.",
@@ -43,7 +43,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          75
+          85
         ],
         "id": "range",
         "joint": "elbow",
@@ -122,6 +122,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -141,43 +145,11 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
         "measure": "eccentric_seconds",
-        "robust": "median"
-      },
-      {
-        "almost": [
-          12,
-          20
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "One side is a little behind. Move them together.",
-            "hi": "Ek side thoda peeche hai. Dono saath chalao."
-          },
-          "fix": {
-            "en": "One arm is doing less. Pull with both evenly.",
-            "hi": "Ek haath kam kar raha hai. Dono se barabar kheencho."
-          },
-          "good": {
-            "en": "Good. Both arms pulled together.",
-            "hi": "Badhiya. Dono haath saath khinche."
-          }
-        },
-        "good": [
-          0,
-          12
-        ],
-        "id": "even",
-        "joint": "elbow",
-        "label": "Both arms",
-        "measure": "side_difference",
-        "min_visibility": 0.7,
         "robust": "median"
       }
     ],
@@ -199,6 +171,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -223,29 +196,29 @@ export const RUBRICS: Record<string, Rubric> = {
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Not above the shoulder. Stop at shoulder height.",
-            "hi": "Kandhe se zyada upar nahi. Kandhe tak hi ruko."
+            "en": "Lower slightly if your shoulder pinches.",
+            "hi": "Agar kandhe mein dabav lage toh thoda kam uthao."
           },
           "almost": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "below": {
             "en": "Lift higher, up to shoulder height.",
             "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "fix": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "good": {
-            "en": "Good. You raised to shoulder height.",
-            "hi": "Badhiya. Kandhe ki height tak uthaya."
+            "en": "Good. You raised to full height.",
+            "hi": "Badhiya. Poori height tak uthaya."
           }
         },
         "good": [
           75,
-          105
+          115
         ],
         "id": "range",
         "joint": "shoulder",
@@ -261,6 +234,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -280,43 +257,11 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
         "measure": "eccentric_seconds",
-        "robust": "median"
-      },
-      {
-        "almost": [
-          12,
-          20
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "One side is a little behind. Move them together.",
-            "hi": "Ek side thoda peeche hai. Dono saath chalao."
-          },
-          "fix": {
-            "en": "One arm is much lower. Raise both arms together.",
-            "hi": "Ek haath bahut neeche hai. Dono haath saath uthao."
-          },
-          "good": {
-            "en": "Good. Both arms went up together.",
-            "hi": "Badhiya. Dono haath saath uthe."
-          }
-        },
-        "good": [
-          0,
-          12
-        ],
-        "id": "even",
-        "joint": "shoulder",
-        "label": "Both arms",
-        "measure": "side_difference",
-        "min_visibility": 0.7,
         "robust": "median"
       }
     ],
@@ -357,23 +302,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          80,
-          100
+          90,
+          110
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "That is enough. Do not pull your back.",
-            "hi": "Itna hi kaafi hai. Back ko kheencho mat."
+            "en": "Crunch further so your abs do the work.",
+            "hi": "Aur crunch karo taaki abs kaam karein."
           },
           "almost": {
             "en": "Crunch further, bring your ribs to your hips.",
             "hi": "Aur crunch karo, ribs ko hips ke paas lao."
           },
           "below": {
-            "en": "Crunch further so your abs do the work.",
-            "hi": "Aur crunch karo taaki abs kaam karein."
+            "en": "That is enough. Do not pull your back.",
+            "hi": "Itna hi kaafi hai. Back ko kheencho mat."
           },
           "fix": {
             "en": "Crunch further, bring your ribs to your hips.",
@@ -385,8 +330,8 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          20,
-          80
+          25,
+          90
         ],
         "id": "range",
         "joint": "hip",
@@ -433,6 +378,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -452,7 +401,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -478,6 +427,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "hip",
       "origin": "shoulder",
       "point": "knee"
@@ -527,19 +477,19 @@ export const RUBRICS: Record<string, Rubric> = {
       },
       {
         "almost": [
-          95,
-          110
+          125,
+          145
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
-          "almost": {
+          "above": {
             "en": "Push your hips further back to feel the stretch.",
             "hi": "Hips aur peeche le jao taaki stretch mehsoos ho."
           },
-          "below": {
-            "en": "Do not squat it. Keep a small bend in the knee.",
-            "hi": "Squat mat karo. Knee mein halka bend rakho."
+          "almost": {
+            "en": "Push your hips further back to feel the stretch.",
+            "hi": "Hips aur peeche le jao taaki stretch mehsoos ho."
           },
           "fix": {
             "en": "Push your hips further back to feel the stretch.",
@@ -551,19 +501,19 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          110,
-          165
+          65,
+          125
         ],
         "id": "stretch",
-        "joint": "knee",
-        "label": "Stretch",
+        "joint": "hip",
+        "label": "Hinge",
         "min_visibility": 0.55,
         "robust": "min_of_3"
       },
       {
         "almost": [
-          145,
-          160
+          140,
+          155
         ],
         "at": "lockout",
         "capture": "in_plane",
@@ -582,11 +532,11 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          160,
+          155,
           180
         ],
         "id": "lockout",
-        "joint": "knee",
+        "joint": "hip",
         "label": "Standing",
         "min_visibility": 0.6,
         "robust": "max"
@@ -599,6 +549,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -618,7 +572,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          4.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -643,11 +597,10 @@ export const RUBRICS: Record<string, Rubric> = {
       "hi": "Seedhe khade ho, phir back flat rakhte hue hips peeche le jao."
     },
     "track": {
-      "axis": "distance",
-      "eccentric": "return",
-      "joint": "knee",
-      "origin": "ankle",
-      "point": "hip"
+      "axis": "angle",
+      "joint": "hip",
+      "origin": "shoulder",
+      "point": "knee"
     },
     "validated": false,
     "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
@@ -662,23 +615,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          70,
-          95
+          75,
+          100
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not swing that high. Stop before your elbow pinches.",
-            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
+            "en": "Curl higher, squeeze at the top.",
+            "hi": "Aur upar karo, upar squeeze karo."
           },
           "almost": {
             "en": "Curl higher before you lower.",
             "hi": "Neeche laane se pehle aur upar karo."
           },
           "below": {
-            "en": "Curl higher, squeeze at the top.",
-            "hi": "Aur upar karo, upar squeeze karo."
+            "en": "Do not swing that high. Stop before your elbow pinches.",
+            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
           },
           "fix": {
             "en": "Curl higher before you lower.",
@@ -691,7 +644,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          70
+          75
         ],
         "id": "range",
         "joint": "elbow",
@@ -770,6 +723,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -789,7 +746,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -909,6 +866,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -928,7 +889,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -986,7 +947,6 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "angle",
-      "eccentric": "return",
       "invert": true,
       "joint": "shoulder",
       "origin": "shoulder",
@@ -1005,23 +965,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          70,
-          95
+          75,
+          100
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not swing that high. Stop before your elbow pinches.",
-            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
+            "en": "Curl higher, squeeze at the top.",
+            "hi": "Aur upar karo, upar squeeze karo."
           },
           "almost": {
             "en": "Curl higher before you lower.",
             "hi": "Neeche laane se pehle aur upar karo."
           },
           "below": {
-            "en": "Curl higher, squeeze at the top.",
-            "hi": "Aur upar karo, upar squeeze karo."
+            "en": "Do not swing that high. Stop before your elbow pinches.",
+            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
           },
           "fix": {
             "en": "Curl higher before you lower.",
@@ -1034,7 +994,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          70
+          75
         ],
         "id": "range",
         "joint": "elbow",
@@ -1075,44 +1035,16 @@ export const RUBRICS: Record<string, Rubric> = {
       },
       {
         "almost": [
-          12,
-          22
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "You are swinging your body. Keep your back still and curl.",
-            "hi": "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."
-          },
-          "fix": {
-            "en": "You are swinging your body. Keep your back still and curl.",
-            "hi": "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."
-          },
-          "good": {
-            "en": "Good. Your body stayed still.",
-            "hi": "Badhiya. Aapka shareer sthir raha."
-          }
-        },
-        "good": [
-          0,
-          12
-        ],
-        "id": "lean",
-        "joint": "torso",
-        "label": "Body",
-        "measure": "torso_lean",
-        "min_visibility": 0.6,
-        "robust": "median"
-      },
-      {
-        "almost": [
           0.45,
           0.9
         ],
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -1132,7 +1064,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -1176,23 +1108,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          80,
-          100
+          90,
+          110
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "That is enough. Do not pull your back.",
-            "hi": "Itna hi kaafi hai. Back ko kheencho mat."
+            "en": "Crunch further so your abs do the work.",
+            "hi": "Aur crunch karo taaki abs kaam karein."
           },
           "almost": {
             "en": "Crunch further, bring your ribs to your hips.",
             "hi": "Aur crunch karo, ribs ko hips ke paas lao."
           },
           "below": {
-            "en": "Crunch further so your abs do the work.",
-            "hi": "Aur crunch karo taaki abs kaam karein."
+            "en": "That is enough. Do not pull your back.",
+            "hi": "Itna hi kaafi hai. Back ko kheencho mat."
           },
           "fix": {
             "en": "Crunch further, bring your ribs to your hips.",
@@ -1204,8 +1136,8 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          20,
-          80
+          25,
+          90
         ],
         "id": "range",
         "joint": "hip",
@@ -1252,6 +1184,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -1271,7 +1207,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -1297,6 +1233,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "hip",
       "origin": "shoulder",
       "point": "knee"
@@ -1390,6 +1327,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -1409,7 +1350,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -1467,7 +1408,6 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "angle",
-      "eccentric": "return",
       "invert": true,
       "joint": "shoulder",
       "origin": "shoulder",
@@ -1486,23 +1426,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          75,
-          95
+          85,
+          105
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not pull past your body. Stop when the elbow is behind you.",
-            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+            "en": "Pull further, all the way in.",
+            "hi": "Aur kheencho, poora andar tak."
           },
           "almost": {
             "en": "Pull further. Bring the weight all the way in.",
             "hi": "Aur kheencho. Weight poora andar lao."
           },
           "below": {
-            "en": "Pull further, all the way in.",
-            "hi": "Aur kheencho, poora andar tak."
+            "en": "Do not pull past your body. Stop when the elbow is behind you.",
+            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
           },
           "fix": {
             "en": "Pull further. Bring the weight all the way in.",
@@ -1515,7 +1455,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          75
+          85
         ],
         "id": "range",
         "joint": "elbow",
@@ -1594,6 +1534,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -1613,7 +1557,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -1671,6 +1615,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -1695,29 +1640,29 @@ export const RUBRICS: Record<string, Rubric> = {
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Not above the shoulder. Stop at shoulder height.",
-            "hi": "Kandhe se zyada upar nahi. Kandhe tak hi ruko."
+            "en": "Lower slightly if your shoulder pinches.",
+            "hi": "Agar kandhe mein dabav lage toh thoda kam uthao."
           },
           "almost": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "below": {
             "en": "Lift higher, up to shoulder height.",
             "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "fix": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "good": {
-            "en": "Good. You raised to shoulder height.",
-            "hi": "Badhiya. Kandhe ki height tak uthaya."
+            "en": "Good. You raised to full height.",
+            "hi": "Badhiya. Poori height tak uthaya."
           }
         },
         "good": [
           75,
-          105
+          115
         ],
         "id": "range",
         "joint": "shoulder",
@@ -1733,6 +1678,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -1752,7 +1701,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -1829,10 +1778,10 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          80,
-          100
+          130,
+          145
         ],
-        "at": "bottom",
+        "at": "lockout",
         "capture": "in_plane",
         "cue": {
           "almost": {
@@ -1840,8 +1789,8 @@ export const RUBRICS: Record<string, Rubric> = {
             "hi": "Haath poore seedhe karo."
           },
           "below": {
-            "en": "Do not hyperextend. Stop when the arm is straight.",
-            "hi": "Seedhe se zyada nahi. Seedha hote hi ruko."
+            "en": "Straighten your arms all the way.",
+            "hi": "Haath poore seedhe karo."
           },
           "fix": {
             "en": "Straighten your arms all the way.",
@@ -1853,30 +1802,34 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          20,
-          80
+          145,
+          180
         ],
         "id": "range",
         "joint": "elbow",
-        "label": "Range",
+        "label": "Lockout",
         "min_visibility": 0.55,
-        "robust": "min_of_3"
+        "robust": "max"
       },
       {
         "almost": [
-          110,
-          130
+          95,
+          115
         ],
-        "at": "lockout",
+        "at": "bottom",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+          },
           "almost": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "fix": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "good": {
             "en": "Good. You let the elbow close fully.",
@@ -1884,46 +1837,14 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          40,
-          110
+          35,
+          95
         ],
         "id": "stretch",
         "joint": "elbow",
         "label": "Stretch",
         "min_visibility": 0.6,
-        "robust": "max"
-      },
-      {
-        "almost": [
-          18,
-          30
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "You are leaning into it. Keep your body still.",
-            "hi": "Aap shareer se dhakel rahe hain. Shareer sthir rakho."
-          },
-          "fix": {
-            "en": "You are leaning into it. Keep your body still.",
-            "hi": "Aap shareer se dhakel rahe hain. Shareer sthir rakho."
-          },
-          "good": {
-            "en": "Good. Your body stayed still.",
-            "hi": "Badhiya. Aapka shareer sthir raha."
-          }
-        },
-        "good": [
-          0,
-          18
-        ],
-        "id": "lean",
-        "joint": "torso",
-        "label": "Body",
-        "measure": "torso_lean",
-        "min_visibility": 0.6,
-        "robust": "median"
+        "robust": "min_of_3"
       },
       {
         "almost": [
@@ -1933,6 +1854,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -1952,7 +1877,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -1978,7 +1903,6 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
-      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -1996,10 +1920,10 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          80,
-          100
+          130,
+          145
         ],
-        "at": "bottom",
+        "at": "lockout",
         "capture": "in_plane",
         "cue": {
           "almost": {
@@ -2007,8 +1931,8 @@ export const RUBRICS: Record<string, Rubric> = {
             "hi": "Haath poore seedhe karo."
           },
           "below": {
-            "en": "Do not hyperextend. Stop when the arm is straight.",
-            "hi": "Seedhe se zyada nahi. Seedha hote hi ruko."
+            "en": "Straighten your arms all the way.",
+            "hi": "Haath poore seedhe karo."
           },
           "fix": {
             "en": "Straighten your arms all the way.",
@@ -2020,30 +1944,34 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          20,
-          80
+          145,
+          180
         ],
         "id": "range",
         "joint": "elbow",
-        "label": "Range",
+        "label": "Lockout",
         "min_visibility": 0.55,
-        "robust": "min_of_3"
+        "robust": "max"
       },
       {
         "almost": [
-          110,
-          130
+          95,
+          115
         ],
-        "at": "lockout",
+        "at": "bottom",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+          },
           "almost": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "fix": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "good": {
             "en": "Good. You let the elbow close fully.",
@@ -2051,46 +1979,14 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          40,
-          110
+          35,
+          95
         ],
         "id": "stretch",
         "joint": "elbow",
         "label": "Stretch",
         "min_visibility": 0.6,
-        "robust": "max"
-      },
-      {
-        "almost": [
-          18,
-          30
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "You are leaning into it. Keep your body still.",
-            "hi": "Aap shareer se dhakel rahe hain. Shareer sthir rakho."
-          },
-          "fix": {
-            "en": "You are leaning into it. Keep your body still.",
-            "hi": "Aap shareer se dhakel rahe hain. Shareer sthir rakho."
-          },
-          "good": {
-            "en": "Good. Your body stayed still.",
-            "hi": "Badhiya. Aapka shareer sthir raha."
-          }
-        },
-        "good": [
-          0,
-          18
-        ],
-        "id": "lean",
-        "joint": "torso",
-        "label": "Body",
-        "measure": "torso_lean",
-        "min_visibility": 0.6,
-        "robust": "median"
+        "robust": "min_of_3"
       },
       {
         "almost": [
@@ -2100,6 +1996,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -2119,7 +2019,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -2145,7 +2045,6 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
-      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -2163,23 +2062,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          75,
-          95
+          85,
+          105
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not pull past your body. Stop when the elbow is behind you.",
-            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+            "en": "Pull further, all the way in.",
+            "hi": "Aur kheencho, poora andar tak."
           },
           "almost": {
             "en": "Pull further. Bring the weight all the way in.",
             "hi": "Aur kheencho. Weight poora andar lao."
           },
           "below": {
-            "en": "Pull further, all the way in.",
-            "hi": "Aur kheencho, poora andar tak."
+            "en": "Do not pull past your body. Stop when the elbow is behind you.",
+            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
           },
           "fix": {
             "en": "Pull further. Bring the weight all the way in.",
@@ -2192,7 +2091,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          75
+          85
         ],
         "id": "range",
         "joint": "elbow",
@@ -2233,44 +2132,16 @@ export const RUBRICS: Record<string, Rubric> = {
       },
       {
         "almost": [
-          25,
-          40
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "You are swinging. Keep your body still and pull.",
-            "hi": "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."
-          },
-          "fix": {
-            "en": "You are swinging. Keep your body still and pull.",
-            "hi": "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."
-          },
-          "good": {
-            "en": "Good. Your body stayed still.",
-            "hi": "Badhiya. Aapka shareer sthir raha."
-          }
-        },
-        "good": [
-          0,
-          25
-        ],
-        "id": "lean",
-        "joint": "torso",
-        "label": "Back",
-        "measure": "torso_lean",
-        "min_visibility": 0.6,
-        "robust": "median"
-      },
-      {
-        "almost": [
           0.4,
           0.8
         ],
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -2290,7 +2161,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -2348,6 +2219,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -2365,23 +2237,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          75,
-          95
+          85,
+          105
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not pull past your body. Stop when the elbow is behind you.",
-            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+            "en": "Pull further, all the way in.",
+            "hi": "Aur kheencho, poora andar tak."
           },
           "almost": {
             "en": "Pull further. Bring the weight all the way in.",
             "hi": "Aur kheencho. Weight poora andar lao."
           },
           "below": {
-            "en": "Pull further, all the way in.",
-            "hi": "Aur kheencho, poora andar tak."
+            "en": "Do not pull past your body. Stop when the elbow is behind you.",
+            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
           },
           "fix": {
             "en": "Pull further. Bring the weight all the way in.",
@@ -2394,7 +2266,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          75
+          85
         ],
         "id": "range",
         "joint": "elbow",
@@ -2435,44 +2307,16 @@ export const RUBRICS: Record<string, Rubric> = {
       },
       {
         "almost": [
-          25,
-          40
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "You are swinging. Keep your body still and pull.",
-            "hi": "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."
-          },
-          "fix": {
-            "en": "You are swinging. Keep your body still and pull.",
-            "hi": "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."
-          },
-          "good": {
-            "en": "Good. Your body stayed still.",
-            "hi": "Badhiya. Aapka shareer sthir raha."
-          }
-        },
-        "good": [
-          0,
-          25
-        ],
-        "id": "lean",
-        "joint": "torso",
-        "label": "Back",
-        "measure": "torso_lean",
-        "min_visibility": 0.6,
-        "robust": "median"
-      },
-      {
-        "almost": [
           0.4,
           0.8
         ],
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -2492,7 +2336,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -2550,6 +2394,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -2567,23 +2412,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          75,
-          95
+          85,
+          105
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not pull past your body. Stop when the elbow is behind you.",
-            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+            "en": "Pull further, all the way in.",
+            "hi": "Aur kheencho, poora andar tak."
           },
           "almost": {
             "en": "Pull further. Bring the weight all the way in.",
             "hi": "Aur kheencho. Weight poora andar lao."
           },
           "below": {
-            "en": "Pull further, all the way in.",
-            "hi": "Aur kheencho, poora andar tak."
+            "en": "Do not pull past your body. Stop when the elbow is behind you.",
+            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
           },
           "fix": {
             "en": "Pull further. Bring the weight all the way in.",
@@ -2596,7 +2441,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          75
+          85
         ],
         "id": "range",
         "joint": "elbow",
@@ -2637,44 +2482,16 @@ export const RUBRICS: Record<string, Rubric> = {
       },
       {
         "almost": [
-          25,
-          40
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "You are swinging. Keep your body still and pull.",
-            "hi": "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."
-          },
-          "fix": {
-            "en": "You are swinging. Keep your body still and pull.",
-            "hi": "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."
-          },
-          "good": {
-            "en": "Good. Your body stayed still.",
-            "hi": "Badhiya. Aapka shareer sthir raha."
-          }
-        },
-        "good": [
-          0,
-          25
-        ],
-        "id": "lean",
-        "joint": "torso",
-        "label": "Back",
-        "measure": "torso_lean",
-        "min_visibility": 0.6,
-        "robust": "median"
-      },
-      {
-        "almost": [
           0.4,
           0.8
         ],
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -2694,7 +2511,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -2752,6 +2569,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -2769,23 +2587,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          75,
-          95
+          85,
+          105
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not pull past your body. Stop when the elbow is behind you.",
-            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+            "en": "Pull further, all the way in.",
+            "hi": "Aur kheencho, poora andar tak."
           },
           "almost": {
             "en": "Pull further. Bring the weight all the way in.",
             "hi": "Aur kheencho. Weight poora andar lao."
           },
           "below": {
-            "en": "Pull further, all the way in.",
-            "hi": "Aur kheencho, poora andar tak."
+            "en": "Do not pull past your body. Stop when the elbow is behind you.",
+            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
           },
           "fix": {
             "en": "Pull further. Bring the weight all the way in.",
@@ -2798,7 +2616,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          75
+          85
         ],
         "id": "range",
         "joint": "elbow",
@@ -2877,6 +2695,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -2896,7 +2718,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -2954,6 +2776,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -2971,23 +2794,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          70,
-          95
+          75,
+          100
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not swing that high. Stop before your elbow pinches.",
-            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
+            "en": "Curl higher, squeeze at the top.",
+            "hi": "Aur upar karo, upar squeeze karo."
           },
           "almost": {
             "en": "Curl higher before you lower.",
             "hi": "Neeche laane se pehle aur upar karo."
           },
           "below": {
-            "en": "Curl higher, squeeze at the top.",
-            "hi": "Aur upar karo, upar squeeze karo."
+            "en": "Do not swing that high. Stop before your elbow pinches.",
+            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
           },
           "fix": {
             "en": "Curl higher before you lower.",
@@ -3000,7 +2823,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          70
+          75
         ],
         "id": "range",
         "joint": "elbow",
@@ -3041,44 +2864,16 @@ export const RUBRICS: Record<string, Rubric> = {
       },
       {
         "almost": [
-          12,
-          22
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "You are swinging your body. Keep your back still and curl.",
-            "hi": "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."
-          },
-          "fix": {
-            "en": "You are swinging your body. Keep your back still and curl.",
-            "hi": "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."
-          },
-          "good": {
-            "en": "Good. Your body stayed still.",
-            "hi": "Badhiya. Aapka shareer sthir raha."
-          }
-        },
-        "good": [
-          0,
-          12
-        ],
-        "id": "lean",
-        "joint": "torso",
-        "label": "Body",
-        "measure": "torso_lean",
-        "min_visibility": 0.6,
-        "robust": "median"
-      },
-      {
-        "almost": [
           0.45,
           0.9
         ],
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -3098,7 +2893,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -3149,29 +2944,29 @@ export const RUBRICS: Record<string, Rubric> = {
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Not above the shoulder. Stop at shoulder height.",
-            "hi": "Kandhe se zyada upar nahi. Kandhe tak hi ruko."
+            "en": "Lower slightly if your shoulder pinches.",
+            "hi": "Agar kandhe mein dabav lage toh thoda kam uthao."
           },
           "almost": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "below": {
             "en": "Lift higher, up to shoulder height.",
             "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "fix": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "good": {
-            "en": "Good. You raised to shoulder height.",
-            "hi": "Badhiya. Kandhe ki height tak uthaya."
+            "en": "Good. You raised to full height.",
+            "hi": "Badhiya. Poori height tak uthaya."
           }
         },
         "good": [
           75,
-          105
+          165
         ],
         "id": "range",
         "joint": "shoulder",
@@ -3187,6 +2982,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -3206,43 +3005,11 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
         "measure": "eccentric_seconds",
-        "robust": "median"
-      },
-      {
-        "almost": [
-          12,
-          20
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "One side is a little behind. Move them together.",
-            "hi": "Ek side thoda peeche hai. Dono saath chalao."
-          },
-          "fix": {
-            "en": "One arm is much lower. Raise both arms together.",
-            "hi": "Ek haath bahut neeche hai. Dono haath saath uthao."
-          },
-          "good": {
-            "en": "Good. Both arms went up together.",
-            "hi": "Badhiya. Dono haath saath uthe."
-          }
-        },
-        "good": [
-          0,
-          12
-        ],
-        "id": "even",
-        "joint": "shoulder",
-        "label": "Both arms",
-        "measure": "side_difference",
-        "min_visibility": 0.7,
         "robust": "median"
       }
     ],
@@ -3283,23 +3050,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          75,
-          95
+          85,
+          105
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not pull past your body. Stop when the elbow is behind you.",
-            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+            "en": "Pull further, all the way in.",
+            "hi": "Aur kheencho, poora andar tak."
           },
           "almost": {
             "en": "Pull further. Bring the weight all the way in.",
             "hi": "Aur kheencho. Weight poora andar lao."
           },
           "below": {
-            "en": "Pull further, all the way in.",
-            "hi": "Aur kheencho, poora andar tak."
+            "en": "Do not pull past your body. Stop when the elbow is behind you.",
+            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
           },
           "fix": {
             "en": "Pull further. Bring the weight all the way in.",
@@ -3312,7 +3079,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          75
+          85
         ],
         "id": "range",
         "joint": "elbow",
@@ -3391,6 +3158,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -3410,43 +3181,11 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
         "measure": "eccentric_seconds",
-        "robust": "median"
-      },
-      {
-        "almost": [
-          12,
-          20
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "One side is a little behind. Move them together.",
-            "hi": "Ek side thoda peeche hai. Dono saath chalao."
-          },
-          "fix": {
-            "en": "One arm is doing less. Pull with both evenly.",
-            "hi": "Ek haath kam kar raha hai. Dono se barabar kheencho."
-          },
-          "good": {
-            "en": "Good. Both arms pulled together.",
-            "hi": "Badhiya. Dono haath saath khinche."
-          }
-        },
-        "good": [
-          0,
-          12
-        ],
-        "id": "even",
-        "joint": "elbow",
-        "label": "Both arms",
-        "measure": "side_difference",
-        "min_visibility": 0.7,
         "robust": "median"
       }
     ],
@@ -3468,6 +3207,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -3492,29 +3232,29 @@ export const RUBRICS: Record<string, Rubric> = {
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Not above the shoulder. Stop at shoulder height.",
-            "hi": "Kandhe se zyada upar nahi. Kandhe tak hi ruko."
+            "en": "Lower slightly if your shoulder pinches.",
+            "hi": "Agar kandhe mein dabav lage toh thoda kam uthao."
           },
           "almost": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "below": {
             "en": "Lift higher, up to shoulder height.",
             "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "fix": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "good": {
-            "en": "Good. You raised to shoulder height.",
-            "hi": "Badhiya. Kandhe ki height tak uthaya."
+            "en": "Good. You raised to full height.",
+            "hi": "Badhiya. Poori height tak uthaya."
           }
         },
         "good": [
           75,
-          105
+          115
         ],
         "id": "range",
         "joint": "shoulder",
@@ -3530,6 +3270,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -3549,43 +3293,11 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
         "measure": "eccentric_seconds",
-        "robust": "median"
-      },
-      {
-        "almost": [
-          12,
-          20
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "One side is a little behind. Move them together.",
-            "hi": "Ek side thoda peeche hai. Dono saath chalao."
-          },
-          "fix": {
-            "en": "One arm is much lower. Raise both arms together.",
-            "hi": "Ek haath bahut neeche hai. Dono haath saath uthao."
-          },
-          "good": {
-            "en": "Good. Both arms went up together.",
-            "hi": "Badhiya. Dono haath saath uthe."
-          }
-        },
-        "good": [
-          0,
-          12
-        ],
-        "id": "even",
-        "joint": "shoulder",
-        "label": "Both arms",
-        "measure": "side_difference",
-        "min_visibility": 0.7,
         "robust": "median"
       }
     ],
@@ -3877,6 +3589,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -3896,7 +3612,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -3971,22 +3687,22 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          105,
-          120
+          98,
+          110
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
-          "above": {
-            "en": "That is high enough. Do not roll your ankle.",
-            "hi": "Itna hi kaafi hai. Ankle mat mudo."
-          },
           "almost": {
-            "en": "Push up higher onto your toes.",
+            "en": "Rise higher onto your toes.",
+            "hi": "Aur upar aao, toes par."
+          },
+          "below": {
+            "en": "Rise higher onto your toes.",
             "hi": "Aur upar aao, toes par."
           },
           "fix": {
-            "en": "Push up higher onto your toes.",
+            "en": "Rise higher onto your toes.",
             "hi": "Aur upar aao, toes par."
           },
           "good": {
@@ -3995,30 +3711,34 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          60,
-          105
+          110,
+          165
         ],
         "id": "range",
         "joint": "ankle",
         "label": "Range",
         "min_visibility": 0.55,
-        "robust": "min_of_3"
+        "robust": "max"
       },
       {
         "almost": [
-          40,
-          60
+          100,
+          112
         ],
         "at": "lockout",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Drop your heels lower for a full stretch.",
+            "hi": "Heel ko aur neeche jaane do, stretch ke liye."
+          },
           "almost": {
-            "en": "Let your heel drop below the step for a stretch.",
-            "hi": "Heel ko step se neeche jaane do, stretch ke liye."
+            "en": "Drop your heels lower for a full stretch.",
+            "hi": "Heel ko aur neeche jaane do, stretch ke liye."
           },
           "fix": {
-            "en": "Let your heel drop below the step for a stretch.",
-            "hi": "Heel ko step se neeche jaane do, stretch ke liye."
+            "en": "Drop your heels lower for a full stretch.",
+            "hi": "Heel ko aur neeche jaane do, stretch ke liye."
           },
           "good": {
             "en": "Good. You let the heel drop fully.",
@@ -4026,14 +3746,14 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          60,
-          105
+          55,
+          100
         ],
         "id": "stretch",
         "joint": "ankle",
         "label": "Stretch",
         "min_visibility": 0.6,
-        "robust": "max"
+        "robust": "min_of_3"
       },
       {
         "almost": [
@@ -4043,6 +3763,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -4062,7 +3786,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -4088,6 +3812,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "angle",
+      "eccentric": "return",
       "invert": true,
       "joint": "ankle",
       "origin": "knee",
@@ -4214,6 +3939,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -4233,7 +3962,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -4384,6 +4113,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -4403,7 +4136,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -4582,6 +4315,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -4601,7 +4338,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -4644,10 +4381,10 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          80,
-          100
+          130,
+          145
         ],
-        "at": "bottom",
+        "at": "lockout",
         "capture": "in_plane",
         "cue": {
           "almost": {
@@ -4655,8 +4392,8 @@ export const RUBRICS: Record<string, Rubric> = {
             "hi": "Haath poore seedhe karo."
           },
           "below": {
-            "en": "Do not hyperextend. Stop when the arm is straight.",
-            "hi": "Seedhe se zyada nahi. Seedha hote hi ruko."
+            "en": "Straighten your arms all the way.",
+            "hi": "Haath poore seedhe karo."
           },
           "fix": {
             "en": "Straighten your arms all the way.",
@@ -4668,30 +4405,34 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          20,
-          80
+          145,
+          180
         ],
         "id": "range",
         "joint": "elbow",
-        "label": "Range",
+        "label": "Lockout",
         "min_visibility": 0.55,
-        "robust": "min_of_3"
+        "robust": "max"
       },
       {
         "almost": [
-          110,
-          130
+          95,
+          115
         ],
-        "at": "lockout",
+        "at": "bottom",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+          },
           "almost": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "fix": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "good": {
             "en": "Good. You let the elbow close fully.",
@@ -4699,14 +4440,14 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          40,
-          110
+          35,
+          95
         ],
         "id": "stretch",
         "joint": "elbow",
         "label": "Stretch",
         "min_visibility": 0.6,
-        "robust": "max"
+        "robust": "min_of_3"
       },
       {
         "almost": [
@@ -4748,6 +4489,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -4767,7 +4512,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -4793,7 +4538,6 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
-      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -4811,23 +4555,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          75,
-          95
+          85,
+          105
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not pull past your body. Stop when the elbow is behind you.",
-            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+            "en": "Pull further, all the way in.",
+            "hi": "Aur kheencho, poora andar tak."
           },
           "almost": {
             "en": "Pull further. Bring the weight all the way in.",
             "hi": "Aur kheencho. Weight poora andar lao."
           },
           "below": {
-            "en": "Pull further, all the way in.",
-            "hi": "Aur kheencho, poora andar tak."
+            "en": "Do not pull past your body. Stop when the elbow is behind you.",
+            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
           },
           "fix": {
             "en": "Pull further. Bring the weight all the way in.",
@@ -4840,7 +4584,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          75
+          85
         ],
         "id": "range",
         "joint": "elbow",
@@ -4919,6 +4663,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -4938,7 +4686,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -4996,6 +4744,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -5013,23 +4762,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          70,
-          95
+          75,
+          100
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not swing that high. Stop before your elbow pinches.",
-            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
+            "en": "Curl higher, squeeze at the top.",
+            "hi": "Aur upar karo, upar squeeze karo."
           },
           "almost": {
             "en": "Curl higher before you lower.",
             "hi": "Neeche laane se pehle aur upar karo."
           },
           "below": {
-            "en": "Curl higher, squeeze at the top.",
-            "hi": "Aur upar karo, upar squeeze karo."
+            "en": "Do not swing that high. Stop before your elbow pinches.",
+            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
           },
           "fix": {
             "en": "Curl higher before you lower.",
@@ -5042,7 +4791,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          70
+          75
         ],
         "id": "range",
         "joint": "elbow",
@@ -5121,6 +4870,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -5140,7 +4893,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -5184,10 +4937,10 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          80,
-          100
+          130,
+          145
         ],
-        "at": "bottom",
+        "at": "lockout",
         "capture": "in_plane",
         "cue": {
           "almost": {
@@ -5195,8 +4948,8 @@ export const RUBRICS: Record<string, Rubric> = {
             "hi": "Haath poore seedhe karo."
           },
           "below": {
-            "en": "Do not hyperextend. Stop when the arm is straight.",
-            "hi": "Seedhe se zyada nahi. Seedha hote hi ruko."
+            "en": "Straighten your arms all the way.",
+            "hi": "Haath poore seedhe karo."
           },
           "fix": {
             "en": "Straighten your arms all the way.",
@@ -5208,30 +4961,34 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          20,
-          80
+          145,
+          180
         ],
         "id": "range",
         "joint": "elbow",
-        "label": "Range",
+        "label": "Lockout",
         "min_visibility": 0.55,
-        "robust": "min_of_3"
+        "robust": "max"
       },
       {
         "almost": [
-          110,
-          130
+          95,
+          115
         ],
-        "at": "lockout",
+        "at": "bottom",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+          },
           "almost": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "fix": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "good": {
             "en": "Good. You let the elbow close fully.",
@@ -5239,46 +4996,14 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          40,
-          110
+          35,
+          95
         ],
         "id": "stretch",
         "joint": "elbow",
         "label": "Stretch",
         "min_visibility": 0.6,
-        "robust": "max"
-      },
-      {
-        "almost": [
-          18,
-          30
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "You are leaning into it. Keep your body still.",
-            "hi": "Aap shareer se dhakel rahe hain. Shareer sthir rakho."
-          },
-          "fix": {
-            "en": "You are leaning into it. Keep your body still.",
-            "hi": "Aap shareer se dhakel rahe hain. Shareer sthir rakho."
-          },
-          "good": {
-            "en": "Good. Your body stayed still.",
-            "hi": "Badhiya. Aapka shareer sthir raha."
-          }
-        },
-        "good": [
-          0,
-          18
-        ],
-        "id": "lean",
-        "joint": "torso",
-        "label": "Body",
-        "measure": "torso_lean",
-        "min_visibility": 0.6,
-        "robust": "median"
+        "robust": "min_of_3"
       },
       {
         "almost": [
@@ -5288,6 +5013,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -5307,7 +5036,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -5333,7 +5062,6 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
-      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -5351,17 +5079,17 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          8,
-          15
+          155,
+          168
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
-          "almost": {
+          "above": {
             "en": "Move further out to the side.",
             "hi": "Side mein aur door le jao."
           },
-          "below": {
+          "almost": {
             "en": "Move further out to the side.",
             "hi": "Side mein aur door le jao."
           },
@@ -5375,8 +5103,8 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          15,
-          70
+          90,
+          155
         ],
         "id": "range",
         "joint": "hip",
@@ -5392,6 +5120,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -5411,7 +5143,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          4.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -5437,6 +5169,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "angle",
+      "eccentric": "return",
       "joint": "hip",
       "origin": "shoulder",
       "point": "knee"
@@ -5659,23 +5392,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          70,
-          95
+          75,
+          100
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not swing that high. Stop before your elbow pinches.",
-            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
+            "en": "Curl higher, squeeze at the top.",
+            "hi": "Aur upar karo, upar squeeze karo."
           },
           "almost": {
             "en": "Curl higher before you lower.",
             "hi": "Neeche laane se pehle aur upar karo."
           },
           "below": {
-            "en": "Curl higher, squeeze at the top.",
-            "hi": "Aur upar karo, upar squeeze karo."
+            "en": "Do not swing that high. Stop before your elbow pinches.",
+            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
           },
           "fix": {
             "en": "Curl higher before you lower.",
@@ -5688,7 +5421,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          70
+          75
         ],
         "id": "range",
         "joint": "elbow",
@@ -5767,6 +5500,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -5786,7 +5523,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -5830,23 +5567,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          70,
-          95
+          75,
+          100
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not swing that high. Stop before your elbow pinches.",
-            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
+            "en": "Curl higher, squeeze at the top.",
+            "hi": "Aur upar karo, upar squeeze karo."
           },
           "almost": {
             "en": "Curl higher before you lower.",
             "hi": "Neeche laane se pehle aur upar karo."
           },
           "below": {
-            "en": "Curl higher, squeeze at the top.",
-            "hi": "Aur upar karo, upar squeeze karo."
+            "en": "Do not swing that high. Stop before your elbow pinches.",
+            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
           },
           "fix": {
             "en": "Curl higher before you lower.",
@@ -5859,7 +5596,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          70
+          75
         ],
         "id": "range",
         "joint": "elbow",
@@ -5900,44 +5637,16 @@ export const RUBRICS: Record<string, Rubric> = {
       },
       {
         "almost": [
-          12,
-          22
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "You are swinging your body. Keep your back still and curl.",
-            "hi": "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."
-          },
-          "fix": {
-            "en": "You are swinging your body. Keep your back still and curl.",
-            "hi": "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."
-          },
-          "good": {
-            "en": "Good. Your body stayed still.",
-            "hi": "Badhiya. Aapka shareer sthir raha."
-          }
-        },
-        "good": [
-          0,
-          12
-        ],
-        "id": "lean",
-        "joint": "torso",
-        "label": "Body",
-        "measure": "torso_lean",
-        "min_visibility": 0.6,
-        "robust": "median"
-      },
-      {
-        "almost": [
           0.45,
           0.9
         ],
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -5957,7 +5666,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -6001,23 +5710,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          70,
-          95
+          75,
+          100
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not swing that high. Stop before your elbow pinches.",
-            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
+            "en": "Curl higher, squeeze at the top.",
+            "hi": "Aur upar karo, upar squeeze karo."
           },
           "almost": {
             "en": "Curl higher before you lower.",
             "hi": "Neeche laane se pehle aur upar karo."
           },
           "below": {
-            "en": "Curl higher, squeeze at the top.",
-            "hi": "Aur upar karo, upar squeeze karo."
+            "en": "Do not swing that high. Stop before your elbow pinches.",
+            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
           },
           "fix": {
             "en": "Curl higher before you lower.",
@@ -6030,7 +5739,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          70
+          75
         ],
         "id": "range",
         "joint": "elbow",
@@ -6071,44 +5780,16 @@ export const RUBRICS: Record<string, Rubric> = {
       },
       {
         "almost": [
-          12,
-          22
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "You are swinging your body. Keep your back still and curl.",
-            "hi": "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."
-          },
-          "fix": {
-            "en": "You are swinging your body. Keep your back still and curl.",
-            "hi": "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."
-          },
-          "good": {
-            "en": "Good. Your body stayed still.",
-            "hi": "Badhiya. Aapka shareer sthir raha."
-          }
-        },
-        "good": [
-          0,
-          12
-        ],
-        "id": "lean",
-        "joint": "torso",
-        "label": "Body",
-        "measure": "torso_lean",
-        "min_visibility": 0.6,
-        "robust": "median"
-      },
-      {
-        "almost": [
           0.45,
           0.9
         ],
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -6128,7 +5809,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -6179,29 +5860,29 @@ export const RUBRICS: Record<string, Rubric> = {
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Not above the shoulder. Stop at shoulder height.",
-            "hi": "Kandhe se zyada upar nahi. Kandhe tak hi ruko."
+            "en": "Lower slightly if your shoulder pinches.",
+            "hi": "Agar kandhe mein dabav lage toh thoda kam uthao."
           },
           "almost": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "below": {
             "en": "Lift higher, up to shoulder height.",
             "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "fix": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "good": {
-            "en": "Good. You raised to shoulder height.",
-            "hi": "Badhiya. Kandhe ki height tak uthaya."
+            "en": "Good. You raised to full height.",
+            "hi": "Badhiya. Poori height tak uthaya."
           }
         },
         "good": [
           75,
-          105
+          165
         ],
         "id": "range",
         "joint": "shoulder",
@@ -6217,6 +5898,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -6236,7 +5921,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -6313,23 +5998,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          70,
-          95
+          75,
+          100
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not swing that high. Stop before your elbow pinches.",
-            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
+            "en": "Curl higher, squeeze at the top.",
+            "hi": "Aur upar karo, upar squeeze karo."
           },
           "almost": {
             "en": "Curl higher before you lower.",
             "hi": "Neeche laane se pehle aur upar karo."
           },
           "below": {
-            "en": "Curl higher, squeeze at the top.",
-            "hi": "Aur upar karo, upar squeeze karo."
+            "en": "Do not swing that high. Stop before your elbow pinches.",
+            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
           },
           "fix": {
             "en": "Curl higher before you lower.",
@@ -6342,7 +6027,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          70
+          75
         ],
         "id": "range",
         "joint": "elbow",
@@ -6421,6 +6106,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -6440,7 +6129,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -6484,10 +6173,10 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          80,
-          100
+          130,
+          145
         ],
-        "at": "bottom",
+        "at": "lockout",
         "capture": "in_plane",
         "cue": {
           "almost": {
@@ -6495,8 +6184,8 @@ export const RUBRICS: Record<string, Rubric> = {
             "hi": "Haath poore seedhe karo."
           },
           "below": {
-            "en": "Do not hyperextend. Stop when the arm is straight.",
-            "hi": "Seedhe se zyada nahi. Seedha hote hi ruko."
+            "en": "Straighten your arms all the way.",
+            "hi": "Haath poore seedhe karo."
           },
           "fix": {
             "en": "Straighten your arms all the way.",
@@ -6508,30 +6197,34 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          20,
-          80
+          145,
+          180
         ],
         "id": "range",
         "joint": "elbow",
-        "label": "Range",
+        "label": "Lockout",
         "min_visibility": 0.55,
-        "robust": "min_of_3"
+        "robust": "max"
       },
       {
         "almost": [
-          110,
-          130
+          95,
+          115
         ],
-        "at": "lockout",
+        "at": "bottom",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+          },
           "almost": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "fix": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "good": {
             "en": "Good. You let the elbow close fully.",
@@ -6539,14 +6232,14 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          40,
-          110
+          35,
+          95
         ],
         "id": "stretch",
         "joint": "elbow",
         "label": "Stretch",
         "min_visibility": 0.6,
-        "robust": "max"
+        "robust": "min_of_3"
       },
       {
         "almost": [
@@ -6588,6 +6281,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -6607,7 +6304,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -6633,7 +6330,6 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
-      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -6651,23 +6347,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          70,
-          95
+          75,
+          100
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not swing that high. Stop before your elbow pinches.",
-            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
+            "en": "Curl higher, squeeze at the top.",
+            "hi": "Aur upar karo, upar squeeze karo."
           },
           "almost": {
             "en": "Curl higher before you lower.",
             "hi": "Neeche laane se pehle aur upar karo."
           },
           "below": {
-            "en": "Curl higher, squeeze at the top.",
-            "hi": "Aur upar karo, upar squeeze karo."
+            "en": "Do not swing that high. Stop before your elbow pinches.",
+            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
           },
           "fix": {
             "en": "Curl higher before you lower.",
@@ -6680,7 +6376,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          70
+          75
         ],
         "id": "range",
         "joint": "elbow",
@@ -6759,6 +6455,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -6778,7 +6478,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -6822,23 +6522,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          75,
-          95
+          85,
+          105
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not pull past your body. Stop when the elbow is behind you.",
-            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+            "en": "Pull further, all the way in.",
+            "hi": "Aur kheencho, poora andar tak."
           },
           "almost": {
             "en": "Pull further. Bring the weight all the way in.",
             "hi": "Aur kheencho. Weight poora andar lao."
           },
           "below": {
-            "en": "Pull further, all the way in.",
-            "hi": "Aur kheencho, poora andar tak."
+            "en": "Do not pull past your body. Stop when the elbow is behind you.",
+            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
           },
           "fix": {
             "en": "Pull further. Bring the weight all the way in.",
@@ -6851,7 +6551,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          75
+          85
         ],
         "id": "range",
         "joint": "elbow",
@@ -6930,6 +6630,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -6949,7 +6653,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -7007,6 +6711,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -7024,23 +6729,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          75,
-          95
+          85,
+          105
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not pull past your body. Stop when the elbow is behind you.",
-            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+            "en": "Pull further, all the way in.",
+            "hi": "Aur kheencho, poora andar tak."
           },
           "almost": {
             "en": "Pull further. Bring the weight all the way in.",
             "hi": "Aur kheencho. Weight poora andar lao."
           },
           "below": {
-            "en": "Pull further, all the way in.",
-            "hi": "Aur kheencho, poora andar tak."
+            "en": "Do not pull past your body. Stop when the elbow is behind you.",
+            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
           },
           "fix": {
             "en": "Pull further. Bring the weight all the way in.",
@@ -7053,7 +6758,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          75
+          85
         ],
         "id": "range",
         "joint": "elbow",
@@ -7094,44 +6799,16 @@ export const RUBRICS: Record<string, Rubric> = {
       },
       {
         "almost": [
-          25,
-          40
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "You are swinging. Keep your body still and pull.",
-            "hi": "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."
-          },
-          "fix": {
-            "en": "You are swinging. Keep your body still and pull.",
-            "hi": "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."
-          },
-          "good": {
-            "en": "Good. Your body stayed still.",
-            "hi": "Badhiya. Aapka shareer sthir raha."
-          }
-        },
-        "good": [
-          0,
-          25
-        ],
-        "id": "lean",
-        "joint": "torso",
-        "label": "Back",
-        "measure": "torso_lean",
-        "min_visibility": 0.6,
-        "robust": "median"
-      },
-      {
-        "almost": [
           0.4,
           0.8
         ],
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -7151,7 +6828,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -7209,6 +6886,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -7298,6 +6976,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -7317,7 +6999,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -7432,6 +7114,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -7451,7 +7137,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -7494,22 +7180,22 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          105,
-          120
+          98,
+          110
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
-          "above": {
-            "en": "That is high enough. Do not roll your ankle.",
-            "hi": "Itna hi kaafi hai. Ankle mat mudo."
-          },
           "almost": {
-            "en": "Push up higher onto your toes.",
+            "en": "Rise higher onto your toes.",
+            "hi": "Aur upar aao, toes par."
+          },
+          "below": {
+            "en": "Rise higher onto your toes.",
             "hi": "Aur upar aao, toes par."
           },
           "fix": {
-            "en": "Push up higher onto your toes.",
+            "en": "Rise higher onto your toes.",
             "hi": "Aur upar aao, toes par."
           },
           "good": {
@@ -7518,30 +7204,34 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          60,
-          105
+          110,
+          165
         ],
         "id": "range",
         "joint": "ankle",
         "label": "Range",
         "min_visibility": 0.55,
-        "robust": "min_of_3"
+        "robust": "max"
       },
       {
         "almost": [
-          40,
-          60
+          100,
+          112
         ],
         "at": "lockout",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Drop your heels lower for a full stretch.",
+            "hi": "Heel ko aur neeche jaane do, stretch ke liye."
+          },
           "almost": {
-            "en": "Let your heel drop below the step for a stretch.",
-            "hi": "Heel ko step se neeche jaane do, stretch ke liye."
+            "en": "Drop your heels lower for a full stretch.",
+            "hi": "Heel ko aur neeche jaane do, stretch ke liye."
           },
           "fix": {
-            "en": "Let your heel drop below the step for a stretch.",
-            "hi": "Heel ko step se neeche jaane do, stretch ke liye."
+            "en": "Drop your heels lower for a full stretch.",
+            "hi": "Heel ko aur neeche jaane do, stretch ke liye."
           },
           "good": {
             "en": "Good. You let the heel drop fully.",
@@ -7549,14 +7239,14 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          60,
-          105
+          55,
+          100
         ],
         "id": "stretch",
         "joint": "ankle",
         "label": "Stretch",
         "min_visibility": 0.6,
-        "robust": "max"
+        "robust": "min_of_3"
       },
       {
         "almost": [
@@ -7566,6 +7256,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -7585,7 +7279,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -7611,6 +7305,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "angle",
+      "eccentric": "return",
       "invert": true,
       "joint": "ankle",
       "origin": "knee",
@@ -7933,6 +7628,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -7952,7 +7651,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -8010,7 +7709,6 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "angle",
-      "eccentric": "return",
       "invert": true,
       "joint": "shoulder",
       "origin": "shoulder",
@@ -8137,6 +7835,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -8156,7 +7858,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -8303,6 +8005,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -8322,7 +8028,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -8348,6 +8054,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "knee",
       "origin": "ankle",
       "point": "hip"
@@ -8365,23 +8072,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          75,
-          95
+          85,
+          105
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not pull past your body. Stop when the elbow is behind you.",
-            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+            "en": "Pull further, all the way in.",
+            "hi": "Aur kheencho, poora andar tak."
           },
           "almost": {
             "en": "Pull further. Bring the weight all the way in.",
             "hi": "Aur kheencho. Weight poora andar lao."
           },
           "below": {
-            "en": "Pull further, all the way in.",
-            "hi": "Aur kheencho, poora andar tak."
+            "en": "Do not pull past your body. Stop when the elbow is behind you.",
+            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
           },
           "fix": {
             "en": "Pull further. Bring the weight all the way in.",
@@ -8394,7 +8101,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          75
+          85
         ],
         "id": "range",
         "joint": "elbow",
@@ -8435,44 +8142,16 @@ export const RUBRICS: Record<string, Rubric> = {
       },
       {
         "almost": [
-          25,
-          40
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "You are swinging. Keep your body still and pull.",
-            "hi": "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."
-          },
-          "fix": {
-            "en": "You are swinging. Keep your body still and pull.",
-            "hi": "Aap jhool rahe hain. Shareer sthir rakho aur kheencho."
-          },
-          "good": {
-            "en": "Good. Your body stayed still.",
-            "hi": "Badhiya. Aapka shareer sthir raha."
-          }
-        },
-        "good": [
-          0,
-          25
-        ],
-        "id": "lean",
-        "joint": "torso",
-        "label": "Back",
-        "measure": "torso_lean",
-        "min_visibility": 0.6,
-        "robust": "median"
-      },
-      {
-        "almost": [
           0.4,
           0.8
         ],
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -8492,7 +8171,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -8550,6 +8229,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -8675,6 +8355,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -8694,7 +8378,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -8769,17 +8453,17 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          8,
-          15
+          155,
+          168
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
-          "almost": {
+          "above": {
             "en": "Move further out to the side.",
             "hi": "Side mein aur door le jao."
           },
-          "below": {
+          "almost": {
             "en": "Move further out to the side.",
             "hi": "Side mein aur door le jao."
           },
@@ -8793,8 +8477,8 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          15,
-          70
+          90,
+          155
         ],
         "id": "range",
         "joint": "hip",
@@ -8810,6 +8494,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -8829,7 +8517,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          4.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -8855,6 +8543,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "angle",
+      "eccentric": "return",
       "joint": "hip",
       "origin": "shoulder",
       "point": "knee"
@@ -8872,17 +8561,17 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          8,
-          15
+          155,
+          168
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
-          "almost": {
+          "above": {
             "en": "Move further out to the side.",
             "hi": "Side mein aur door le jao."
           },
-          "below": {
+          "almost": {
             "en": "Move further out to the side.",
             "hi": "Side mein aur door le jao."
           },
@@ -8896,8 +8585,8 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          15,
-          70
+          90,
+          155
         ],
         "id": "range",
         "joint": "hip",
@@ -8913,6 +8602,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -8932,7 +8625,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          4.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -8958,6 +8651,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "angle",
+      "eccentric": "return",
       "joint": "hip",
       "origin": "shoulder",
       "point": "knee"
@@ -8975,23 +8669,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          75,
-          95
+          85,
+          105
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not pull past your body. Stop when the elbow is behind you.",
-            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+            "en": "Pull further, all the way in.",
+            "hi": "Aur kheencho, poora andar tak."
           },
           "almost": {
             "en": "Pull further. Bring the weight all the way in.",
             "hi": "Aur kheencho. Weight poora andar lao."
           },
           "below": {
-            "en": "Pull further, all the way in.",
-            "hi": "Aur kheencho, poora andar tak."
+            "en": "Do not pull past your body. Stop when the elbow is behind you.",
+            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
           },
           "fix": {
             "en": "Pull further. Bring the weight all the way in.",
@@ -9004,7 +8698,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          75
+          85
         ],
         "id": "range",
         "joint": "elbow",
@@ -9083,6 +8777,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -9102,7 +8800,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -9160,6 +8858,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -9184,29 +8883,29 @@ export const RUBRICS: Record<string, Rubric> = {
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Not above the shoulder. Stop at shoulder height.",
-            "hi": "Kandhe se zyada upar nahi. Kandhe tak hi ruko."
+            "en": "Lower slightly if your shoulder pinches.",
+            "hi": "Agar kandhe mein dabav lage toh thoda kam uthao."
           },
           "almost": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "below": {
             "en": "Lift higher, up to shoulder height.",
             "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "fix": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "good": {
-            "en": "Good. You raised to shoulder height.",
-            "hi": "Badhiya. Kandhe ki height tak uthaya."
+            "en": "Good. You raised to full height.",
+            "hi": "Badhiya. Poori height tak uthaya."
           }
         },
         "good": [
           75,
-          105
+          115
         ],
         "id": "range",
         "joint": "shoulder",
@@ -9222,6 +8921,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -9241,7 +8944,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -9426,6 +9129,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -9445,7 +9152,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -9520,23 +9227,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          80,
-          100
+          90,
+          110
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "That is enough. Do not pull your back.",
-            "hi": "Itna hi kaafi hai. Back ko kheencho mat."
+            "en": "Crunch further so your abs do the work.",
+            "hi": "Aur crunch karo taaki abs kaam karein."
           },
           "almost": {
             "en": "Crunch further, bring your ribs to your hips.",
             "hi": "Aur crunch karo, ribs ko hips ke paas lao."
           },
           "below": {
-            "en": "Crunch further so your abs do the work.",
-            "hi": "Aur crunch karo taaki abs kaam karein."
+            "en": "That is enough. Do not pull your back.",
+            "hi": "Itna hi kaafi hai. Back ko kheencho mat."
           },
           "fix": {
             "en": "Crunch further, bring your ribs to your hips.",
@@ -9548,8 +9255,8 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          20,
-          80
+          25,
+          90
         ],
         "id": "range",
         "joint": "hip",
@@ -9596,6 +9303,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -9615,7 +9326,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -9641,6 +9352,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "hip",
       "origin": "shoulder",
       "point": "knee"
@@ -9658,23 +9370,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          70,
-          95
+          75,
+          100
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not swing that high. Stop before your elbow pinches.",
-            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
+            "en": "Curl higher, squeeze at the top.",
+            "hi": "Aur upar karo, upar squeeze karo."
           },
           "almost": {
             "en": "Curl higher before you lower.",
             "hi": "Neeche laane se pehle aur upar karo."
           },
           "below": {
-            "en": "Curl higher, squeeze at the top.",
-            "hi": "Aur upar karo, upar squeeze karo."
+            "en": "Do not swing that high. Stop before your elbow pinches.",
+            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
           },
           "fix": {
             "en": "Curl higher before you lower.",
@@ -9687,7 +9399,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          70
+          75
         ],
         "id": "range",
         "joint": "elbow",
@@ -9766,6 +9478,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -9785,7 +9501,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -9829,10 +9545,10 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          80,
-          100
+          130,
+          145
         ],
-        "at": "bottom",
+        "at": "lockout",
         "capture": "in_plane",
         "cue": {
           "almost": {
@@ -9840,8 +9556,8 @@ export const RUBRICS: Record<string, Rubric> = {
             "hi": "Haath poore seedhe karo."
           },
           "below": {
-            "en": "Do not hyperextend. Stop when the arm is straight.",
-            "hi": "Seedhe se zyada nahi. Seedha hote hi ruko."
+            "en": "Straighten your arms all the way.",
+            "hi": "Haath poore seedhe karo."
           },
           "fix": {
             "en": "Straighten your arms all the way.",
@@ -9853,30 +9569,34 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          20,
-          80
+          145,
+          180
         ],
         "id": "range",
         "joint": "elbow",
-        "label": "Range",
+        "label": "Lockout",
         "min_visibility": 0.55,
-        "robust": "min_of_3"
+        "robust": "max"
       },
       {
         "almost": [
-          110,
-          130
+          95,
+          115
         ],
-        "at": "lockout",
+        "at": "bottom",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+          },
           "almost": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "fix": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "good": {
             "en": "Good. You let the elbow close fully.",
@@ -9884,14 +9604,14 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          40,
-          110
+          35,
+          95
         ],
         "id": "stretch",
         "joint": "elbow",
         "label": "Stretch",
         "min_visibility": 0.6,
-        "robust": "max"
+        "robust": "min_of_3"
       },
       {
         "almost": [
@@ -9933,6 +9653,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -9952,7 +9676,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -9978,7 +9702,6 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
-      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -10104,6 +9827,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -10123,7 +9850,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -10230,19 +9957,19 @@ export const RUBRICS: Record<string, Rubric> = {
       },
       {
         "almost": [
-          95,
-          110
+          125,
+          145
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
-          "almost": {
+          "above": {
             "en": "Push your hips further back to feel the stretch.",
             "hi": "Hips aur peeche le jao taaki stretch mehsoos ho."
           },
-          "below": {
-            "en": "Do not squat it. Keep a small bend in the knee.",
-            "hi": "Squat mat karo. Knee mein halka bend rakho."
+          "almost": {
+            "en": "Push your hips further back to feel the stretch.",
+            "hi": "Hips aur peeche le jao taaki stretch mehsoos ho."
           },
           "fix": {
             "en": "Push your hips further back to feel the stretch.",
@@ -10254,19 +9981,19 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          110,
-          165
+          65,
+          125
         ],
         "id": "stretch",
-        "joint": "knee",
-        "label": "Stretch",
+        "joint": "hip",
+        "label": "Hinge",
         "min_visibility": 0.55,
         "robust": "min_of_3"
       },
       {
         "almost": [
-          145,
-          160
+          140,
+          155
         ],
         "at": "lockout",
         "capture": "in_plane",
@@ -10285,11 +10012,11 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          160,
+          155,
           180
         ],
         "id": "lockout",
-        "joint": "knee",
+        "joint": "hip",
         "label": "Standing",
         "min_visibility": 0.6,
         "robust": "max"
@@ -10302,6 +10029,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -10321,7 +10052,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          4.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -10346,11 +10077,10 @@ export const RUBRICS: Record<string, Rubric> = {
       "hi": "Seedhe khade ho, phir back flat rakhte hue hips peeche le jao."
     },
     "track": {
-      "axis": "distance",
-      "eccentric": "return",
-      "joint": "knee",
-      "origin": "ankle",
-      "point": "hip"
+      "axis": "angle",
+      "joint": "hip",
+      "origin": "shoulder",
+      "point": "knee"
     },
     "validated": false,
     "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
@@ -10441,6 +10171,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -10460,7 +10194,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -10518,7 +10252,6 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "angle",
-      "eccentric": "return",
       "invert": true,
       "joint": "shoulder",
       "origin": "shoulder",
@@ -10613,6 +10346,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -10632,7 +10369,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -10690,7 +10427,6 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "angle",
-      "eccentric": "return",
       "invert": true,
       "joint": "shoulder",
       "origin": "shoulder",
@@ -10709,23 +10445,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          70,
-          95
+          75,
+          100
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not swing that high. Stop before your elbow pinches.",
-            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
+            "en": "Curl higher, squeeze at the top.",
+            "hi": "Aur upar karo, upar squeeze karo."
           },
           "almost": {
             "en": "Curl higher before you lower.",
             "hi": "Neeche laane se pehle aur upar karo."
           },
           "below": {
-            "en": "Curl higher, squeeze at the top.",
-            "hi": "Aur upar karo, upar squeeze karo."
+            "en": "Do not swing that high. Stop before your elbow pinches.",
+            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
           },
           "fix": {
             "en": "Curl higher before you lower.",
@@ -10738,7 +10474,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          70
+          75
         ],
         "id": "range",
         "joint": "elbow",
@@ -10779,44 +10515,16 @@ export const RUBRICS: Record<string, Rubric> = {
       },
       {
         "almost": [
-          12,
-          22
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "You are swinging your body. Keep your back still and curl.",
-            "hi": "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."
-          },
-          "fix": {
-            "en": "You are swinging your body. Keep your back still and curl.",
-            "hi": "Aap shareer jhula rahe hain. Back sthir rakho aur curl karo."
-          },
-          "good": {
-            "en": "Good. Your body stayed still.",
-            "hi": "Badhiya. Aapka shareer sthir raha."
-          }
-        },
-        "good": [
-          0,
-          12
-        ],
-        "id": "lean",
-        "joint": "torso",
-        "label": "Body",
-        "measure": "torso_lean",
-        "min_visibility": 0.6,
-        "robust": "median"
-      },
-      {
-        "almost": [
           0.45,
           0.9
         ],
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -10836,7 +10544,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -10880,23 +10588,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          75,
-          95
+          85,
+          105
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not pull past your body. Stop when the elbow is behind you.",
-            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+            "en": "Pull further, all the way in.",
+            "hi": "Aur kheencho, poora andar tak."
           },
           "almost": {
             "en": "Pull further. Bring the weight all the way in.",
             "hi": "Aur kheencho. Weight poora andar lao."
           },
           "below": {
-            "en": "Pull further, all the way in.",
-            "hi": "Aur kheencho, poora andar tak."
+            "en": "Do not pull past your body. Stop when the elbow is behind you.",
+            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
           },
           "fix": {
             "en": "Pull further. Bring the weight all the way in.",
@@ -10909,7 +10617,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          75
+          85
         ],
         "id": "range",
         "joint": "elbow",
@@ -10988,6 +10696,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -11007,7 +10719,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -11065,6 +10777,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -11089,29 +10802,29 @@ export const RUBRICS: Record<string, Rubric> = {
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Not above the shoulder. Stop at shoulder height.",
-            "hi": "Kandhe se zyada upar nahi. Kandhe tak hi ruko."
+            "en": "Lower slightly if your shoulder pinches.",
+            "hi": "Agar kandhe mein dabav lage toh thoda kam uthao."
           },
           "almost": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "below": {
             "en": "Lift higher, up to shoulder height.",
             "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "fix": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "good": {
-            "en": "Good. You raised to shoulder height.",
-            "hi": "Badhiya. Kandhe ki height tak uthaya."
+            "en": "Good. You raised to full height.",
+            "hi": "Badhiya. Poori height tak uthaya."
           }
         },
         "good": [
           75,
-          105
+          115
         ],
         "id": "range",
         "joint": "shoulder",
@@ -11127,6 +10840,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -11146,43 +10863,11 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
         "measure": "eccentric_seconds",
-        "robust": "median"
-      },
-      {
-        "almost": [
-          12,
-          20
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "One side is a little behind. Move them together.",
-            "hi": "Ek side thoda peeche hai. Dono saath chalao."
-          },
-          "fix": {
-            "en": "One arm is much lower. Raise both arms together.",
-            "hi": "Ek haath bahut neeche hai. Dono haath saath uthao."
-          },
-          "good": {
-            "en": "Good. Both arms went up together.",
-            "hi": "Badhiya. Dono haath saath uthe."
-          }
-        },
-        "good": [
-          0,
-          12
-        ],
-        "id": "even",
-        "joint": "shoulder",
-        "label": "Both arms",
-        "measure": "side_difference",
-        "min_visibility": 0.7,
         "robust": "median"
       }
     ],
@@ -11223,23 +10908,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          70,
-          95
+          75,
+          100
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not swing that high. Stop before your elbow pinches.",
-            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
+            "en": "Curl higher, squeeze at the top.",
+            "hi": "Aur upar karo, upar squeeze karo."
           },
           "almost": {
             "en": "Curl higher before you lower.",
             "hi": "Neeche laane se pehle aur upar karo."
           },
           "below": {
-            "en": "Curl higher, squeeze at the top.",
-            "hi": "Aur upar karo, upar squeeze karo."
+            "en": "Do not swing that high. Stop before your elbow pinches.",
+            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
           },
           "fix": {
             "en": "Curl higher before you lower.",
@@ -11252,7 +10937,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          70
+          75
         ],
         "id": "range",
         "joint": "elbow",
@@ -11331,6 +11016,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -11350,7 +11039,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -11401,29 +11090,29 @@ export const RUBRICS: Record<string, Rubric> = {
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Not above the shoulder. Stop at shoulder height.",
-            "hi": "Kandhe se zyada upar nahi. Kandhe tak hi ruko."
+            "en": "Lower slightly if your shoulder pinches.",
+            "hi": "Agar kandhe mein dabav lage toh thoda kam uthao."
           },
           "almost": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "below": {
             "en": "Lift higher, up to shoulder height.",
             "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "fix": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "good": {
-            "en": "Good. You raised to shoulder height.",
-            "hi": "Badhiya. Kandhe ki height tak uthaya."
+            "en": "Good. You raised to full height.",
+            "hi": "Badhiya. Poori height tak uthaya."
           }
         },
         "good": [
           75,
-          105
+          115
         ],
         "id": "range",
         "joint": "shoulder",
@@ -11439,6 +11128,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -11458,7 +11151,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -11535,23 +11228,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          80,
-          100
+          90,
+          110
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "That is enough. Do not pull your back.",
-            "hi": "Itna hi kaafi hai. Back ko kheencho mat."
+            "en": "Crunch further so your abs do the work.",
+            "hi": "Aur crunch karo taaki abs kaam karein."
           },
           "almost": {
             "en": "Crunch further, bring your ribs to your hips.",
             "hi": "Aur crunch karo, ribs ko hips ke paas lao."
           },
           "below": {
-            "en": "Crunch further so your abs do the work.",
-            "hi": "Aur crunch karo taaki abs kaam karein."
+            "en": "That is enough. Do not pull your back.",
+            "hi": "Itna hi kaafi hai. Back ko kheencho mat."
           },
           "fix": {
             "en": "Crunch further, bring your ribs to your hips.",
@@ -11563,8 +11256,8 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          20,
-          80
+          25,
+          90
         ],
         "id": "range",
         "joint": "hip",
@@ -11611,6 +11304,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -11630,7 +11327,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -11656,6 +11353,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "hip",
       "origin": "shoulder",
       "point": "knee"
@@ -11673,10 +11371,10 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          80,
-          100
+          130,
+          145
         ],
-        "at": "bottom",
+        "at": "lockout",
         "capture": "in_plane",
         "cue": {
           "almost": {
@@ -11684,8 +11382,8 @@ export const RUBRICS: Record<string, Rubric> = {
             "hi": "Haath poore seedhe karo."
           },
           "below": {
-            "en": "Do not hyperextend. Stop when the arm is straight.",
-            "hi": "Seedhe se zyada nahi. Seedha hote hi ruko."
+            "en": "Straighten your arms all the way.",
+            "hi": "Haath poore seedhe karo."
           },
           "fix": {
             "en": "Straighten your arms all the way.",
@@ -11697,30 +11395,34 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          20,
-          80
+          145,
+          180
         ],
         "id": "range",
         "joint": "elbow",
-        "label": "Range",
+        "label": "Lockout",
         "min_visibility": 0.55,
-        "robust": "min_of_3"
+        "robust": "max"
       },
       {
         "almost": [
-          110,
-          130
+          95,
+          115
         ],
-        "at": "lockout",
+        "at": "bottom",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+          },
           "almost": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "fix": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "good": {
             "en": "Good. You let the elbow close fully.",
@@ -11728,14 +11430,14 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          40,
-          110
+          35,
+          95
         ],
         "id": "stretch",
         "joint": "elbow",
         "label": "Stretch",
         "min_visibility": 0.6,
-        "robust": "max"
+        "robust": "min_of_3"
       },
       {
         "almost": [
@@ -11777,6 +11479,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -11796,7 +11502,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -11822,7 +11528,6 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
-      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -11948,6 +11653,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -11967,7 +11676,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -12114,6 +11823,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -12133,7 +11846,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -12159,6 +11872,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "knee",
       "origin": "ankle",
       "point": "hip"
@@ -12248,6 +11962,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -12267,7 +11985,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -12382,6 +12100,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -12401,7 +12123,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -12444,23 +12166,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          70,
-          95
+          75,
+          100
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not swing that high. Stop before your elbow pinches.",
-            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
+            "en": "Curl higher, squeeze at the top.",
+            "hi": "Aur upar karo, upar squeeze karo."
           },
           "almost": {
             "en": "Curl higher before you lower.",
             "hi": "Neeche laane se pehle aur upar karo."
           },
           "below": {
-            "en": "Curl higher, squeeze at the top.",
-            "hi": "Aur upar karo, upar squeeze karo."
+            "en": "Do not swing that high. Stop before your elbow pinches.",
+            "hi": "Itna zyada upar nahi. Kohni mein khinchne se pehle ruko."
           },
           "fix": {
             "en": "Curl higher before you lower.",
@@ -12473,7 +12195,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          70
+          75
         ],
         "id": "range",
         "joint": "elbow",
@@ -12552,6 +12274,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -12571,7 +12297,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -12615,10 +12341,10 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          80,
-          100
+          130,
+          145
         ],
-        "at": "bottom",
+        "at": "lockout",
         "capture": "in_plane",
         "cue": {
           "almost": {
@@ -12626,8 +12352,8 @@ export const RUBRICS: Record<string, Rubric> = {
             "hi": "Haath poore seedhe karo."
           },
           "below": {
-            "en": "Do not hyperextend. Stop when the arm is straight.",
-            "hi": "Seedhe se zyada nahi. Seedha hote hi ruko."
+            "en": "Straighten your arms all the way.",
+            "hi": "Haath poore seedhe karo."
           },
           "fix": {
             "en": "Straighten your arms all the way.",
@@ -12639,30 +12365,34 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          20,
-          80
+          145,
+          180
         ],
         "id": "range",
         "joint": "elbow",
-        "label": "Range",
+        "label": "Lockout",
         "min_visibility": 0.55,
-        "robust": "min_of_3"
+        "robust": "max"
       },
       {
         "almost": [
-          110,
-          130
+          95,
+          115
         ],
-        "at": "lockout",
+        "at": "bottom",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+          },
           "almost": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "fix": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "good": {
             "en": "Good. You let the elbow close fully.",
@@ -12670,46 +12400,14 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          40,
-          110
+          35,
+          95
         ],
         "id": "stretch",
         "joint": "elbow",
         "label": "Stretch",
         "min_visibility": 0.6,
-        "robust": "max"
-      },
-      {
-        "almost": [
-          18,
-          30
-        ],
-        "at": "bottom",
-        "capture": "in_plane",
-        "cue": {
-          "almost": {
-            "en": "You are leaning into it. Keep your body still.",
-            "hi": "Aap shareer se dhakel rahe hain. Shareer sthir rakho."
-          },
-          "fix": {
-            "en": "You are leaning into it. Keep your body still.",
-            "hi": "Aap shareer se dhakel rahe hain. Shareer sthir rakho."
-          },
-          "good": {
-            "en": "Good. Your body stayed still.",
-            "hi": "Badhiya. Aapka shareer sthir raha."
-          }
-        },
-        "good": [
-          0,
-          18
-        ],
-        "id": "lean",
-        "joint": "torso",
-        "label": "Body",
-        "measure": "torso_lean",
-        "min_visibility": 0.6,
-        "robust": "median"
+        "robust": "min_of_3"
       },
       {
         "almost": [
@@ -12719,6 +12417,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -12738,7 +12440,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -12764,7 +12466,148 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
-      "eccentric": "return",
+      "joint": "elbow",
+      "origin": "shoulder",
+      "point": "wrist"
+    },
+    "validated": false,
+    "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
+    "view": [
+      "side",
+      "45"
+    ]
+  },
+  "smith_machine_jm_press": {
+    "_generated": true,
+    "_source_file": "smith-machine-jm-press.json",
+    "checks": [
+      {
+        "almost": [
+          130,
+          145
+        ],
+        "at": "lockout",
+        "capture": "in_plane",
+        "cue": {
+          "almost": {
+            "en": "Straighten your arms all the way.",
+            "hi": "Haath poore seedhe karo."
+          },
+          "below": {
+            "en": "Straighten your arms all the way.",
+            "hi": "Haath poore seedhe karo."
+          },
+          "fix": {
+            "en": "Straighten your arms all the way.",
+            "hi": "Haath poore seedhe karo."
+          },
+          "good": {
+            "en": "Good. You straightened your arms fully.",
+            "hi": "Badhiya. Aapne haath poore seedhe kiye."
+          }
+        },
+        "good": [
+          145,
+          180
+        ],
+        "id": "range",
+        "joint": "elbow",
+        "label": "Lockout",
+        "min_visibility": 0.55,
+        "robust": "max"
+      },
+      {
+        "almost": [
+          95,
+          115
+        ],
+        "at": "bottom",
+        "capture": "in_plane",
+        "cue": {
+          "above": {
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+          },
+          "almost": {
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+          },
+          "fix": {
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+          },
+          "good": {
+            "en": "Good. You let the elbow close fully.",
+            "hi": "Badhiya. Kohni poora band hui."
+          }
+        },
+        "good": [
+          35,
+          95
+        ],
+        "id": "stretch",
+        "joint": "elbow",
+        "label": "Stretch",
+        "min_visibility": 0.6,
+        "robust": "min_of_3"
+      },
+      {
+        "almost": [
+          0.45,
+          0.9
+        ],
+        "at": "eccentric",
+        "capture": "in_plane",
+        "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
+          "almost": {
+            "en": "A bit fast. Count 2 seconds on the way down.",
+            "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
+          },
+          "below": {
+            "en": "Too fast. Control the return. Count 2 seconds.",
+            "hi": "Bahut tez hai. Wapas aane mein control rakho. 2 tak gino."
+          },
+          "fix": {
+            "en": "Too fast. Control the return. Count 2 seconds.",
+            "hi": "Bahut tez hai. Wapas aane mein control rakho. 2 tak gino."
+          },
+          "good": {
+            "en": "Good. You controlled the weight.",
+            "hi": "Badhiya. Aapne weight control kiya."
+          }
+        },
+        "good": [
+          0.9,
+          5.5
+        ],
+        "id": "tempo",
+        "label": "Speed",
+        "measure": "eccentric_seconds",
+        "robust": "median"
+      }
+    ],
+    "family": "triceps",
+    "id": "smith_machine_jm_press",
+    "name": "Smith Machine Jm Press",
+    "phases": [
+      "setup",
+      "eccentric",
+      "bottom",
+      "concentric",
+      "lockout"
+    ],
+    "rubric_version": "2026-11-18",
+    "setup": [],
+    "start_cue": {
+      "en": "Set your elbow still, then straighten your arm.",
+      "hi": "Kohni sthir rakho, phir haath seedha karo."
+    },
+    "track": {
+      "axis": "distance",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -12890,6 +12733,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -12909,7 +12756,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -13060,6 +12907,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -13079,7 +12930,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -13230,6 +13081,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -13249,7 +13104,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -13356,19 +13211,19 @@ export const RUBRICS: Record<string, Rubric> = {
       },
       {
         "almost": [
-          95,
-          110
+          125,
+          145
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
-          "almost": {
+          "above": {
             "en": "Push your hips further back to feel the stretch.",
             "hi": "Hips aur peeche le jao taaki stretch mehsoos ho."
           },
-          "below": {
-            "en": "Do not squat it. Keep a small bend in the knee.",
-            "hi": "Squat mat karo. Knee mein halka bend rakho."
+          "almost": {
+            "en": "Push your hips further back to feel the stretch.",
+            "hi": "Hips aur peeche le jao taaki stretch mehsoos ho."
           },
           "fix": {
             "en": "Push your hips further back to feel the stretch.",
@@ -13380,19 +13235,19 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          110,
-          165
+          65,
+          125
         ],
         "id": "stretch",
-        "joint": "knee",
-        "label": "Stretch",
+        "joint": "hip",
+        "label": "Hinge",
         "min_visibility": 0.55,
         "robust": "min_of_3"
       },
       {
         "almost": [
-          145,
-          160
+          140,
+          155
         ],
         "at": "lockout",
         "capture": "in_plane",
@@ -13411,11 +13266,11 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          160,
+          155,
           180
         ],
         "id": "lockout",
-        "joint": "knee",
+        "joint": "hip",
         "label": "Standing",
         "min_visibility": 0.6,
         "robust": "max"
@@ -13428,6 +13283,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -13447,7 +13306,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          4.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -13472,11 +13331,10 @@ export const RUBRICS: Record<string, Rubric> = {
       "hi": "Seedhe khade ho, phir back flat rakhte hue hips peeche le jao."
     },
     "track": {
-      "axis": "distance",
-      "eccentric": "return",
-      "joint": "knee",
-      "origin": "ankle",
-      "point": "hip"
+      "axis": "angle",
+      "joint": "hip",
+      "origin": "shoulder",
+      "point": "knee"
     },
     "validated": false,
     "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
@@ -13491,22 +13349,22 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          105,
-          120
+          98,
+          110
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
-          "above": {
-            "en": "That is high enough. Do not roll your ankle.",
-            "hi": "Itna hi kaafi hai. Ankle mat mudo."
-          },
           "almost": {
-            "en": "Push up higher onto your toes.",
+            "en": "Rise higher onto your toes.",
+            "hi": "Aur upar aao, toes par."
+          },
+          "below": {
+            "en": "Rise higher onto your toes.",
             "hi": "Aur upar aao, toes par."
           },
           "fix": {
-            "en": "Push up higher onto your toes.",
+            "en": "Rise higher onto your toes.",
             "hi": "Aur upar aao, toes par."
           },
           "good": {
@@ -13515,30 +13373,34 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          60,
-          105
+          110,
+          165
         ],
         "id": "range",
         "joint": "ankle",
         "label": "Range",
         "min_visibility": 0.55,
-        "robust": "min_of_3"
+        "robust": "max"
       },
       {
         "almost": [
-          40,
-          60
+          100,
+          112
         ],
         "at": "lockout",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Drop your heels lower for a full stretch.",
+            "hi": "Heel ko aur neeche jaane do, stretch ke liye."
+          },
           "almost": {
-            "en": "Let your heel drop below the step for a stretch.",
-            "hi": "Heel ko step se neeche jaane do, stretch ke liye."
+            "en": "Drop your heels lower for a full stretch.",
+            "hi": "Heel ko aur neeche jaane do, stretch ke liye."
           },
           "fix": {
-            "en": "Let your heel drop below the step for a stretch.",
-            "hi": "Heel ko step se neeche jaane do, stretch ke liye."
+            "en": "Drop your heels lower for a full stretch.",
+            "hi": "Heel ko aur neeche jaane do, stretch ke liye."
           },
           "good": {
             "en": "Good. You let the heel drop fully.",
@@ -13546,14 +13408,14 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          60,
-          105
+          55,
+          100
         ],
         "id": "stretch",
         "joint": "ankle",
         "label": "Stretch",
         "min_visibility": 0.6,
-        "robust": "max"
+        "robust": "min_of_3"
       },
       {
         "almost": [
@@ -13563,6 +13425,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -13582,7 +13448,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -13608,6 +13474,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "angle",
+      "eccentric": "return",
       "invert": true,
       "joint": "ankle",
       "origin": "knee",
@@ -13658,19 +13525,19 @@ export const RUBRICS: Record<string, Rubric> = {
       },
       {
         "almost": [
-          95,
-          110
+          125,
+          145
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
-          "almost": {
+          "above": {
             "en": "Push your hips further back to feel the stretch.",
             "hi": "Hips aur peeche le jao taaki stretch mehsoos ho."
           },
-          "below": {
-            "en": "Do not squat it. Keep a small bend in the knee.",
-            "hi": "Squat mat karo. Knee mein halka bend rakho."
+          "almost": {
+            "en": "Push your hips further back to feel the stretch.",
+            "hi": "Hips aur peeche le jao taaki stretch mehsoos ho."
           },
           "fix": {
             "en": "Push your hips further back to feel the stretch.",
@@ -13682,19 +13549,19 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          110,
-          165
+          65,
+          125
         ],
         "id": "stretch",
-        "joint": "knee",
-        "label": "Stretch",
+        "joint": "hip",
+        "label": "Hinge",
         "min_visibility": 0.55,
         "robust": "min_of_3"
       },
       {
         "almost": [
-          145,
-          160
+          140,
+          155
         ],
         "at": "lockout",
         "capture": "in_plane",
@@ -13713,11 +13580,11 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          160,
+          155,
           180
         ],
         "id": "lockout",
-        "joint": "knee",
+        "joint": "hip",
         "label": "Standing",
         "min_visibility": 0.6,
         "robust": "max"
@@ -13730,6 +13597,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -13749,7 +13620,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          4.0
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -13774,11 +13645,10 @@ export const RUBRICS: Record<string, Rubric> = {
       "hi": "Seedhe khade ho, phir back flat rakhte hue hips peeche le jao."
     },
     "track": {
-      "axis": "distance",
-      "eccentric": "return",
-      "joint": "knee",
-      "origin": "ankle",
-      "point": "hip"
+      "axis": "angle",
+      "joint": "hip",
+      "origin": "shoulder",
+      "point": "knee"
     },
     "validated": false,
     "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
@@ -13842,6 +13712,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "hip",
       "origin": "shoulder",
       "point": "knee"
@@ -13859,23 +13730,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          75,
-          95
+          85,
+          105
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not pull past your body. Stop when the elbow is behind you.",
-            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+            "en": "Pull further, all the way in.",
+            "hi": "Aur kheencho, poora andar tak."
           },
           "almost": {
             "en": "Pull further. Bring the weight all the way in.",
             "hi": "Aur kheencho. Weight poora andar lao."
           },
           "below": {
-            "en": "Pull further, all the way in.",
-            "hi": "Aur kheencho, poora andar tak."
+            "en": "Do not pull past your body. Stop when the elbow is behind you.",
+            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
           },
           "fix": {
             "en": "Pull further. Bring the weight all the way in.",
@@ -13888,7 +13759,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          75
+          85
         ],
         "id": "range",
         "joint": "elbow",
@@ -13967,6 +13838,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -13986,7 +13861,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -14044,6 +13919,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -14068,29 +13944,29 @@ export const RUBRICS: Record<string, Rubric> = {
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Not above the shoulder. Stop at shoulder height.",
-            "hi": "Kandhe se zyada upar nahi. Kandhe tak hi ruko."
+            "en": "Lower slightly if your shoulder pinches.",
+            "hi": "Agar kandhe mein dabav lage toh thoda kam uthao."
           },
           "almost": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "below": {
             "en": "Lift higher, up to shoulder height.",
             "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "fix": {
-            "en": "Lift to shoulder height, no higher.",
-            "hi": "Kandhe ki height tak uthao, usse zyada nahi."
+            "en": "Lift higher, up to shoulder height.",
+            "hi": "Aur upar uthao, kandhe ki height tak."
           },
           "good": {
-            "en": "Good. You raised to shoulder height.",
-            "hi": "Badhiya. Kandhe ki height tak uthaya."
+            "en": "Good. You raised to full height.",
+            "hi": "Badhiya. Poori height tak uthaya."
           }
         },
         "good": [
           75,
-          105
+          165
         ],
         "id": "range",
         "joint": "shoulder",
@@ -14106,6 +13982,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -14125,7 +14005,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -14202,23 +14082,23 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          75,
-          95
+          85,
+          105
         ],
         "at": "bottom",
         "capture": "in_plane",
         "cue": {
           "above": {
-            "en": "Do not pull past your body. Stop when the elbow is behind you.",
-            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
+            "en": "Pull further, all the way in.",
+            "hi": "Aur kheencho, poora andar tak."
           },
           "almost": {
             "en": "Pull further. Bring the weight all the way in.",
             "hi": "Aur kheencho. Weight poora andar lao."
           },
           "below": {
-            "en": "Pull further, all the way in.",
-            "hi": "Aur kheencho, poora andar tak."
+            "en": "Do not pull past your body. Stop when the elbow is behind you.",
+            "hi": "Shareer se aage nahi. Kohni peeche aate hi ruko."
           },
           "fix": {
             "en": "Pull further. Bring the weight all the way in.",
@@ -14231,7 +14111,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           20,
-          75
+          85
         ],
         "id": "range",
         "joint": "elbow",
@@ -14310,6 +14190,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -14329,7 +14213,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.8,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -14387,6 +14271,7 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
+      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -14404,10 +14289,10 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          80,
-          100
+          130,
+          145
         ],
-        "at": "bottom",
+        "at": "lockout",
         "capture": "in_plane",
         "cue": {
           "almost": {
@@ -14415,8 +14300,8 @@ export const RUBRICS: Record<string, Rubric> = {
             "hi": "Haath poore seedhe karo."
           },
           "below": {
-            "en": "Do not hyperextend. Stop when the arm is straight.",
-            "hi": "Seedhe se zyada nahi. Seedha hote hi ruko."
+            "en": "Straighten your arms all the way.",
+            "hi": "Haath poore seedhe karo."
           },
           "fix": {
             "en": "Straighten your arms all the way.",
@@ -14428,30 +14313,34 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          20,
-          80
+          145,
+          180
         ],
         "id": "range",
         "joint": "elbow",
-        "label": "Range",
+        "label": "Lockout",
         "min_visibility": 0.55,
-        "robust": "min_of_3"
+        "robust": "max"
       },
       {
         "almost": [
-          110,
-          130
+          95,
+          115
         ],
-        "at": "lockout",
+        "at": "bottom",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+          },
           "almost": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "fix": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "good": {
             "en": "Good. You let the elbow close fully.",
@@ -14459,14 +14348,14 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          40,
-          110
+          35,
+          95
         ],
         "id": "stretch",
         "joint": "elbow",
         "label": "Stretch",
         "min_visibility": 0.6,
-        "robust": "max"
+        "robust": "min_of_3"
       },
       {
         "almost": [
@@ -14508,6 +14397,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -14527,7 +14420,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -14553,7 +14446,6 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
-      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -14571,10 +14463,10 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          80,
-          100
+          130,
+          145
         ],
-        "at": "bottom",
+        "at": "lockout",
         "capture": "in_plane",
         "cue": {
           "almost": {
@@ -14582,8 +14474,8 @@ export const RUBRICS: Record<string, Rubric> = {
             "hi": "Haath poore seedhe karo."
           },
           "below": {
-            "en": "Do not hyperextend. Stop when the arm is straight.",
-            "hi": "Seedhe se zyada nahi. Seedha hote hi ruko."
+            "en": "Straighten your arms all the way.",
+            "hi": "Haath poore seedhe karo."
           },
           "fix": {
             "en": "Straighten your arms all the way.",
@@ -14595,30 +14487,34 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          20,
-          80
+          145,
+          180
         ],
         "id": "range",
         "joint": "elbow",
-        "label": "Range",
+        "label": "Lockout",
         "min_visibility": 0.55,
-        "robust": "min_of_3"
+        "robust": "max"
       },
       {
         "almost": [
-          110,
-          130
+          95,
+          115
         ],
-        "at": "lockout",
+        "at": "bottom",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+          },
           "almost": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "fix": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "good": {
             "en": "Good. You let the elbow close fully.",
@@ -14626,14 +14522,14 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          40,
-          110
+          35,
+          95
         ],
         "id": "stretch",
         "joint": "elbow",
         "label": "Stretch",
         "min_visibility": 0.6,
-        "robust": "max"
+        "robust": "min_of_3"
       },
       {
         "almost": [
@@ -14675,6 +14571,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -14694,7 +14594,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -14720,7 +14620,6 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
-      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"
@@ -14738,10 +14637,10 @@ export const RUBRICS: Record<string, Rubric> = {
     "checks": [
       {
         "almost": [
-          80,
-          100
+          130,
+          145
         ],
-        "at": "bottom",
+        "at": "lockout",
         "capture": "in_plane",
         "cue": {
           "almost": {
@@ -14749,8 +14648,8 @@ export const RUBRICS: Record<string, Rubric> = {
             "hi": "Haath poore seedhe karo."
           },
           "below": {
-            "en": "Do not hyperextend. Stop when the arm is straight.",
-            "hi": "Seedhe se zyada nahi. Seedha hote hi ruko."
+            "en": "Straighten your arms all the way.",
+            "hi": "Haath poore seedhe karo."
           },
           "fix": {
             "en": "Straighten your arms all the way.",
@@ -14762,30 +14661,34 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          20,
-          80
+          145,
+          180
         ],
         "id": "range",
         "joint": "elbow",
-        "label": "Range",
+        "label": "Lockout",
         "min_visibility": 0.55,
-        "robust": "min_of_3"
+        "robust": "max"
       },
       {
         "almost": [
-          110,
-          130
+          95,
+          115
         ],
-        "at": "lockout",
+        "at": "bottom",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+          },
           "almost": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "fix": {
-            "en": "Let the elbow close all the way so the muscle stretches.",
-            "hi": "Kohni poora band hone do taaki muscle stretch ho."
+            "en": "Bend your elbows more for a deeper stretch.",
+            "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
           },
           "good": {
             "en": "Good. You let the elbow close fully.",
@@ -14793,14 +14696,14 @@ export const RUBRICS: Record<string, Rubric> = {
           }
         },
         "good": [
-          40,
-          110
+          35,
+          95
         ],
         "id": "stretch",
         "joint": "elbow",
         "label": "Stretch",
         "min_visibility": 0.6,
-        "robust": "max"
+        "robust": "min_of_3"
       },
       {
         "almost": [
@@ -14842,6 +14745,10 @@ export const RUBRICS: Record<string, Rubric> = {
         "at": "eccentric",
         "capture": "in_plane",
         "cue": {
+          "above": {
+            "en": "Very slow. Good control — keep moving smoothly.",
+            "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+          },
           "almost": {
             "en": "A bit fast. Count 2 seconds on the way down.",
             "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
@@ -14861,7 +14768,7 @@ export const RUBRICS: Record<string, Rubric> = {
         },
         "good": [
           0.9,
-          3.5
+          5.5
         ],
         "id": "tempo",
         "label": "Speed",
@@ -14887,7 +14794,6 @@ export const RUBRICS: Record<string, Rubric> = {
     },
     "track": {
       "axis": "distance",
-      "eccentric": "return",
       "joint": "elbow",
       "origin": "shoulder",
       "point": "wrist"

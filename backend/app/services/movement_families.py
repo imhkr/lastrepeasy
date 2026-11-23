@@ -68,8 +68,8 @@ FAMILIES: Dict[str, Dict] = {
         "faults": ["depth", "lockout", "chest", "speed", "one leg lagging"],
     },
     "hinge": {
-        "track": {"joint": "knee", "origin": "ankle", "point": "hip", "axis": "distance"},
-        "measures": ["knee_angle", "torso_lean", "eccentric_seconds"],
+        "track": {"joint": "hip", "origin": "shoulder", "point": "knee", "axis": "angle"},
+        "measures": ["hip_angle", "torso_lean", "eccentric_seconds"],
         "faults": ["hip travel", "back angle", "speed"],
     },
     "leg_isolation": {
@@ -88,9 +88,9 @@ FAMILIES: Dict[str, Dict] = {
     },
     "calf": {
         # ANGLE. Knee-to-toe barely changes across a calf raise; the ankle joint is what travels.
-        # Invert: TRIPLES["ankle"] is knee-ankle-toe, which is LARGEST with the heel dropped and
-        # SMALLEST at the top of the raise -- the opposite of every other family, where the top is
-        # the large end. Without the inversion the heel-dropped rest position would read as the top.
+        # Invert: TRIPLES["ankle"] is knee-ankle-toe, which is SMALLEST with the heel dropped
+        # (~65-95 deg) and LARGEST up on the toes (~115-155 deg). With invert: True, rest/heel-dropped
+        # maps to p=1 (lockout) and toes-up maps to p=0 (bottom).
         "track": {"joint": "ankle", "origin": "knee", "point": "foot_index", "axis": "angle", "invert": True},
         "measures": ["ankle_angle", "eccentric_seconds"],
         "faults": ["range", "speed"],
@@ -111,7 +111,7 @@ RULES: List[Tuple[str, str]] = [
     # "glute kickback" before the triceps list, which would otherwise claim it on the word
     # "kickback" and coach a hip extension as an elbow movement.
     (r"glute kickback", "hip_isolation"),
-    (r"skull|french|pressdown|kickback|katana|triceps|pushdown", "triceps"),
+    (r"skull|french|pressdown|kickback|katana|triceps|pushdown|jm press", "triceps"),
     (r"crunch|vaccum|vacuum|russian twist|leg raise|rollout|ab wheel|ab-wheel", "core"),
     (r"calf|ankle", "calf"),
     (r"hip adduction|hip abduction", "hip_isolation"),

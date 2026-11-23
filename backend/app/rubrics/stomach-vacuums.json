@@ -14,7 +14,8 @@
     "joint": "hip",
     "origin": "shoulder",
     "point": "knee",
-    "axis": "distance"
+    "axis": "distance",
+    "eccentric": "return"
   },
   "start_cue": {
     "en": "Lie back, then curl your ribs toward your hips.",

@@ -11,11 +11,10 @@
   "validated": false,
   "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
   "track": {
-    "joint": "knee",
-    "origin": "ankle",
-    "point": "hip",
-    "axis": "distance",
-    "eccentric": "return"
+    "joint": "hip",
+    "origin": "shoulder",
+    "point": "knee",
+    "axis": "angle"
   },
   "start_cue": {
     "en": "Stand tall, then push your hips back with a flat back.",
@@ -64,19 +63,19 @@
     },
     {
       "id": "stretch",
-      "label": "Stretch",
-      "joint": "knee",
+      "label": "Hinge",
+      "joint": "hip",
       "at": "bottom",
       "robust": "min_of_3",
       "capture": "in_plane",
       "min_visibility": 0.55,
       "good": [
-        110,
-        165
+        65,
+        125
       ],
       "almost": [
-        95,
-        110
+        125,
+        145
       ],
       "cue": {
         "good": {
@@ -87,9 +86,9 @@
           "en": "Push your hips further back to feel the stretch.",
           "hi": "Hips aur peeche le jao taaki stretch mehsoos ho."
         },
-        "below": {
-          "en": "Do not squat it. Keep a small bend in the knee.",
-          "hi": "Squat mat karo. Knee mein halka bend rakho."
+        "above": {
+          "en": "Push your hips further back to feel the stretch.",
+          "hi": "Hips aur peeche le jao taaki stretch mehsoos ho."
         },
         "almost": {
           "en": "Push your hips further back to feel the stretch.",
@@ -100,18 +99,18 @@
     {
       "id": "lockout",
       "label": "Standing",
-      "joint": "knee",
+      "joint": "hip",
       "at": "lockout",
       "robust": "max",
       "capture": "in_plane",
       "min_visibility": 0.6,
       "good": [
-        160,
+        155,
         180
       ],
       "almost": [
-        145,
-        160
+        140,
+        155
       ],
       "cue": {
         "good": {
@@ -137,7 +136,7 @@
       "measure": "eccentric_seconds",
       "good": [
         0.9,
-        4.0
+        5.5
       ],
       "almost": [
         0.45,
@@ -151,6 +150,10 @@
         "fix": {
           "en": "Too fast. Control the way down and count 2.",
           "hi": "Bahut tez hai. Neeche control karo aur 2 gino."
+        },
+        "above": {
+          "en": "Very slow. Good control — keep moving smoothly.",
+          "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
         },
         "below": {
           "en": "Too fast. Control the way down and count 2.",

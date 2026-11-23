@@ -1,0 +1,141 @@
+{
+  "id": "smith_machine_jm_press",
+  "name": "Smith Machine Jm Press",
+  "family": "triceps",
+  "view": [
+    "side",
+    "45"
+  ],
+  "rubric_version": "2026-11-18",
+  "_generated": true,
+  "validated": false,
+  "validation_note": "Bands are the standard coaching ranges for this movement, not measured against a labelled clip. Treat a fix verdict as a prompt to look, not as a measured fault.",
+  "track": {
+    "joint": "elbow",
+    "origin": "shoulder",
+    "point": "wrist",
+    "axis": "distance"
+  },
+  "start_cue": {
+    "en": "Set your elbow still, then straighten your arm.",
+    "hi": "Kohni sthir rakho, phir haath seedha karo."
+  },
+  "phases": [
+    "setup",
+    "eccentric",
+    "bottom",
+    "concentric",
+    "lockout"
+  ],
+  "setup": [],
+  "checks": [
+    {
+      "id": "range",
+      "label": "Lockout",
+      "joint": "elbow",
+      "at": "lockout",
+      "robust": "max",
+      "capture": "in_plane",
+      "min_visibility": 0.55,
+      "good": [
+        145,
+        180
+      ],
+      "almost": [
+        130,
+        145
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You straightened your arms fully.",
+          "hi": "Badhiya. Aapne haath poore seedhe kiye."
+        },
+        "fix": {
+          "en": "Straighten your arms all the way.",
+          "hi": "Haath poore seedhe karo."
+        },
+        "below": {
+          "en": "Straighten your arms all the way.",
+          "hi": "Haath poore seedhe karo."
+        },
+        "almost": {
+          "en": "Straighten your arms all the way.",
+          "hi": "Haath poore seedhe karo."
+        }
+      }
+    },
+    {
+      "id": "stretch",
+      "label": "Stretch",
+      "joint": "elbow",
+      "at": "bottom",
+      "robust": "min_of_3",
+      "capture": "in_plane",
+      "min_visibility": 0.6,
+      "good": [
+        35,
+        95
+      ],
+      "almost": [
+        95,
+        115
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You let the elbow close fully.",
+          "hi": "Badhiya. Kohni poora band hui."
+        },
+        "fix": {
+          "en": "Bend your elbows more for a deeper stretch.",
+          "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+        },
+        "above": {
+          "en": "Bend your elbows more for a deeper stretch.",
+          "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+        },
+        "almost": {
+          "en": "Bend your elbows more for a deeper stretch.",
+          "hi": "Kohni aur zyada mudo taaki muscle stretch ho."
+        }
+      }
+    },
+    {
+      "id": "tempo",
+      "label": "Speed",
+      "at": "eccentric",
+      "robust": "median",
+      "capture": "in_plane",
+      "measure": "eccentric_seconds",
+      "good": [
+        0.9,
+        5.5
+      ],
+      "almost": [
+        0.45,
+        0.9
+      ],
+      "cue": {
+        "good": {
+          "en": "Good. You controlled the weight.",
+          "hi": "Badhiya. Aapne weight control kiya."
+        },
+        "fix": {
+          "en": "Too fast. Control the return. Count 2 seconds.",
+          "hi": "Bahut tez hai. Wapas aane mein control rakho. 2 tak gino."
+        },
+        "above": {
+          "en": "Very slow. Good control — keep moving smoothly.",
+          "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
+        },
+        "below": {
+          "en": "Too fast. Control the return. Count 2 seconds.",
+          "hi": "Bahut tez hai. Wapas aane mein control rakho. 2 tak gino."
+        },
+        "almost": {
+          "en": "A bit fast. Count 2 seconds on the way down.",
+          "hi": "Thoda tez hai. Neeche aate time 2 tak gino."
+        }
+      }
+    }
+  ]
+}

@@ -14,7 +14,8 @@
     "joint": "hip",
     "origin": "shoulder",
     "point": "knee",
-    "axis": "angle"
+    "axis": "angle",
+    "eccentric": "return"
   },
   "start_cue": {
     "en": "Stand tall, then move your leg out to the side.",
@@ -38,12 +39,12 @@
       "capture": "in_plane",
       "min_visibility": 0.55,
       "good": [
-        15,
-        70
+        90,
+        155
       ],
       "almost": [
-        8,
-        15
+        155,
+        168
       ],
       "cue": {
         "good": {
@@ -54,7 +55,7 @@
           "en": "Move further out to the side.",
           "hi": "Side mein aur door le jao."
         },
-        "below": {
+        "above": {
           "en": "Move further out to the side.",
           "hi": "Side mein aur door le jao."
         },
@@ -73,7 +74,7 @@
       "measure": "eccentric_seconds",
       "good": [
         0.9,
-        4.0
+        5.5
       ],
       "almost": [
         0.45,
@@ -87,6 +88,10 @@
         "fix": {
           "en": "Too fast. Control the way back. Count 2 seconds.",
           "hi": "Bahut tez hai. Wapas aane mein control rakho. 2 tak gino."
+        },
+        "above": {
+          "en": "Very slow. Good control — keep moving smoothly.",
+          "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
         },
         "below": {
           "en": "Too fast. Control the way back. Count 2 seconds.",

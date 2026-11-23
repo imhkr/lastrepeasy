@@ -265,7 +265,10 @@ def _frame_points(frame: Any) -> Dict[str, Any]:
 def _coords(p: Any) -> Optional[Tuple[float, float, float]]:
     try:
         if isinstance(p, dict):
-            x, y, z = float(p.get("wx", p.get("x"))), float(p.get("wy", p.get("y"))), float(p.get("wz", p.get("z", 0.0)))
+            rx = p["wx"] if p.get("wx") is not None else p.get("x")
+            ry = p["wy"] if p.get("wy") is not None else p.get("y")
+            rz = p["wz"] if p.get("wz") is not None else p.get("z", 0.0)
+            x, y, z = float(rx), float(ry), float(rz if rz is not None else 0.0)
         else:
             x = float(getattr(p, "wx", getattr(p, "x", None)))
             y = float(getattr(p, "wy", getattr(p, "y", None)))
@@ -381,6 +384,12 @@ def _local_checks(local_verdict: Any) -> Dict[str, str]:
         checks = local_verdict.get("checks")
         if checks is None and "id" in local_verdict:
             checks = [local_verdict]
+        elif checks is None:
+            return {
+                str(k): str(v or "")
+                for k, v in local_verdict.items()
+                if isinstance(k, str) and k and isinstance(v, str)
+            }
     else:
         checks = getattr(local_verdict, "checks", local_verdict)
     out: Dict[str, str] = {}
@@ -444,6 +453,7 @@ def adjudicate(
     if not isinstance(raw_checks, list) or not raw_checks:
         raise VLMError("model returned no checks")
 
+    valid_ids = {c.get("id") for c in (rubric.get("checks") or []) if isinstance(c, dict) and c.get("id")}
     checks: List[Dict[str, str]] = []
     disagreements: List[str] = []
     for c in raw_checks:
@@ -452,12 +462,17 @@ def adjudicate(
         cid, status = c.get("id"), c.get("status")
         if not isinstance(cid, str) or not cid:
             raise VLMError("model check is missing an id")
+        if valid_ids and cid not in valid_ids:
+            continue
         if status not in CHECK_STATUSES:
             raise VLMError(f"check {cid!r}: status {status!r} is not one of {list(CHECK_STATUSES)}")
         reason = c.get("reason")
         checks.append({"id": cid, "status": status, "reason": reason if isinstance(reason, str) else ""})
         if cid in local and local[cid] != status:
             disagreements.append(f"{cid}: local={local[cid]}, remote={status}")
+
+    if not checks:
+        raise VLMError("model returned no valid rubric checks")
 
     return Adjudication(
         checks=checks,

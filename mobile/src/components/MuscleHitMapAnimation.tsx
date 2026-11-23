@@ -1,78 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Animated, Easing } from "react-native";
 import Body, { ExtendedBodyPart, Slug } from "react-native-body-highlighter";
+import { classifyMuscleActivation, MuscleGroupKey } from "../services/muscleMap";
+
+export { classifyMuscleActivation };
 
 interface Props {
   exerciseName: string;
   targetMuscles: string[];
-}
-
-type MuscleGroupKey =
-  | "chest"
-  | "shoulders"
-  | "biceps"
-  | "forearms"
-  | "abs"
-  | "quads"
-  | "lats"
-  | "traps"
-  | "triceps"
-  | "glutes"
-  | "hamstrings"
-  | "erectors";
-
-interface MuscleActivation {
-  primary: Set<MuscleGroupKey>;
-  secondary: Set<MuscleGroupKey>;
-}
-
-function classifyMuscleActivation(
-  exerciseName: string,
-  targetMuscles: string[]
-): MuscleActivation {
-  const combined = `${exerciseName} ${targetMuscles.join(" ")}`.toLowerCase();
-  const primary = new Set<MuscleGroupKey>();
-  const secondary = new Set<MuscleGroupKey>();
-
-  if (combined.includes("lat") || combined.includes("pullover") || combined.includes("pulldown") || combined.includes("teres")) {
-    primary.add("lats");
-    secondary.add("triceps");
-    secondary.add("traps");
-    secondary.add("abs");
-  }
-  if (combined.includes("chest") || combined.includes("pec") || combined.includes("clavicular") || combined.includes("incline") || combined.includes("press")) {
-    primary.add("chest");
-    primary.add("shoulders");
-    secondary.add("triceps");
-  }
-  if (combined.includes("bicep") || combined.includes("curl") || combined.includes("brachialis")) {
-    primary.add("biceps");
-    secondary.add("forearms");
-    secondary.add("shoulders");
-  }
-  if (combined.includes("hamstring") || combined.includes("rdl") || combined.includes("deadlift") || combined.includes("hinge")) {
-    primary.add("hamstrings");
-    primary.add("glutes");
-    secondary.add("erectors");
-    secondary.add("lats");
-    secondary.add("forearms");
-  }
-  if (combined.includes("squat") || combined.includes("quad")) {
-    primary.add("quads");
-    primary.add("glutes");
-    secondary.add("hamstrings");
-    secondary.add("abs");
-  }
-
-  // Fallback if custom exercise name had no match
-  if (primary.size === 0) {
-    primary.add("lats");
-    primary.add("chest");
-    secondary.add("shoulders");
-    secondary.add("biceps");
-  }
-
-  return { primary, secondary };
 }
 
 const SLUGS: Record<MuscleGroupKey, Slug[]> = {
@@ -88,6 +23,9 @@ const SLUGS: Record<MuscleGroupKey, Slug[]> = {
   glutes: ["gluteal"],
   hamstrings: ["hamstring"],
   erectors: ["lower-back"],
+  calves: ["calves"],
+  adductors: ["adductors"],
+  neck: ["neck"],
 };
 
 // intensity 1 = helper (amber), 2 = main (red)

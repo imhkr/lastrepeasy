@@ -38,7 +38,7 @@ def test_the_angle_axis_is_used_only_where_length_cannot_move():
     for name, spec in FAMILIES.items():
         if spec["track"]["axis"] != "angle":
             continue
-        assert name in ("lateral_raise", "hip_isolation", "calf"), name
+        assert name in ("lateral_raise", "hip_isolation", "calf", "hinge"), name
     assert FAMILIES["lateral_raise"]["track"]["axis"] == "angle"
     # The raise is inverted: hip-shoulder-elbow is ~10 deg with the arm down, so the rest position
     # -- which every family needs at progress 1 -- is the SMALL end of its range.

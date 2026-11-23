@@ -65,7 +65,7 @@ export type Rubric = {
 
 const DEG = 180 / Math.PI;
 const RANGES: Record<string, [number, number]> = {
-  elbow: [20, 180], knee: [20, 180], shoulder: [0, 195], hip: [20, 200], ankle: [30, 160],
+  elbow: [20, 180], knee: [20, 180], shoulder: [0, 195], hip: [10, 200], ankle: [30, 160],
 };
 
 // Plan ids are hyphenated (`low-incline-db-press`) while rubric files are underscored, because the
@@ -309,33 +309,37 @@ export type EvaluateInput = {
 // it returns to the top mark, so its highest progress is often around 0.8 -- a fixed 0.85 window
 // would then contain no frames at all and the lockout check would report "I could not see you" on
 // every single rep.
-export function phaseFrames(input: EvaluateInput, at: string | undefined): Landmarks[] {
+export function phaseFrames(input: EvaluateInput, at: string | undefined, eccentricDir?: string): Landmarks[] {
   const p = input.progress;
   if (!p || p.length !== input.frames.length || !at) return input.frames;
   const lo = Math.min(...p);
   const hi = Math.max(...p);
   const span = hi - lo;
   if (!(span > 1e-6)) return input.frames;
+  let iMin = 0;
+  for (let i = 1; i < p.length; i++) if (p[i] < p[iMin]) iMin = i;
   const norm = (x: number) => (x - lo) / span;
   const idx: number[] = [];
   for (let i = 0; i < p.length; i++) {
     const n = norm(p[i]);
     if (at === "bottom" && n <= 0.25) idx.push(i);
-    else if (at === "lockout" && n >= 0.8) idx.push(i);
-    else if (at === "eccentric" && n < 0.6) idx.push(i);
+    else if (at === "lockout" && i >= iMin && n >= 0.8) idx.push(i);
+    else if (at === "eccentric") {
+      if (((eccentricDir === "return" ? i >= iMin : i <= iMin) || n <= 0.25) && n < 0.6) idx.push(i);
+    }
   }
   return idx.length ? idx.map((i) => input.frames[i]) : input.frames;
 }
 
 // Judge one window of frames against one check of the rubric.
-export function evaluateCheck(check: RubricCheck, input: EvaluateInput): CheckVerdict {
+export function evaluateCheck(check: RubricCheck, input: EvaluateInput, eccentricDir?: string): CheckVerdict {
   const aspect = input.aspect ?? 1;
   const minVis = check.min_visibility ?? 0.6;
   const robust = check.robust ?? "median";
   const capture = check.capture ?? "in_plane";
   // Each check is graded at the phase it names. Doing this once here is what keeps "depth at the
   // bottom" from being measured as the arm comes back up.
-  const frames = phaseFrames(input, check.at);
+  const frames = phaseFrames(input, check.at, eccentricDir);
 
   if (check.measure === "eccentric_seconds") {
     const secs = input.secondsAvailable;
@@ -392,7 +396,7 @@ export function evaluateCheck(check: RubricCheck, input: EvaluateInput): CheckVe
 
 export function evaluateAll(input: EvaluateInput): CheckVerdict[] {
   const rubric = getRubric(input.exerciseId);
-  return rubric.checks.map((c) => evaluateCheck(c, input));
+  return rubric.checks.map((c) => evaluateCheck(c, input, rubric.track?.eccentric));
 }
 
 // ---------------------------------------------------------------- view gate

@@ -16,6 +16,7 @@ export default function Workout() {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<PlanExercise | null>(null);
   const [renaming, setRenaming] = useState(false);
+  const [showWarmup, setShowWarmup] = useState(false);
   const w = plan?.weeks.find((x) => x.week === Number(week));
   const d = w?.days[Number(day)];
   const key = dayKey(planId, week, day);
@@ -43,11 +44,31 @@ export default function Workout() {
         {plan.unit ?? "Week"} {w.week}
         {w.label ? ` · ${w.label}` : ""} · {d.exercises.length} exercises
       </Text>
-      <Text style={styles.tip}>Tap an exercise for substitutes and to log your weights.</Text>
+      <Text style={styles.tip}>Tap an exercise for notes, warm-up pyramid, Live Coach, and set logging.</Text>
+      {plan.warmupProtocol && (
+        <View style={styles.warmupWrap}>
+          <TouchableOpacity onPress={() => setShowWarmup((v) => !v)}>
+            <Text style={styles.warmupToggle}>{showWarmup ? "Hide warm-up protocol" : "Show warm-up protocol (5-10 min)"}</Text>
+          </TouchableOpacity>
+          {showWarmup && (
+            <View style={styles.warmupCard}>
+              {plan.warmupProtocol.general.map((line) => (
+                <Text key={line} style={styles.warmupLine}>• {line}</Text>
+              ))}
+              {plan.warmupProtocol.pyramid.map((p) => (
+                <Text key={p.sets} style={styles.warmupLine}>
+                  {p.sets} {p.sets === "1" ? "warm-up set" : "warm-up sets"}: {p.detail}
+                </Text>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
       {d.exercises.map((ex, i) => (
         <ExerciseCard
           key={`${ex.id}-${ex.name}`}
           ex={ex}
+          planId={plan.id}
           weakPoints={plan.weakPoints}
           canUp={i > 0}
           canDown={i < d.exercises.length - 1}
@@ -107,6 +128,13 @@ export default function Workout() {
         onClose={() => setAdding(false)}
         onAdd={async (v) => { await addExercise(base, w.week, Number(day), v.name, v.sets, v.reps, v.rest, v.allWeeks); setAdding(false); reload(); }}
       />
+      {d.restAfter && (
+        <View style={[styles.restNotice, d.restAfter === "mandatory" ? styles.restNoticeMandatory : styles.restNoticeOptional]}>
+          <Text style={[styles.restNoticeText, d.restAfter === "mandatory" ? styles.restNoticeMandatoryText : styles.restNoticeOptionalText]}>
+            {d.restAfter === "mandatory" ? "Mandatory rest day after this session" : "Optional rest day after this session"}
+          </Text>
+        </View>
+      )}
       <TouchableOpacity
         style={[styles.doneBtn, done && styles.doneOn]}
         onPress={() => {
@@ -135,5 +163,15 @@ const styles = StyleSheet.create({
   doneBtn: { backgroundColor: "#0284C7", borderRadius: 14, paddingVertical: 15, alignItems: "center", marginTop: 8 },
   doneOn: { backgroundColor: "#065F46" },
   doneText: { color: "#FFFFFF", fontSize: 15, fontWeight: "800" },
-  tip: { color: "#94A3B8", fontSize: 13, marginTop: 6, marginBottom: 14 },
+  tip: { color: "#94A3B8", fontSize: 13, marginTop: 6, marginBottom: 10 },
+  warmupWrap: { marginBottom: 12, gap: 8 },
+  warmupToggle: { color: "#38BDF8", fontSize: 13, fontWeight: "700" },
+  warmupCard: { backgroundColor: "#111827", borderRadius: 12, padding: 12, borderWidth: 1, borderColor: "#1E293B", gap: 4 },
+  warmupLine: { color: "#CBD5E1", fontSize: 12, lineHeight: 18 },
+  restNotice: { borderRadius: 10, paddingVertical: 9, paddingHorizontal: 12, borderWidth: 1, marginTop: 4, alignItems: "center" },
+  restNoticeOptional: { backgroundColor: "#0F172A", borderColor: "#334155" },
+  restNoticeMandatory: { backgroundColor: "#2D1E07", borderColor: "#D97706" },
+  restNoticeText: { fontSize: 12, fontWeight: "800" },
+  restNoticeOptionalText: { color: "#94A3B8" },
+  restNoticeMandatoryText: { color: "#FCD34D" },
 });

@@ -1,12 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Vibration } from "react-native";
+import { useRouter } from "expo-router";
 import { PlanExercise, WeakPoint } from "../types/plans";
 import { bestE1rmBeforeToday, lastLiftBeforeToday, logLift, todaysLift } from "../services/weightLog";
 import { clock, restSeconds } from "../services/rest";
 import { LiftEntry, SetLog, compareLifts, e1rm } from "../services/weightMath";
+import { listExercises } from "../live/engine";
 
 interface Props {
   ex: PlanExercise;
+  planId?: string;
   weakPoints?: WeakPoint[];
   onRemove?: () => void; // custom exercises are deleted, book ones are hidden from the day
   onEdit?: () => void;
@@ -24,7 +27,23 @@ const num = (s: string) => {
 };
 const dateLabel = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 
-export const ExerciseCard: React.FC<Props> = ({ ex, weakPoints, onRemove, onEdit, onReset, onMove, canUp, canDown }) => {
+const warmupPyramid = (warmup: string): string | null => {
+  const nums = (warmup || "").match(/\d+/g)?.map(Number) ?? [];
+  const max = nums.length ? Math.max(...nums) : 0;
+  if (max <= 0) return null;
+  if (max === 1) return "~60% × 6-10 reps";
+  if (max === 2) return "~50% × 6-10  →  ~70% × 4-6";
+  return "~45% × 6-10  →  ~65% × 4-6  →  ~85% × 3-4";
+};
+
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+export const ExerciseCard: React.FC<Props> = ({ ex, planId, weakPoints, onRemove, onEdit, onReset, onMove, canUp, canDown }) => {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [variant, setVariant] = useState(ex.name);
   const [area, setArea] = useState<string | null>(null);
@@ -138,16 +157,53 @@ export const ExerciseCard: React.FC<Props> = ({ ex, weakPoints, onRemove, onEdit
 
       {open && (
         <View style={styles.body}>
-          <Text style={styles.meta}>
-            Warm-up sets: {ex.warmup || "none"}
-            {ex.rest ? `   ·   Rest ${ex.rest}` : ""}
-          </Text>
+          <View style={styles.metaBlock}>
+            <Text style={styles.meta}>
+              Warm-up sets: {ex.warmup || "none"}
+              {ex.rest ? `   ·   Rest ${ex.rest}` : ""}
+            </Text>
+            {warmupPyramid(ex.warmup) ? (
+              <Text style={styles.pyramid}>Pyramid: {warmupPyramid(ex.warmup)}</Text>
+            ) : null}
+          </View>
 
-          {restSeconds(ex.rest) > 0 && (
-            <TouchableOpacity style={[styles.timer, left > 0 && styles.timerOn]} onPress={() => setLeft(left > 0 ? 0 : restSeconds(ex.rest))}>
-              <Text style={styles.timerText}>{left > 0 ? `Resting ${clock(left)}  ·  tap to stop` : `Start rest timer (${clock(restSeconds(ex.rest))})`}</Text>
+          {ex.note ? (
+            <View style={styles.noteBox}>
+              <Text style={styles.noteTitle}>Coach note</Text>
+              <Text style={styles.noteText}>{ex.note}</Text>
+            </View>
+          ) : null}
+
+          <View style={styles.actionRow}>
+            {restSeconds(ex.rest) > 0 && (
+              <TouchableOpacity style={[styles.timer, { flex: 1 }, left > 0 && styles.timerOn]} onPress={() => setLeft(left > 0 ? 0 : restSeconds(ex.rest))}>
+                <Text style={styles.timerText}>{left > 0 ? `Resting ${clock(left)} · stop` : `Rest ${clock(restSeconds(ex.rest))}`}</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={styles.coachBtn}
+              onPress={() => {
+                const activeName = loggedName || ex.name;
+                const available = new Set(listExercises());
+                const candidate = variant === ex.name && available.has(ex.id) ? ex.id : slugify(activeName);
+                if (available.has(candidate)) {
+                  router.push(`/live?exercise=${encodeURIComponent(candidate)}` as any);
+                } else {
+                  router.push(`/live?q=${encodeURIComponent(activeName)}` as any);
+                }
+              }}
+            >
+              <Text style={styles.coachBtnText}>Live Coach</Text>
             </TouchableOpacity>
-          )}
+            {planId ? (
+              <TouchableOpacity
+                style={styles.guideBtn}
+                onPress={() => router.push(`/exercise/${planId}/${ex.id}?name=${encodeURIComponent(ex.name)}` as any)}
+              >
+                <Text style={styles.guideBtnText}>Guide</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
 
           {ex.weakPoint ? (
             <View style={styles.block}>
@@ -287,7 +343,17 @@ const styles = StyleSheet.create({
   techChip: { alignSelf: "flex-start", marginTop: 8, backgroundColor: "#3B2A0A", borderColor: "#F59E0B", borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   techText: { color: "#FCD34D", fontSize: 12, fontWeight: "700" },
   body: { marginTop: 12, gap: 12 },
+  metaBlock: { gap: 3 },
   meta: { color: "#94A3B8", fontSize: 13 },
+  pyramid: { color: "#7DD3FC", fontSize: 12, fontWeight: "600" },
+  noteBox: { backgroundColor: "#0B1220", borderLeftWidth: 3, borderLeftColor: "#38BDF8", borderRadius: 10, padding: 10, gap: 4 },
+  noteTitle: { color: "#7DD3FC", fontSize: 11, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.5 },
+  noteText: { color: "#E2E8F0", fontSize: 13, lineHeight: 19 },
+  actionRow: { flexDirection: "row", gap: 8 },
+  coachBtn: { backgroundColor: "#0C2A3F", borderWidth: 1, borderColor: "#0284C7", borderRadius: 10, paddingVertical: 11, paddingHorizontal: 14, alignItems: "center", justifyContent: "center" },
+  coachBtnText: { color: "#7DD3FC", fontSize: 14, fontWeight: "800" },
+  guideBtn: { backgroundColor: "#182235", borderRadius: 10, paddingVertical: 11, paddingHorizontal: 12, alignItems: "center", justifyContent: "center" },
+  guideBtnText: { color: "#E2E8F0", fontSize: 14, fontWeight: "700" },
   block: { gap: 8 },
   blockTitle: { color: "#94A3B8", fontSize: 12, fontWeight: "700", letterSpacing: 0.4 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },

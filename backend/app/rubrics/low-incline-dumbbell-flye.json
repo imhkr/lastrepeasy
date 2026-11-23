@@ -15,8 +15,7 @@
     "origin": "shoulder",
     "point": "wrist",
     "axis": "angle",
-    "invert": true,
-    "eccentric": "return"
+    "invert": true
   },
   "start_cue": {
     "en": "Hold the weight up, then lower it slowly.",
@@ -110,7 +109,7 @@
       "measure": "eccentric_seconds",
       "good": [
         0.9,
-        3.0
+        5.5
       ],
       "almost": [
         0.45,
@@ -124,6 +123,10 @@
         "fix": {
           "en": "Too fast. Control the opening. Count 2 seconds.",
           "hi": "Bahut tez hai. Kholne mein control rakho. 2 tak gino."
+        },
+        "above": {
+          "en": "Very slow. Good control — keep moving smoothly.",
+          "hi": "Bahut slow hai. Control achha hai, smooth chalte raho."
         },
         "below": {
           "en": "Too fast. Control the opening. Count 2 seconds.",

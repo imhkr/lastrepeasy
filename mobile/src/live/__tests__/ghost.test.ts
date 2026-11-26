@@ -7,7 +7,7 @@ import { liveHtml } from "../liveHtml.ts";
 import { getRubric, listExercises } from "../engine.ts";
 import type { Landmarks } from "../engine.ts";
 import {
-  buildShadowArm, createGhostClock, ghostPhase, ghostTargetDeg, jointAngleDeg, teachGhostClock,
+  buildShadowArm, createGhostRunner, GHOST_CYCLE, ghostStep, ghostTargetDeg, jointAngleDeg, teachGhostRunner,
 } from "../overlay.ts";
 
 const ASPECT = 0.75; // portrait 480x640, so x and y are on different scales like a real phone
@@ -88,27 +88,80 @@ const shown = jointAngleDeg({ ...stalled, shadow_wrist: half.b }, "left_shoulder
 assert.ok(shown - 90 > 25, `a stalled lifter sees a ${Math.round(shown)}-degree shadow, not 90`);
 console.log("GHOST_STALLED_VISIBLE_OK");
 
-// ---- the clock -------------------------------------------------------------
+// ---- the runner -------------------------------------------------------------
 
-const c = createGhostClock();
-assert.equal(ghostPhase(c, 100), 1, "no rep yet: resting straight");
-c.t0 = 10;
-assert.equal(ghostPhase(c, 10), 1, "rep starts straight");
-assert.ok(Math.abs(ghostPhase(c, 10 + 2.4 * 0.25) - 0.5) < 1e-9, "quarter cycle is half bent");
-assert.ok(Math.abs(ghostPhase(c, 10 + 1.2) - 0) < 1e-9, "half cycle is fully bent");
-assert.ok(Math.abs(ghostPhase(c, 10 + 2.4 * 0.75) - 0.5) < 1e-9, "three quarters is coming back");
-assert.equal(ghostPhase(c, 10 + 2.4), 1, "cycle end is straight again");
-assert.equal(ghostPhase(c, 10 + 50), 1, "holding at the top, never cycles on its own");
-assert.equal(ghostPhase(c, 5), 1, "before the start is treated as rest");
+// Frames at 30 fps, like the page; a single big jump would be rate-limited and prove nothing.
+function frames(r: ReturnType<typeof createGhostRunner>, from: number, to: number, progress: (t: number) => number | null): number {
+  let t = from;
+  for (; t < to; t += 1 / 30) ghostStep(r, t, progress(t));
+  return ghostStep(r, to, progress(to));
+}
 
-teachGhostClock(c, 3.6);
-assert.equal(c.duration, 3.6, "tempo is learned from the last rep");
-teachGhostClock(c, 0.2);
-assert.equal(c.duration, 1.2, "clamped fast");
-teachGhostClock(c, 50);
-assert.equal(c.duration, 8, "clamped slow");
-teachGhostClock(c, -3);
-assert.equal(c.duration, 8, "a nonsense duration is ignored");
+// The ready position is the bent arm a pushdown starts from -- not the straight one the first
+// build rested on, which lay a straight shadow over a bent lifter before they had moved.
+{
+  const r = createGhostRunner();
+  assert.equal(ghostStep(r, 100, null), 0, "starts bent, over the ready position");
+}
+
+// Between reps the shadow demonstrates on a loop, so the movement is visible before the first
+// rep is ever counted. A frozen shadow reads as "the feature is broken".
+{
+  const r = createGhostRunner();
+  frames(r, 0, 1.2, () => null);
+  const top = ghostStep(r, 1.2, null);
+  assert.ok(top > 0.95, `demonstrates the push to lockout, got ${top.toFixed(2)}`);
+  frames(r, 1.2, 2.4, () => null);
+  const bottom = ghostStep(r, 2.4, null);
+  assert.ok(bottom < 0.05, `and returns to the bent ready position, got ${bottom.toFixed(2)}`);
+}
+
+// THE BUG: the shadow used to run on its own timer, so it straightened while the lifter rested at
+// the bottom. It must follow the lifter's own progress while they move...
+{
+  const r = createGhostRunner();
+  const rising = (t: number) => 0.1 + 0.5 * t; // pushing over one second
+  frames(r, 0, 1, rising);
+  assert.ok(Math.abs(r.phase - rising(1)) < 0.05, `lockstep with the lifter, got ${r.phase.toFixed(2)}`);
+  const falling = (t: number) => 1.6 - 0.5 * t; // and bending back
+  frames(r, 1, 2, falling);
+  assert.ok(Math.abs(r.phase - falling(2)) < 0.05, `and follows them back down, got ${r.phase.toFixed(2)}`);
+}
+
+// ...but when the hand stops moving it must finish the push, because "my hand is not going down
+// while the shadow is" is the whole point of showing it.
+{
+  const r = createGhostRunner();
+  frames(r, 0, 1, () => 0.3);
+  const stalled = frames(r, 1, 2.5, () => 0.3);
+  assert.ok(stalled > 0.8, `stalled lifter still sees the push, got ${stalled.toFixed(2)}`);
+  // And it hands control back as soon as the lifter moves again.
+  const resumed = frames(r, 2.5, 3.5, (t) => 1 - 0.5 * (t - 2.5));
+  assert.ok(Math.abs(resumed - 0.5) < 0.06, `returns to lockstep, got ${resumed.toFixed(2)}`);
+}
+
+// A slow frame or a backgrounded tab must not teleport the shadow across the rep.
+{
+  const r = createGhostRunner();
+  ghostStep(r, 0, 0.1);
+  const jumped = ghostStep(r, 5, 0.1);
+  assert.ok(jumped - 0.1 <= 3 * 0.5 + 1e-9, "clamped dt bounds one frame's move");
+  assert.ok(Number.isFinite(jumped) && jumped >= 0 && jumped <= 1, "phase stays a number in range");
+}
+
+// Tempo is learned from completed reps for the idle loop and the stall rescue.
+{
+  const r = createGhostRunner();
+  assert.equal(r.duration, GHOST_CYCLE);
+  teachGhostRunner(r, 3.6);
+  assert.equal(r.duration, 3.6, "tempo is learned from the last rep");
+  teachGhostRunner(r, 0.2);
+  assert.equal(r.duration, 1.2, "clamped fast");
+  teachGhostRunner(r, 50);
+  assert.equal(r.duration, 8, "clamped slow");
+  teachGhostRunner(r, -3);
+  assert.equal(r.duration, 8, "a nonsense duration is ignored");
+}
 console.log("GHOST_CLOCK_OK");
 
 // ---- rubric + bundle wiring ------------------------------------------------
@@ -124,7 +177,7 @@ console.log("GHOST_RUBRIC_OK");
 
 const LIVE = new Function(`${RUNTIME_JS}\nreturn LIVE;`)() as any;
 assert.equal(typeof LIVE.overlay.buildShadowArm, "function", "bundle exposes the shadow limb");
-assert.equal(typeof LIVE.overlay.ghostPhase, "function", "bundle exposes the clock");
+assert.equal(typeof LIVE.overlay.ghostStep, "function", "bundle exposes the runner");
 assert.deepEqual(LIVE.rubrics.triceps_pressdown.ghost, SPEC, "bundle carries the ghost config");
 assert.ok(liveHtml({ exerciseId: "triceps_pressdown" }).includes("buildShadowArm"), "the live page draws it");
 console.log("GHOST_BUNDLE_OK");

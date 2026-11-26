@@ -221,7 +221,7 @@ export function liveHtml(opts: LiveHtmlOpts): string {
   var files, landmarker, stream = null, running = false;
   var lastTs = -1, lastMedia = -1, summaryShown = false, speakAt = 0;
   var seg = null, frameWindow = [], repsDone = [], lastCueKey = "";
-  var ghostClock = LIVE.overlay.createGhostClock(), ghostNow = 1;
+  var ghostRunner = LIVE.overlay.createGhostRunner(), ghostNow = 0;
   var viewOk = false, gateReason = "";
   var lastVerdicts = [], lastBanner = null, lostPoseFrames = 0, badViewFrames = 0;
 
@@ -344,12 +344,12 @@ export function liveHtml(opts: LiveHtmlOpts): string {
     var nowT = src ? mt : now / 1000;
     var rep = seg.update(lm, nowT);
 
-    // The shadow's clock starts with the rep, not with the lifter's hand: that is what lets it keep
-    // demonstrating a full rep while the lifter stalls half way. Between reps it rests straight.
+    // The shadow follows the lifter's own progress during a rep, finishes the push if they stall,
+    // and demonstrates on a loop between reps -- see overlay.ghostStep for why each rule exists.
     if (GHOST) {
-      if (seg.pending()) { if (ghostClock.t0 === null) ghostClock.t0 = nowT; }
-      else if (!rep) ghostClock.t0 = null;
-      ghostNow = LIVE.overlay.ghostPhase(ghostClock, nowT);
+      var pendNow = seg.pending();
+      var prog = pendNow && pendNow.progress.length ? pendNow.progress[pendNow.progress.length - 1] : null;
+      ghostNow = LIVE.overlay.ghostStep(ghostRunner, nowT, prog);
     }
 
     // Snapshot the bottom as it happens. A live camera cannot be rewound, so the only way to send
@@ -474,8 +474,8 @@ export function liveHtml(opts: LiveHtmlOpts): string {
 
   function finishRep(r, lm, aspect) {
     var verdicts = judge(r, aspect);
-    // Next rep is demonstrated at this rep's pace; this one's clock is done.
-    if (GHOST) { LIVE.overlay.teachGhostClock(ghostClock, r.endT - r.startT); ghostClock.t0 = null; ghostNow = 1; }
+    // Next demo runs at this rep's pace.
+    if (GHOST) LIVE.overlay.teachGhostRunner(ghostRunner, r.endT - r.startT);
     lastVerdicts = verdicts;
     verdicts.forEach(function (vd) { showCheck(specFor(vd.id), vd.status, vd.value, ""); });
     paint(lm, verdicts);
@@ -634,13 +634,13 @@ export function liveHtml(opts: LiveHtmlOpts): string {
   document.getElementById("flip").onclick = function () {
     facing = facing === "user" ? "environment" : "user";
     seg = LIVE.segment.createSegmenter({ track: TRACK });
-    ghostClock = LIVE.overlay.createGhostClock(); ghostNow = 1;
+    ghostRunner = LIVE.overlay.createGhostRunner(); ghostNow = 0;
     frameWindow = []; kfBottom = null; kfBottomT = null; badViewFrames = 0; viewOk = false;
     lastMedia = -1; startSource();
   };
   document.getElementById("reset").onclick = function () {
     seg = LIVE.segment.createSegmenter({ track: TRACK });
-    ghostClock = LIVE.overlay.createGhostClock(); ghostNow = 1;
+    ghostRunner = LIVE.overlay.createGhostRunner(); ghostNow = 0;
     frameWindow = []; repsDone = []; lastCueKey = ""; kfBottom = null; kfBottomT = null;
     lastVerdicts = []; lastBanner = null; lostPoseFrames = 0; badViewFrames = 0;
     window.__live.reps = [];

@@ -202,29 +202,64 @@ export function buildShadowArm(lm: Landmarks, side: string, targetDeg: number, a
   ];
 }
 
-// The shadow runs on its own clock, started with the rep. It is NOT a copy of the lifter's
-// progress: a shadow slaved to progress freezes the instant the lifter stalls -- which is exactly
-// the moment it has something to teach.
-export type GhostClock = { t0: number | null; duration: number };
-export const GHOST_CYCLE = 2.4; // seconds to demonstrate a full rep before one has been learned
+// The shadow follows the lifter's OWN phase while they move -- a shadow on an independent timer
+// drifts out of step with anyone whose bend and push are not equal halves, and straightens by
+// itself while they rest at the bottom. Two exceptions keep it useful: when the lifter stalls it
+// finishes the push for them (the exact moment it has something to teach), and with no rep in
+// flight it demonstrates on a loop so the movement is visible before the first rep.
+export type GhostRunner = {
+  phase: number; // shadow phase, 0 bottom .. 1 lockout
+  t0: number | null; // demo loop anchor
+  lastT: number | null;
+  lastP: number | null;
+  stillSince: number | null;
+  duration: number; // demo tempo, learned from completed reps
+};
+export const GHOST_CYCLE = 2.4; // seconds per demonstrated rep until one has been learned
+export const GHOST_STALL_S = 0.6; // how long a frozen hand counts as stalled
+const GHOST_MAX_RATE = 3.0; // phase per second, so a target switch glides instead of jumping
 
-export function createGhostClock(): GhostClock {
-  return { t0: null, duration: GHOST_CYCLE };
+export function createGhostRunner(): GhostRunner {
+  return { phase: 0, t0: null, lastT: null, lastP: null, stillSince: null, duration: GHOST_CYCLE };
 }
 
-// 1 at the start (arm straight), 0 at half the cycle (elbow closed), back to 1. Between reps the
-// clock is unset and the shadow rests at 1, over the lifter's own straight arm.
-export function ghostPhase(c: GhostClock, t: number): number {
-  if (c.t0 === null) return 1;
-  const u = (t - c.t0) / c.duration;
-  if (!(u >= 0) || u >= 1) return 1;
-  return u < 0.5 ? 1 - 2 * u : 2 * u - 1;
+// Idle demonstration: starts bent (the ready position for a pressdown), straightens, returns.
+function loopPhase(r: GhostRunner, t: number): number {
+  const u = (((t - (r.t0 ?? t)) / r.duration) % 1 + 1) % 1;
+  return u < 0.5 ? u * 2 : 2 - u * 2;
 }
 
-// Tempo lock: the next rep is demonstrated at the pace of the last one, so the shadow moves with
-// the lifter instead of at an arbitrary speed. Bounds keep a mis-segmented 12-second "rep" from
-// turning the shadow into a slideshow.
-export function teachGhostClock(c: GhostClock, seconds: number): void {
+// progress: the segmenter's in-rep phase, or null when no rep is in flight.
+export function ghostStep(r: GhostRunner, t: number, progress: number | null): number {
+  if (r.t0 === null || r.lastT === null) {
+    r.t0 = t;
+    r.lastT = t;
+    r.phase = 0; // ready position: elbow closed, matching the start cue
+    return r.phase;
+  }
+  // Clamped dt: a backgrounded tab or a slow frame must not teleport the shadow.
+  const dt = Math.max(0, Math.min(0.5, t - r.lastT));
+  r.lastT = t;
+  let target: number;
+  if (progress === null || !Number.isFinite(progress)) {
+    r.lastP = null;
+    r.stillSince = null;
+    target = loopPhase(r, t);
+  } else {
+    const p = Math.max(0, Math.min(1, progress));
+    if (r.lastP !== null && Math.abs(p - r.lastP) > 0.004) r.stillSince = null;
+    else if (r.stillSince === null) r.stillSince = t;
+    r.lastP = p;
+    target = r.stillSince !== null && t - r.stillSince >= GHOST_STALL_S ? 1 : p;
+  }
+  const step = GHOST_MAX_RATE * dt;
+  r.phase += Math.max(-step, Math.min(step, target - r.phase));
+  return r.phase;
+}
+
+// Tempo for the idle demo and the stall rescue, taken from the last completed rep. Bounds keep a
+// mis-segmented 12-second "rep" from turning the shadow into a slideshow.
+export function teachGhostRunner(r: GhostRunner, seconds: number): void {
   if (!(seconds > 0)) return;
-  c.duration = Math.min(8, Math.max(1.2, seconds));
+  r.duration = Math.min(8, Math.max(1.2, seconds));
 }

@@ -298,6 +298,9 @@ def health_check():
     return {
         "status": "ok",
         "service": "formflow-ai-backend",
+        # Render sets this at build time, so "did my push actually deploy?" is answerable
+        # from outside instead of assumed.
+        "commit": (os.getenv("RENDER_GIT_COMMIT") or "dev")[:7],
         "features": [
             "pose_angle_tracking",
             "handle_wrist_ankle_biomechanics",

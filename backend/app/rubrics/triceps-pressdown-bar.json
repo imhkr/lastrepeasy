@@ -16,6 +16,10 @@
     "point": "wrist",
     "axis": "distance"
   },
+  "ghost": {
+    "at_bottom": 70,
+    "at_top": 170
+  },
   "start_cue": {
     "en": "Set your elbow still, then straighten your arm.",
     "hi": "Kohni sthir rakho, phir haath seedha karo."

@@ -157,3 +157,74 @@ export function plausible(joint: string, deg: number): boolean {
   const r = RANGES[joint.replace(/^(left|right)_/, "")];
   return !r || (deg >= r[0] && deg <= r[1]);
 }
+
+// ---------------------------------------------------------------- shadow arm
+
+// The rubric declares where the arm should be at each end of the rep. Only movements whose form
+// is visible in the arm path carry this block; without it no shadow is drawn at all.
+export type GhostSpec = { at_bottom: number; at_top: number };
+
+// Phase is the segmenter's own 0..1 (0 = bottom, joint closed; 1 = lockout). One meaning of
+// "phase" in the whole system, so the shadow can never disagree with the judge about the rep.
+export function ghostTargetDeg(spec: GhostSpec | undefined, phase: number): number {
+  if (!spec || !Number.isFinite(phase)) return NaN;
+  const p = Math.max(0, Math.min(1, phase));
+  return spec.at_bottom + (spec.at_top - spec.at_bottom) * p;
+}
+
+const SHADOW = "rgba(110,235,60,0.55)";
+const SHADOW_W = 11;
+
+// The shadow keeps the REAL shoulder and elbow and prescribes only the forearm. Inventing an upper
+// arm would put a limb on screen the tracker never saw (the old cartoon), and the pressdown's fault
+// is the hand path, not the upper-arm angle. The angle is measured the same way the in-plane check
+// measures it -- x scaled by aspect -- so the shadow and the verdict describe the same joint.
+export function buildShadowArm(lm: Landmarks, side: string, targetDeg: number, aspect = 1): DrawItem[] {
+  const sh = lm[`${side}_shoulder`], el = lm[`${side}_elbow`], wr = lm[`${side}_wrist`];
+  if (!sh || !el || !wr) return [];
+  // No wrist means no forearm length to project along, and the direction to rotate toward is lost.
+  if (Math.min(sh.vis, el.vis) < 0.5 || wr.vis < 0.4) return [];
+  if (!Number.isFinite(targetDeg)) return [];
+  const ux = (sh.x - el.x) * aspect, uy = sh.y - el.y; // elbow -> shoulder
+  const fx = (wr.x - el.x) * aspect, fy = wr.y - el.y; // elbow -> wrist
+  const nu = Math.hypot(ux, uy), nf = Math.hypot(fx, fy);
+  if (nu < 1e-6 || nf < 1e-6) return [];
+  const rad = (targetDeg * Math.PI) / 180;
+  const px = -uy / nu, py = ux / nu; // perpendicular to the upper arm
+  const sign = fx * px + fy * py >= 0 ? 1 : -1; // rotate toward the side the real forearm is on
+  const cos = Math.cos(rad), sin = Math.sin(rad) * sign;
+  const dx = (ux / nu) * cos + px * sin;
+  const dy = (uy / nu) * cos + py * sin;
+  const gwr = { x: el.x + (dx * nf) / aspect, y: el.y + dy * nf, vis: 1 };
+  return [
+    { kind: "bone", a: el, b: gwr, color: SHADOW, width: SHADOW_W },
+    { kind: "joint", at: gwr, color: SHADOW, r: 4 },
+  ];
+}
+
+// The shadow runs on its own clock, started with the rep. It is NOT a copy of the lifter's
+// progress: a shadow slaved to progress freezes the instant the lifter stalls -- which is exactly
+// the moment it has something to teach.
+export type GhostClock = { t0: number | null; duration: number };
+export const GHOST_CYCLE = 2.4; // seconds to demonstrate a full rep before one has been learned
+
+export function createGhostClock(): GhostClock {
+  return { t0: null, duration: GHOST_CYCLE };
+}
+
+// 1 at the start (arm straight), 0 at half the cycle (elbow closed), back to 1. Between reps the
+// clock is unset and the shadow rests at 1, over the lifter's own straight arm.
+export function ghostPhase(c: GhostClock, t: number): number {
+  if (c.t0 === null) return 1;
+  const u = (t - c.t0) / c.duration;
+  if (!(u >= 0) || u >= 1) return 1;
+  return u < 0.5 ? 1 - 2 * u : 2 * u - 1;
+}
+
+// Tempo lock: the next rep is demonstrated at the pace of the last one, so the shadow moves with
+// the lifter instead of at an arbitrary speed. Bounds keep a mis-segmented 12-second "rep" from
+// turning the shadow into a slideshow.
+export function teachGhostClock(c: GhostClock, seconds: number): void {
+  if (!(seconds > 0)) return;
+  c.duration = Math.min(8, Math.max(1.2, seconds));
+}

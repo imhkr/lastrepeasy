@@ -116,6 +116,9 @@ export function liveHtml(opts: LiveHtmlOpts): string {
   // Which geometry counts a rep for THIS exercise. A press is wrist-off-shoulder; a squat is
   // hip-above-foot. The rubric declares it, so adding a family is still a JSON edit.
   var TRACK = rubric && rubric.track ? rubric.track : undefined;
+  // The scripted shadow arm, if this movement declares one. It shows where the forearm should be
+  // while the lifter performs their own rep beside it.
+  var GHOST = rubric && rubric.ghost ? rubric.ghost : null;
   // What "ready to start" looks like depends on the movement: a press starts with the weight held
   // up, a squat starts standing. Telling a squatting user to "hold the weights up" was leftover
   // press wording that only made sense for one family.
@@ -193,6 +196,12 @@ export function liveHtml(opts: LiveHtmlOpts): string {
       highlightColor: hlColor,
       vis: 0.5
     });
+    // The shadow goes UNDER the real skeleton so the lifter's own arm is never hidden by it, and
+    // only from a view the rubric can judge: a wrong camera distorts the shadow the same way.
+    var gside = seg ? seg.side() : null;
+    if (GHOST && viewOk && gside) {
+      items = LIVE.overlay.buildShadowArm(lm, gside, LIVE.overlay.ghostTargetDeg(GHOST, ghostNow), W / H).concat(items);
+    }
     for (var j = 0; j < items.length; j++) {
       var it = items[j];
       if (it.kind === "bone") {
@@ -212,6 +221,7 @@ export function liveHtml(opts: LiveHtmlOpts): string {
   var files, landmarker, stream = null, running = false;
   var lastTs = -1, lastMedia = -1, summaryShown = false, speakAt = 0;
   var seg = null, frameWindow = [], repsDone = [], lastCueKey = "";
+  var ghostClock = LIVE.overlay.createGhostClock(), ghostNow = 1;
   var viewOk = false, gateReason = "";
   var lastVerdicts = [], lastBanner = null, lostPoseFrames = 0, badViewFrames = 0;
 
@@ -333,6 +343,14 @@ export function liveHtml(opts: LiveHtmlOpts): string {
     if (!seg) seg = LIVE.segment.createSegmenter({ track: TRACK });
     var nowT = src ? mt : now / 1000;
     var rep = seg.update(lm, nowT);
+
+    // The shadow's clock starts with the rep, not with the lifter's hand: that is what lets it keep
+    // demonstrating a full rep while the lifter stalls half way. Between reps it rests straight.
+    if (GHOST) {
+      if (seg.pending()) { if (ghostClock.t0 === null) ghostClock.t0 = nowT; }
+      else if (!rep) ghostClock.t0 = null;
+      ghostNow = LIVE.overlay.ghostPhase(ghostClock, nowT);
+    }
 
     // Snapshot the bottom as it happens. A live camera cannot be rewound, so the only way to send
     // the backend the frame where the lifter was lowest is to notice the moment it is happening:
@@ -456,6 +474,8 @@ export function liveHtml(opts: LiveHtmlOpts): string {
 
   function finishRep(r, lm, aspect) {
     var verdicts = judge(r, aspect);
+    // Next rep is demonstrated at this rep's pace; this one's clock is done.
+    if (GHOST) { LIVE.overlay.teachGhostClock(ghostClock, r.endT - r.startT); ghostClock.t0 = null; ghostNow = 1; }
     lastVerdicts = verdicts;
     verdicts.forEach(function (vd) { showCheck(specFor(vd.id), vd.status, vd.value, ""); });
     paint(lm, verdicts);
@@ -614,11 +634,13 @@ export function liveHtml(opts: LiveHtmlOpts): string {
   document.getElementById("flip").onclick = function () {
     facing = facing === "user" ? "environment" : "user";
     seg = LIVE.segment.createSegmenter({ track: TRACK });
+    ghostClock = LIVE.overlay.createGhostClock(); ghostNow = 1;
     frameWindow = []; kfBottom = null; kfBottomT = null; badViewFrames = 0; viewOk = false;
     lastMedia = -1; startSource();
   };
   document.getElementById("reset").onclick = function () {
     seg = LIVE.segment.createSegmenter({ track: TRACK });
+    ghostClock = LIVE.overlay.createGhostClock(); ghostNow = 1;
     frameWindow = []; repsDone = []; lastCueKey = ""; kfBottom = null; kfBottomT = null;
     lastVerdicts = []; lastBanner = null; lostPoseFrames = 0; badViewFrames = 0;
     window.__live.reps = [];

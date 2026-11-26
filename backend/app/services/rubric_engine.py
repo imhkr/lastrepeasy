@@ -102,6 +102,9 @@ class Rubric:
     # Which geometry defines a rep: a press counts wrist-off-shoulder with the elbow extending, a
     # squat counts hip-above-foot with the knee extending. None means the press default.
     track: Optional[Dict] = None
+    # The scripted shadow arm, in degrees of elbow bend at phase 0 (bottom) and 1 (lockout).
+    # Optional: only movements whose fault is visible in the arm path declare it.
+    ghost: Optional[Dict] = None
 
 VIEWS = ("front", "side", "45", "any")
 
@@ -129,6 +132,12 @@ def _parse(path: Path) -> Rubric:
         if not data.get(key):
             raise ValueError(f"{path.name}: rubric is missing {key!r}")
     view = _parse_view(data["view"])
+    ghost = data.get("ghost")
+    if ghost is not None:
+        for key in ("at_bottom", "at_top"):
+            value = ghost.get(key) if isinstance(ghost, dict) else None
+            if not isinstance(value, (int, float)) or not 0 <= value <= 180:
+                raise ValueError(f"{path.name}: ghost.{key} must be a number of degrees 0-180")
     for group in ("checks", "setup"):
         for spec in data.get(group) or ():
             if not spec.get("id"):
@@ -148,6 +157,7 @@ def _parse(path: Path) -> Rubric:
         setup=tuple(data.get("setup") or ()),
         checks=tuple(data["checks"]),
         track=data.get("track"),
+        ghost=ghost,
     )
 
 

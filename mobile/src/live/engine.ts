@@ -61,6 +61,9 @@ export type Rubric = {
   phases?: string[];
   setup?: RubricCheck[];
   checks: RubricCheck[];
+  // Where the scripted "shadow" arm should be, in degrees of elbow bend, at phase 0 (bottom) and
+  // 1 (lockout). Only movements whose fault is the arm path declare it; no block, no shadow.
+  ghost?: { at_bottom: number; at_top: number };
 };
 
 const DEG = 180 / Math.PI;

@@ -14429,6 +14429,10 @@ export const RUBRICS: Record<string, Rubric> = {
       }
     ],
     "family": "triceps",
+    "ghost": {
+      "at_bottom": 70,
+      "at_top": 170
+    },
     "id": "triceps_diverging_pressdown_long_rope_or_2_ropes",
     "name": "Triceps Diverging Pressdown Long Rope or 2 Ropes",
     "phases": [
@@ -14603,6 +14607,10 @@ export const RUBRICS: Record<string, Rubric> = {
       }
     ],
     "family": "triceps",
+    "ghost": {
+      "at_bottom": 70,
+      "at_top": 170
+    },
     "id": "triceps_pressdown",
     "name": "Triceps Pressdown",
     "phases": [
@@ -14777,6 +14785,10 @@ export const RUBRICS: Record<string, Rubric> = {
       }
     ],
     "family": "triceps",
+    "ghost": {
+      "at_bottom": 70,
+      "at_top": 170
+    },
     "id": "triceps_pressdown_bar",
     "name": "Triceps Pressdown Bar",
     "phases": [
